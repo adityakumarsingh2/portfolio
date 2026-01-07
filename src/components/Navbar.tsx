@@ -149,8 +149,8 @@ const Navbar = () => {
             </button>
             
             <a 
-              href="/AdityaCVPEVFinal.pdf" 
-              download
+              href="/AdityaResume.pdf" 
+              download="Aditya_Kumar_Singh_Resume.pdf"
               className="btn-primary inline-flex items-center gap-2 text-sm py-2.5 px-5"
             >
               <Download className="w-4 h-4" />
@@ -206,8 +206,8 @@ const Navbar = () => {
                   ))}
                 </button>
                 <a 
-                  href="/AdityaCVPEVFinal.pdf" 
-                  download
+                  href="/AdityaResume.pdf" 
+                  download="Aditya_Kumar_Singh_Resume.pdf"
                   className="btn-primary inline-flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />

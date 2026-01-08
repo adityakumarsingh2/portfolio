@@ -11,7 +11,7 @@ const useTypingEffect = (texts: string[], typingSpeed = 100, deletingSpeed = 50,
 
   useEffect(() => {
     const currentText = texts[textIndex];
-    
+
     const timeout = setTimeout(() => {
       if (!isDeleting) {
         if (displayedText.length < currentText.length) {
@@ -40,21 +40,21 @@ const MagneticElement = ({ children, className = "", strength = 0.3 }: { childre
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  
+
   const springConfig = { stiffness: 150, damping: 15 };
   const xSpring = useSpring(x, springConfig);
   const ySpring = useSpring(y, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
-    
+
     const rect = ref.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     const distanceX = e.clientX - centerX;
     const distanceY = e.clientY - centerY;
-    
+
     x.set(distanceX * strength);
     y.set(distanceY * strength);
   };
@@ -81,13 +81,13 @@ const MagneticElement = ({ children, className = "", strength = 0.3 }: { childre
 const Interactive3DCard = ({ children }: { children: React.ReactNode }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  
+
   const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15 });
   const mouseYSpring = useSpring(y, { stiffness: 150, damping: 15 });
-  
+
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["15deg", "-15deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-15deg", "15deg"]);
   const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"]);
@@ -95,14 +95,14 @@ const Interactive3DCard = ({ children }: { children: React.ReactNode }) => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
-    
+
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     const mouseX = (e.clientX - centerX) / rect.width;
     const mouseY = (e.clientY - centerY) / rect.height;
-    
+
     x.set(mouseX);
     y.set(mouseY);
   };
@@ -127,7 +127,7 @@ const Interactive3DCard = ({ children }: { children: React.ReactNode }) => {
       className="relative cursor-pointer"
     >
       {children}
-      
+
       {/* Glare effect */}
       <motion.div
         className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden"
@@ -144,7 +144,7 @@ const Interactive3DCard = ({ children }: { children: React.ReactNode }) => {
 const Hero = () => {
   const taglines = [
     "Full Stack Developer",
-    "Cloud Enthusiast", 
+    "Cloud Enthusiast",
     "DSA Enthusiast",
     "Problem Solver"
   ];
@@ -173,9 +173,9 @@ const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section 
+    <section
       ref={containerRef}
-      id="home" 
+      id="home"
       className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background gpu-accelerate"
     >
       {/* Subtle grid pattern overlay */}
@@ -185,12 +185,12 @@ const Hero = () => {
         backgroundSize: '60px 60px',
         willChange: 'auto'
       }} />
-      
+
       {/* Animated noise texture overlay */}
       <div className="absolute inset-0 z-0 opacity-[0.015] mix-blend-overlay" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
       }} />
-      
+
       {/* Antigravity Background - mount after idle for smoother first scroll */}
       {enableHeavyFx && (
         <div className="absolute inset-0 z-0 gpu-accelerate">
@@ -209,16 +209,16 @@ const Hero = () => {
           />
         </div>
       )}
-      
+
       {/* Premium gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-[1]" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-primary/[0.04] z-[1]" />
-      
+
       {/* Radial gradient spotlight effect */}
       <div className="absolute inset-0 z-[1]" style={{
         background: 'radial-gradient(ellipse 80% 50% at 50% 50%, hsl(var(--primary) / 0.06) 0%, transparent 60%)'
       }} />
-      
+
       {/* Animated corner accents - refined */}
       <motion.div
         className="absolute top-20 left-10 w-24 h-24 border-l border-t border-primary/20 z-[2]"
@@ -232,7 +232,7 @@ const Hero = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.7, duration: 0.8 }}
       />
-      
+
       {/* Floating code symbols - more subtle */}
       {randomSymbols.map((symbol, i) => (
         <motion.span
@@ -256,12 +256,12 @@ const Hero = () => {
           {symbol}
         </motion.span>
       ))}
-      
+
       {/* Elegant floating orbs - refined with GPU acceleration */}
       <div
         className="absolute w-[500px] h-[500px] rounded-full z-[1] gpu-accelerate animate-pulse"
-        style={{ 
-          left: '5%', 
+        style={{
+          left: '5%',
           top: '10%',
           background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)',
           filter: 'blur(60px)',
@@ -270,8 +270,8 @@ const Hero = () => {
       />
       <div
         className="absolute w-[400px] h-[400px] rounded-full z-[1] gpu-accelerate animate-pulse"
-        style={{ 
-          right: '0%', 
+        style={{
+          right: '0%',
           bottom: '20%',
           background: 'radial-gradient(circle, hsl(var(--primary) / 0.06) 0%, transparent 70%)',
           filter: 'blur(80px)',
@@ -279,27 +279,27 @@ const Hero = () => {
           animationDelay: '2s'
         }}
       />
-      
+
       {/* Subtle horizontal lines */}
       <div className="absolute top-1/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent z-[1]" />
       <div className="absolute bottom-1/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/5 to-transparent z-[1]" />
-      
+
       <div className="container mx-auto px-6 relative z-10 pt-20">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
             <div className="text-center lg:text-left order-2 lg:order-1">
               {/* Intro - Code style */}
-              <motion.div 
+              <motion.div
                 className="mb-4"
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.span 
+                <motion.span
                   className="font-mono text-primary text-sm tracking-wider inline-block px-4 py-2 rounded-lg bg-card/80 border border-primary/20 backdrop-blur-sm cursor-default"
-                  whileHover={{ 
-                    scale: 1.02, 
+                  whileHover={{
+                    scale: 1.02,
                     borderColor: "hsl(var(--primary) / 0.5)",
                     boxShadow: "0 0 20px hsl(var(--primary) / 0.2)"
                   }}
@@ -311,9 +311,9 @@ const Hero = () => {
                   <span className="text-green-400">"@/career"</span>
                 </motion.span>
               </motion.div>
-              
+
               {/* Name with animated underline */}
-              <motion.h1 
+              <motion.h1
                 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 relative"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -330,9 +330,9 @@ const Hero = () => {
                 </span>
                 <span className="block text-gradient-warm mt-4 pb-2">Singh</span>
               </motion.h1>
-              
+
               {/* Typing Animation Tagline */}
-              <motion.div 
+              <motion.div
                 className="text-xl md:text-2xl text-muted-foreground mb-8 h-10 flex items-center justify-center lg:justify-start gap-2"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -340,20 +340,20 @@ const Hero = () => {
               >
                 <span className="text-primary font-mono text-lg">{">"}</span>
                 <span className="text-foreground font-semibold">{typedText}</span>
-                <motion.span 
+                <motion.span
                   className="inline-block w-0.5 h-6 bg-primary"
                   animate={{ opacity: [1, 0] }}
                   transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                 />
               </motion.div>
 
-              <motion.p 
+              <motion.p
                 className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 font-mono text-sm px-4 py-3 rounded-lg bg-card/60 border border-border/50 backdrop-blur-sm cursor-default"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.5 }}
-                whileHover={{ 
-                  scale: 1.02, 
+                whileHover={{
+                  scale: 1.02,
                   borderColor: "hsl(var(--primary) / 0.4)",
                   boxShadow: "0 0 20px hsl(var(--primary) / 0.15)"
                 }}
@@ -363,17 +363,17 @@ const Hero = () => {
                 <span className="text-green-400">"MERN Stack, DSA, Cloud"</span>
                 <span className="text-blue-400">{" />"}</span>
               </motion.p>
-              
+
               {/* CTAs with magnetic effect - aligned */}
-              <motion.div 
+              <motion.div
                 className="flex flex-wrap gap-4 mb-8 justify-center lg:justify-start items-center"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.6 }}
               >
                 <MagneticElement strength={0.4}>
-                  <motion.a 
-                    href="#projects" 
+                  <motion.a
+                    href="#projects"
                     className="btn-primary inline-flex items-center justify-center gap-2 relative overflow-hidden group h-12 px-6"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -388,8 +388,8 @@ const Hero = () => {
                   </motion.a>
                 </MagneticElement>
                 <MagneticElement strength={0.4}>
-                  <motion.a 
-                    href="#contact" 
+                  <motion.a
+                    href="#contact"
                     className="h-12 px-6 rounded-full border-2 border-foreground/20 font-semibold hover:border-primary hover:text-primary transition-all duration-300 backdrop-blur-sm inline-flex items-center justify-center"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -398,9 +398,9 @@ const Hero = () => {
                   </motion.a>
                 </MagneticElement>
               </motion.div>
-              
+
               {/* Social Links with magnetic effect */}
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-6 justify-center lg:justify-start flex-wrap"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -428,7 +428,7 @@ const Hero = () => {
                   </MagneticElement>
                 ))}
                 <span className="hidden sm:block h-px w-16 bg-gradient-to-r from-border to-primary/50" />
-                <motion.span 
+                <motion.span
                   className="font-mono text-sm text-muted-foreground px-3 py-1 rounded-full bg-card/60 border border-border/50"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -440,7 +440,7 @@ const Hero = () => {
             </div>
 
             {/* Right side - Interactive 3D Profile Card */}
-            <motion.div 
+            <motion.div
               className="flex justify-center lg:justify-center order-1 lg:order-2"
               initial={{ opacity: 0, scale: 0.8, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -459,17 +459,17 @@ const Hero = () => {
                   animate={{ rotate: -360 }}
                   transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                 />
-                
+
                 {/* Pulsing glow behind */}
-                <motion.div 
+                <motion.div
                   className="absolute -inset-6 bg-gradient-to-br from-primary/30 via-primary/20 to-transparent blur-2xl rounded-3xl"
-                  animate={{ 
+                  animate={{
                     opacity: [0.4, 0.7, 0.4],
                     scale: [1, 1.1, 1],
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 />
-                
+
                 {/* Orbiting particles */}
                 {[0, 1, 2, 3].map((i) => (
                   <motion.div
@@ -501,25 +501,25 @@ const Hero = () => {
                     }}
                   />
                 ))}
-                
+
                 <Interactive3DCard>
                   {/* Profile image container */}
                   <div className="relative w-52 h-68 md:w-60 md:h-80 lg:w-72 lg:h-96 rounded-2xl overflow-hidden border-2 border-primary/40 bg-card shadow-2xl">
-                    <img 
-                      src={profilePhoto} 
+                    <img
+                      src={profilePhoto}
                       alt="Aditya Kumar Singh"
                       className="w-full h-full object-cover object-top"
                     />
-                    
+
                     {/* Corner decorations */}
                     <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary/60" />
                     <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary/60" />
                     <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary/60" />
                     <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary/60" />
-                    
+
                     {/* Gradient overlay at bottom with text */}
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 via-background/50 to-transparent flex items-end justify-center pb-4">
-                      <motion.span 
+                      <motion.span
                         className="font-mono text-xs text-primary/80"
                         animate={{ opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -534,11 +534,11 @@ const Hero = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Enhanced scroll indicator with magnetic effect */}
       <MagneticElement className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10" strength={0.3}>
-        <motion.a 
-          href="#about" 
+        <motion.a
+          href="#about"
           className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

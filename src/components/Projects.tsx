@@ -3,10 +3,29 @@ import { ArrowUpRight, Github, ExternalLink } from "lucide-react";
 import fitkartPreview from "@/assets/fitkart-preview.png";
 import shantiBrickfieldPreview from "@/assets/shanti-brickfield-preview.png";
 import smartmatchPreview from "@/assets/smartmatch-preview.png";
+import confessitPreview from "@/assets/confessit-preview.png";
 
 const projects = [
   {
     number: "01",
+    title: "ConfessIt",
+    subtitle: "Anonymous Confession Wall (MERN Stack)",
+    description:
+      "A full-stack anonymous confession platform where users authenticate via Google but interact with complete privacy. Features a dynamic trending algorithm and automated anonymous identity abstraction.",
+    highlights: [
+      "Anonymous identity system using random display names and avatar APIs",
+      "Nested comment structure and real-time reaction updates for interactive engagement",
+      "Engagement-based trending algorithm highlights active posts based on likes and comments",
+      "Secure Google OAuth 2.0/Passport.js integration keeping real identity hidden",
+    ],
+    technologies: ["React", "Node.js", "Express", "MongoDB", "Passport.js"],
+    period: "May – Jun 2026",
+    github: "https://github.com/adityakumarsingh2",
+    live: "https://justconfessit.vercel.app",
+    image: confessitPreview,
+  },
+  {
+    number: "02",
     title: "FitKart",
     subtitle: "AI-Powered Virtual Try-On E-Commerce",
     description:
@@ -24,7 +43,7 @@ const projects = [
     image: fitkartPreview,
   },
   {
-    number: "02",
+    number: "03",
     title: "Set Intern",
     subtitle: "AI-Based Smart Internship Allocation",
     description:
@@ -40,7 +59,7 @@ const projects = [
     image: smartmatchPreview,
   },
   {
-    number: "03",
+    number: "04",
     title: "Shanti Brick Field",
     subtitle: "Full-Stack Business Solution",
     description:

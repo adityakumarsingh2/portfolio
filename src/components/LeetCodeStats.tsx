@@ -59,11 +59,11 @@ const LeetCodeStats = () => {
       try {
         // Using LeetCode GraphQL API via proxy
         const response = await fetch(
-          "https://leetcode-stats-api.herokuapp.com/adityakumarsingh2"
+          "https://leetcode-api-faisalshohag.vercel.app/adityakumarsingh2"
         );
         const data = await response.json();
         
-        if (data.status === "success") {
+        if (data && typeof data.totalSolved === "number") {
           setStats({
             totalSolved: data.totalSolved || 0,
             easySolved: data.easySolved || 0,
@@ -73,7 +73,7 @@ const LeetCodeStats = () => {
           });
         }
       } catch (error) {
-        console.log("Using fallback LeetCode stats");
+        console.log("Using fallback LeetCode stats", error);
         // Fallback to known stats from resume
         setStats({
           totalSolved: 150,

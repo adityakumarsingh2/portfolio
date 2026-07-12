@@ -149,13 +149,24 @@
 
   html {
     scroll-behavior: auto;
+    /* Prevent scroll chaining / rubber-band bleed into the page on macOS & mobile */
+    overscroll-behavior: none;
   }
-  
-  /* GPU-accelerated animations */
+
+  body {
+    overscroll-behavior: none;
+  }
+
+  /* gpu-accelerate: only hint the GPU for elements that are *actively* animating.
+     Apply this class only on motion elements, not on static wrappers. */
   .gpu-accelerate {
-    transform: translateZ(0);
+    /* Use opacity trick instead of translateZ — cheaper and avoids a full
+       stacking-context / compositing layer on elements that aren't moving. */
     backface-visibility: hidden;
-    will-change: transform;
+    /* will-change intentionally removed — Framer Motion sets it automatically
+       via its own style injection when an animation is in progress, and clears
+       it when the animation finishes. Keeping it here permanently on dozens of
+       wrappers creates unnecessary GPU layers and causes scroll jank. */
   }
 }
 
@@ -264,18 +275,49 @@
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(240 10% 6%);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(240 10% 20%);
+  background: hsl(var(--border) / 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(15 85% 60%);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border) / 0.4) transparent;
+}
+
+/* ─── Blob background animation ────────────────────────────────────────────── */
+/* Pure CSS so the browser scheduler can handle it without a JS rAF loop.       */
+@keyframes blob-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.5; }
+  50%       { transform: scale(1.12); opacity: 0.75; }
+}
+
+.animate-blob-slow {
+  animation: blob-pulse 10s ease-in-out infinite;
+  /* Explicitly promote only these decorative blobs so the rest of the page
+     is unaffected by extra compositing layers */
+  will-change: transform, opacity;
+}
+
+/* ─── Custom scrollbar for chatbot / overflow panels ───────────────────────── */
+.custom-scrollbar::-webkit-scrollbar       { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--border) / 0.35);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--border) / 0.6);
 }

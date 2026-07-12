@@ -49,6 +49,24 @@ const PROJECTS_DATA = [
   }
 ];
 
+const CERTIFICATIONS_DATA = [
+  {
+    keywords: ["cloud computing", "nptel cloud"],
+    title: "Cloud Computing | NPTEL",
+    link: "https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view"
+  },
+  {
+    keywords: ["demystifying networking", "nptel networking", "demystifying"],
+    title: "Demystifying Networking | NPTEL",
+    link: "https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view"
+  },
+  {
+    keywords: ["oracle cloud", "oci", "oracle cloud infrastructure", "certified foundation associate"],
+    title: "OCI 2025 Foundation Associate | Oracle",
+    link: "https://catalog-education.oracle.com/ords/certview/sharebadge?id=9DC2763D8B6786054E3DF258C1999F07DB5A0BF66C15CFA639399A0DC2C86D61"
+  }
+];
+
 const SECTIONS_DATA = [
   { keywords: ["about", "profile", "bio", "background"], id: "about", label: "About" },
   { keywords: ["skills", "tech stack", "technologies", "languages"], id: "skills", label: "Skills" },
@@ -71,6 +89,14 @@ const detectProjects = (text: string) => {
   const lower = text.toLowerCase();
   return PROJECTS_DATA.filter((proj) =>
     proj.keywords.some((kw) => lower.includes(kw))
+  );
+};
+
+const detectCertifications = (text: string) => {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return CERTIFICATIONS_DATA.filter((cert) =>
+    cert.keywords.some((kw) => lower.includes(kw))
   );
 };
 
@@ -252,7 +278,19 @@ const Chatbot = ({
       });
 
       if (!response.ok) {
-        throw new Error("Unable to reach the server. Make sure the backend server is running.");
+        let errorMsg = "Unable to reach the server. Make sure the backend server is running.";
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errData = await response.json();
+            if (errData && errData.error) {
+              errorMsg = errData.error;
+            }
+          }
+        } catch (e) {
+          // Fallback if parsing fails
+        }
+        throw new Error(errorMsg);
       }
 
       const reader = response.body?.getReader();
@@ -470,6 +508,29 @@ const Chatbot = ({
                                     <Github className="w-2 h-2" /> Code
                                   </a>
                                 )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Certification redirection buttons */}
+                      {(() => {
+                        const detectedCerts = detectCertifications(msg.text);
+                        if (detectedCerts.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
+                            {detectedCerts.map((cert) => (
+                              <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{cert.title}</span>
+                                <a
+                                  href={cert.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                >
+                                  <ExternalLink className="w-2 h-2" /> Credential
+                                </a>
                               </div>
                             ))}
                           </div>
@@ -744,6 +805,29 @@ const Chatbot = ({
                                         <Github className="w-2.5 h-2.5" /> Code
                                       </a>
                                     )}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Certification redirection buttons */}
+                          {(() => {
+                            const detectedCerts = detectCertifications(msg.text);
+                            if (detectedCerts.length === 0) return null;
+                            return (
+                              <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
+                                {detectedCerts.map((cert) => (
+                                  <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                    <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{cert.title}</span>
+                                    <a
+                                      href={cert.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" /> Credential
+                                    </a>
                                   </div>
                                 ))}
                               </div>

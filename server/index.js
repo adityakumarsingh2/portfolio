@@ -6,7 +6,31 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Secure CORS Configurations
+const allowedOrigins = [
+  "https://adityakumaronline.netlify.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = 
+      allowedOrigins.includes(origin) || 
+      origin.startsWith("http://localhost:") || 
+      origin.startsWith("http://127.0.0.1:") || 
+      origin.endsWith(".netlify.app");
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(null, false); // Safely reject CORS without throwing stack trace errors
+    }
+  }
+}));
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
@@ -18,6 +42,53 @@ if (!apiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
+
+// Custom In-Memory Rate Limiting Middleware
+const ipRequests = new Map();
+
+// Clean up stale IP records every 10 minutes to prevent memory growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of ipRequests.entries()) {
+    if (now - data.resetTime > 15 * 60 * 1000) {
+      ipRequests.delete(ip);
+    }
+  }
+}, 10 * 60 * 1000);
+
+const chatRateLimiter = (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes window
+  const maxRequests = 30; // Max 30 requests per window
+
+  if (!ipRequests.has(ip)) {
+    ipRequests.set(ip, {
+      count: 1,
+      resetTime: now + windowMs
+    });
+    return next();
+  }
+
+  const rateData = ipRequests.get(ip);
+
+  if (now > rateData.resetTime) {
+    // Reset window
+    rateData.count = 1;
+    rateData.resetTime = now + windowMs;
+    return next();
+  }
+
+  rateData.count++;
+  if (rateData.count > maxRequests) {
+    const remainingTime = Math.ceil((rateData.resetTime - now) / 1000 / 60);
+    return res.status(429).json({
+      error: `Too many requests from this IP. Please try again after ${remainingTime} minute(s).`
+    });
+  }
+
+  next();
+};
 
 const systemInstruction = `
 You are the AI assistant representing Aditya Kumar Singh on his personal portfolio website. 
@@ -92,9 +163,9 @@ PROJECTS:
    - Technologies: PHP, MySQL, JavaScript, Machine Learning
    - github link: https://github.com/adityakumarsingh2/setintern
 CERTIFICATIONS:
-- Cloud Computing | NPTEL (Nov 2025)
-- Demystifying Networking | NPTEL (Sep 2025)
-- Oracle Cloud Infrastructure 2025 Certified Foundation Associate | Oracle (Aug 2025)
+- Cloud Computing | NPTEL (Nov 2025), link: https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view
+- Demystifying Networking | NPTEL (Sep 2025), link: https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view
+- Oracle Cloud Infrastructure 2025 Certified Foundation Associate | Oracle (Aug 2025), link: https://catalog-education.oracle.com/ords/certview/sharebadge?id=9DC2763D8B6786054E3DF258C1999F07DB5A0BF66C15CFA639399A0DC2C86D61
 
 ACHIEVEMENTS:
 - Obtained a rank of 1543 among 30.7k+ participants in LeetCode Weekly Contest 470 (Oct 2025).
@@ -114,7 +185,7 @@ EDUCATION:
    - Percentage: 86%
    - Duration: Apr 2020 - Mar 2021`;
 
-const modelName = "gemini-3.5-flash";
+const modelName = "gemini-3.1-flash-lite";
 
 // Helper to call generative AI
 async function generateGeminiResponse(message, history) {
@@ -137,11 +208,16 @@ async function generateGeminiResponse(message, history) {
   return response.text();
 }
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", chatRateLimiter, async (req, res) => {
   const { message, history } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ error: "Message is required." });
+  // Input Sanitization & Validations
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({ error: "Message content is required and must be a valid string." });
+  }
+
+  if (message.length > 600) {
+    return res.status(400).json({ error: "Message is too long. Maximum limit is 600 characters." });
   }
 
   // Set headers for SSE streaming

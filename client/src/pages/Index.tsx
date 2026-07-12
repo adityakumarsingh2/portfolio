@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import PageLoader from "@/components/PageLoader";
@@ -26,6 +26,8 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showFloatingChat, setShowFloatingChat] = useState(false);
 
+  const handleLoaderComplete = useCallback(() => setIsLoading(false), []);
+
   useEffect(() => {
     if (isLoading) return;
     const handleScroll = () => {
@@ -42,18 +44,17 @@ const Index = () => {
 
       <AnimatePresence mode="wait">
         {isLoading && (
-          <PageLoader onComplete={() => setIsLoading(false)} />
+          <PageLoader onComplete={handleLoaderComplete} />
         )}
       </AnimatePresence>
 
-      {!isLoading && <ScrollProgress />}
-
-      <motion.main
+      {/* Main content: visible immediately but hidden behind loader overlay.
+          No JS-driven opacity fade — avoids the post-loader flash. */}
+      <main
         className="min-h-screen bg-background"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoading ? 0 : 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        style={{ visibility: isLoading ? "hidden" : "visible" }}
       >
+        {!isLoading && <ScrollProgress />}
         <Navbar />
         <Hero 
           messages={messages} 
@@ -78,7 +79,7 @@ const Index = () => {
             setIsOpen={setIsChatOpen} 
           />
         )}
-      </motion.main>
+      </main>
     </>
   );
 };

@@ -19,9 +19,6 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Default model to use. Will be dynamically tested and locked on startup.
-let resolvedModelName = "gemini-3.5-flash";
-
 const systemInstruction = `
 You are the AI assistant representing Aditya Kumar Singh on his personal portfolio website. 
 Your goal is to answer questions from visitors about Aditya's background, education, experience, projects, skills, and achievements.
@@ -65,79 +62,12 @@ Aditya's Profile Details:
   * General questions about hiring or collaboration can be sent through the contact form on this website!
 `;
 
-// Test candidates in order of preference to find one that has active free quota
-const testCandidates = [
-  "gemini-3.5-flash",
-  "gemini-3.1-flash-lite",
-  "gemini-flash-lite-latest",
-  "gemini-2.0-flash-lite",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-flash-latest"
-];
+const modelName = "gemini-3.5-flash";
 
-// Test all candidates dynamically to see which one works (has positive quota and is active)
-async function autoResolveModel() {
-  console.log("Testing available Gemini models to find one with active quota...");
-  
-  let modelsList = [];
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      modelsList = (data.models || []).map((m) => m.name.replace("models/", ""));
-    }
-  } catch (error) {
-    console.warn("Could not retrieve model list via API, testing all candidates manually:", error.message || error);
-  }
-
-  // Filter our target candidates list to match models supported by the API key
-  const candidatesToTest = modelsList.length > 0
-    ? testCandidates.filter((c) => modelsList.includes(c))
-    : testCandidates;
-
-  // Add a fallback in case we didn't match any candidates but have models listed
-  if (candidatesToTest.length === 0 && modelsList.length > 0) {
-    const generateModels = modelsList.filter(
-      (name) => !name.includes("embedding") && !name.includes("aqa") && !name.includes("imagen")
-    );
-    candidatesToTest.push(...generateModels.slice(0, 5));
-  }
-
-  console.log("Candidates to test in order:", candidatesToTest);
-
-  for (const modelName of candidatesToTest) {
-    try {
-      console.log(`Testing model availability & quota for: ${modelName}...`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      
-      // Perform a lightweight 1-token test generate request to verify quota
-      const testResult = await model.generateContent("hi");
-      const text = testResult.response.text();
-      
-      if (text) {
-        resolvedModelName = modelName;
-        console.log(`>>> LOCKED IN WORKING MODEL: ${resolvedModelName} <<<`);
-        return;
-      }
-    } catch (err) {
-      console.warn(`✕ Model ${modelName} failed test:`, err.message || err);
-    }
-  }
-
-  console.error("CRITICAL: All model test runs failed. Defaulting to gemini-3.5-flash.");
-  resolvedModelName = "gemini-3.5-flash";
-}
-
-// Call on startup
-autoResolveModel();
-
-// Helper to call generative AI with error fallback
-async function generateGeminiResponse(message, history, modelNameAttempt) {
+// Helper to call generative AI
+async function generateGeminiResponse(message, history) {
   const model = genAI.getGenerativeModel({
-    model: modelNameAttempt,
+    model: modelName,
     systemInstruction: systemInstruction,
   });
 
@@ -162,36 +92,46 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "Message is required." });
   }
 
-  // Attempt the resolved model first
-  let modelToTry = resolvedModelName;
-  const backupModels = [...testCandidates];
+  // Set headers for SSE streaming
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
-  const remainingBackups = backupModels.filter((m) => m !== modelToTry);
-  const orderOfAttempts = [modelToTry, ...remainingBackups];
+  try {
+    console.log(`Generating streaming chat response using ${modelName}...`);
+    
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: systemInstruction,
+    });
 
-  let lastError = null;
+    const formattedHistory = (history || []).map((msg) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }));
 
-  for (const modelAttempt of orderOfAttempts) {
-    try {
-      console.log(`Attempting chat generation using model: ${modelAttempt}...`);
-      const reply = await generateGeminiResponse(message, history, modelAttempt);
-      console.log(`Success with model: ${modelAttempt}`);
-      return res.json({ reply });
-    } catch (error) {
-      console.warn(`Failed with model ${modelAttempt}:`, error.message || error);
-      lastError = error;
+    const chat = model.startChat({
+      history: formattedHistory,
+    });
+
+    const result = await chat.sendMessageStream(message);
+
+    for await (const chunk of result.stream) {
+      const chunkText = chunk.text();
+      res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
     }
-  }
 
-  console.error("All Gemini model attempts failed.");
-  return res.status(500).json({
-    error: "All Gemini model attempts failed. Please verify API limits/quota.",
-    details: lastError?.message || lastError,
-  });
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (error) {
+    console.error("Gemini Streaming Error:", error);
+    res.write(`data: ${JSON.stringify({ error: error.message || error })}\n\n`);
+    res.end();
+  }
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "healthy", model: resolvedModelName, time: new Date() });
+  res.json({ status: "healthy", model: modelName, time: new Date() });
 });
 
 app.listen(PORT, () => {

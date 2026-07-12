@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
@@ -12,10 +12,29 @@ import Experience from "@/components/Experience";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
-import Chatbot from "@/components/Chatbot";
+import Chatbot, { Message } from "@/components/Chatbot";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "model",
+      text: "Hi! I'm Aditya's AI Assistant. Ask me anything about Aditya's full-stack projects, tech stack, certifications, or even his boxing achievements! 🥊",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showFloatingChat, setShowFloatingChat] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const handleScroll = () => {
+      setShowFloatingChat(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLoading]);
 
   return (
     <>
@@ -36,7 +55,12 @@ const Index = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <Navbar />
-        <Hero />
+        <Hero 
+          messages={messages} 
+          setMessages={setMessages} 
+          input={input} 
+          setInput={setInput} 
+        />
         <About />
         <Skills />
         <Experience />
@@ -44,7 +68,16 @@ const Index = () => {
         <Contact />
         <Footer />
         <BackToTop />
-        <Chatbot />
+        {showFloatingChat && (
+          <Chatbot 
+            messages={messages} 
+            setMessages={setMessages} 
+            input={input} 
+            setInput={setInput} 
+            isOpen={isChatOpen} 
+            setIsOpen={setIsChatOpen} 
+          />
+        )}
       </motion.main>
     </>
   );

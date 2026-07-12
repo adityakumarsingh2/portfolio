@@ -99,15 +99,41 @@ const getISTStatus = () => {
   }
 };
 
-const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
+interface ChatbotProps {
+  isInline?: boolean;
+  messages?: Message[];
+  setMessages?: React.Dispatch<React.SetStateAction<Message[]>>;
+  input?: string;
+  setInput?: (val: string) => void;
+  isOpen?: boolean;
+  setIsOpen?: (val: boolean) => void;
+}
+
+const Chatbot = ({
+  isInline = false,
+  messages: propMessages,
+  setMessages: propSetMessages,
+  input: propInput,
+  setInput: propSetInput,
+  isOpen: propIsOpen,
+  setIsOpen: propSetIsOpen,
+}: ChatbotProps) => {
+  const [localIsOpen, localSetIsOpen] = useState(false);
+  const [localMessages, localSetMessages] = useState<Message[]>([
     {
       role: "model",
       text: "Hi! I'm Aditya's AI Assistant. Ask me anything about Aditya's full-stack projects, tech stack, certifications, or even his boxing achievements! 🥊",
     },
   ]);
-  const [input, setInput] = useState("");
+  const [localInput, localSetInput] = useState("");
+
+  const isOpen = propIsOpen !== undefined ? propIsOpen : localIsOpen;
+  const setIsOpen = propSetIsOpen !== undefined ? propSetIsOpen : localSetIsOpen;
+  const messages = propMessages !== undefined ? propMessages : localMessages;
+  const setMessages = propSetMessages !== undefined ? propSetMessages : localSetMessages;
+  const input = propInput !== undefined ? propInput : localInput;
+  const setInput = propSetInput !== undefined ? propSetInput : localSetInput;
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -122,10 +148,10 @@ const Chatbot = () => {
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || isInline) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isLoading]);
+  }, [messages, isOpen, isInline, isLoading]);
 
   // Speech Recognition initialization
   useEffect(() => {
@@ -156,7 +182,7 @@ const Chatbot = () => {
 
       recognitionRef.current = recognition;
     }
-  }, []);
+  }, [setInput]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -361,6 +387,244 @@ const Chatbot = () => {
   const matchingCommands = input.startsWith("/") 
     ? COMMANDS.filter((cmd) => cmd.cmd.startsWith(input.toLowerCase()))
     : [];
+
+  if (isInline) {
+    return (
+      <div className="w-full h-full bg-card flex flex-col overflow-hidden relative text-foreground">
+        {/* Minimal header showing activity status */}
+        <div className="p-2.5 bg-secondary/60 border-b border-foreground/30 flex items-center justify-between font-mono text-[10px]">
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span>Status: {getISTStatus().emoji} {getISTStatus().text}</span>
+          </div>
+          {messages.length > 1 && (
+            <button
+              onClick={exportChatTranscript}
+              className="px-2 py-0.5 rounded border border-foreground/30 hover:bg-card flex items-center gap-1 font-bold transition-all text-[9px]"
+              title="Export Conversation"
+            >
+              <Download className="w-3 h-3" /> Export
+            </button>
+          )}
+        </div>
+
+        {/* Chat Body */}
+        <div className="flex-1 p-3 overflow-y-auto space-y-3.5 custom-scrollbar bg-card">
+          {messages.map((msg, index) => {
+            if (msg.role === "model" && msg.text === "") return null;
+
+            return (
+              <div
+                key={index}
+                className={`flex items-start gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+              >
+                <div
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] flex-shrink-0 border border-foreground shadow-2xs ${
+                    msg.role === "user"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-foreground"
+                  }`}
+                >
+                  {msg.role === "user" ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                </div>
+
+                <div className="flex flex-col max-w-[80%]">
+                  <div
+                    className={`px-3 py-2 border rounded-xl text-xs leading-relaxed whitespace-pre-wrap ${
+                      msg.role === "user"
+                        ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
+                        : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                    }`}
+                  >
+                    {formatMessageText(msg.text)}
+                  </div>
+
+                  {/* Interactive Buttons for projects and sections */}
+                  {msg.role === "model" && msg.text !== "" && (
+                    <div className="mt-1 space-y-1">
+                      {/* Project redirection buttons */}
+                      {(() => {
+                        const detected = detectProjects(msg.text);
+                        if (detected.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
+                            {detected.map((proj) => (
+                              <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{proj.title}</span>
+                                {proj.live && (
+                                  <a
+                                    href={proj.live}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                  >
+                                    <ExternalLink className="w-2 h-2" /> Live
+                                  </a>
+                                )}
+                                {proj.github && (
+                                  <a
+                                    href={proj.github}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                  >
+                                    <Github className="w-2 h-2" /> Code
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Section Jumper buttons */}
+                      {(() => {
+                        const detectedSecs = detectSections(msg.text);
+                        if (detectedSecs.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1">
+                            {detectedSecs.map((sec) => (
+                              <button
+                                key={sec.id}
+                                type="button"
+                                onClick={() => {
+                                  const element = document.getElementById(sec.id);
+                                  if (element) {
+                                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                              >
+                                ⚓ Jump to {sec.label}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {shouldShowTyping() && (
+            <div className="flex items-start gap-2">
+              <div className="w-6 h-6 rounded-lg bg-secondary border border-foreground text-foreground flex items-center justify-center text-[10px] flex-shrink-0 shadow-2xs">
+                <Bot className="w-3.5 h-3.5" />
+              </div>
+              <div className="bg-secondary border border-border/80 px-3 py-2 rounded-xl rounded-tl-none max-w-[80%] flex items-center gap-1">
+                <span className="w-1 h-1 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1 h-1 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1 h-1 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-destructive/10 border-2 border-destructive text-destructive font-mono text-[10px] shadow-2xs">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Suggestions Chips */}
+          {messages.length === 1 && !isLoading && (
+            <div className="pt-1.5 space-y-1.5">
+              <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" /> SUGGESTED QUERIES:
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {SUGGESTIONS.map((sug) => (
+                  <button
+                    key={sug}
+                    onClick={() => handleSendMessage(sug)}
+                    className="text-[11px] font-mono text-left px-2.5 py-1.5 rounded-xl border border-foreground/60 bg-card hover:bg-secondary hover:border-foreground hover:translate-y-[-1px] transition-all duration-200 shadow-2xs active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_currentColor] text-foreground"
+                  >
+                    <span className="text-blue-400 mr-1">{">"}</span>
+                    {sug}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Autocomplete Command Dropdown */}
+        {input.startsWith("/") && matchingCommands.length > 0 && (
+          <div className="absolute bottom-[55px] left-2.5 right-2.5 bg-card border-2 border-foreground rounded-xl shadow-md z-20 overflow-hidden max-h-[140px] overflow-y-auto">
+            <div className="bg-secondary p-1.5 border-b border-foreground text-[9px] font-mono text-muted-foreground flex items-center gap-1">
+              <Command className="w-2.5 h-2.5 text-primary" /> COMMAND QUICK SHORTCUTS
+            </div>
+            <div className="flex flex-col">
+              {matchingCommands.map((cmd) => (
+                <button
+                  key={cmd.cmd}
+                  type="button"
+                  onClick={() => {
+                    setInput(cmd.query);
+                    handleSendMessage(cmd.query);
+                  }}
+                  className="w-full text-left font-mono text-[10px] p-2 hover:bg-secondary border-b border-border/40 last:border-0 flex items-center justify-between text-foreground"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-blue-400 font-bold">{cmd.cmd}</span>
+                    <span className="text-muted-foreground text-[9px]">— {cmd.desc}</span>
+                  </div>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Chat Input */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage(input);
+          }}
+          className="p-2 border-t-2 border-foreground bg-secondary/40 flex items-center gap-1.5 relative mt-auto"
+        >
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type or '/' for commands..."
+            className="flex-1 min-w-0 bg-card border-2 border-foreground rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:ring-0 font-mono text-foreground"
+            disabled={isLoading}
+          />
+
+          {/* Web Speech microphone button */}
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`p-2 rounded-xl border-2 border-foreground transition-all duration-150 flex-shrink-0 ${
+              isListening
+                ? "bg-red-500 text-white animate-pulse"
+                : "bg-card text-foreground hover:bg-secondary"
+            }`}
+            title={isListening ? "Listening..." : "Speech Input"}
+          >
+            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+          </button>
+
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="p-2 rounded-xl bg-foreground text-background border-2 border-foreground disabled:opacity-40 hover:bg-secondary hover:text-foreground hover:translate-y-[-1px] shadow-2xs active:translate-y-[1px] active:shadow-none transition-all duration-150 flex-shrink-0"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
@@ -601,7 +865,7 @@ const Chatbot = () => {
                 e.preventDefault();
                 handleSendMessage(input);
               }}
-              className="p-3 border-t-2 border-foreground bg-secondary/40 flex items-center gap-2 relative"
+              className="p-3 border-t-2 border-foreground bg-secondary/40 flex items-center gap-2 relative mt-auto"
             >
               <input
                 type="text"
@@ -659,3 +923,4 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+export type { Message };

@@ -1,8 +1,8 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowDown, Github, Linkedin, Mail } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import Antigravity from "./Antigravity";
 import profilePhoto from "@/assets/profile-photo.png";
+import Chatbot, { Message } from "./Chatbot";
 
 const useTypingEffect = (texts: string[], typingSpeed = 100, deletingSpeed = 50, pauseDuration = 2000) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -141,7 +141,14 @@ const Interactive3DCard = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const Hero = () => {
+interface HeroProps {
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  input: string;
+  setInput: (val: string) => void;
+}
+
+const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
   const taglines = [
     "Full Stack Developer",
     "Cloud Enthusiast",
@@ -151,26 +158,12 @@ const Hero = () => {
 
   const typedText = useTypingEffect(taglines, 100, 50, 2000);
 
-  // Delay mounting heavy visuals until browser is idle (reduces first-scroll stutter)
-  const [enableHeavyFx, setEnableHeavyFx] = useState(false);
-  useEffect(() => {
-    const ric = (window as any).requestIdleCallback as undefined | ((cb: () => void, opts?: { timeout: number }) => number);
-    if (ric) {
-      const id = ric(() => setEnableHeavyFx(true), { timeout: 1500 });
-      return () => {
-        const cancel = (window as any).cancelIdleCallback as undefined | ((id: number) => void);
-        cancel?.(id);
-      };
-    }
-    const t = window.setTimeout(() => setEnableHeavyFx(true), 900);
-    return () => window.clearTimeout(t);
-  }, []);
-
   // Tech stack floating elements
   const techSymbols = ["C++", "Java", "DSA", "React", "Node.js", "Express.js", "MongoDB", "TypeScript", "Python", "AWS"];
   const randomSymbols = techSymbols.sort(() => Math.random() - 0.5).slice(0, 8);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<"profile" | "chat">("profile");
 
   return (
     <section
@@ -190,25 +183,6 @@ const Hero = () => {
       <div className="absolute inset-0 z-0 opacity-[0.015] mix-blend-overlay" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
       }} />
-
-      {/* Antigravity Background - mount after idle for smoother first scroll */}
-      {enableHeavyFx && (
-        <div className="absolute inset-0 z-0 gpu-accelerate">
-          <Antigravity
-            count={80}
-            magnetRadius={8}
-            ringRadius={10}
-            waveSpeed={0.03}
-            waveAmplitude={0.3}
-            particleSize={0.8}
-            lerpSpeed={0.005}
-            color={'#FF6B35'}
-            autoAnimate={true}
-            particleVariance={0.6}
-            particleShape="sphere"
-          />
-        </div>
-      )}
 
       {/* Premium gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-[1]" />
@@ -439,7 +413,7 @@ const Hero = () => {
               </motion.div>
             </div>
 
-            {/* Right side - Interactive 3D Profile Card */}
+            {/* Right side - Interactive 3D Dual-Tab Card */}
             <motion.div
               className="flex justify-center lg:justify-center order-1 lg:order-2"
               initial={{ opacity: 0, scale: 0.8, y: 30 }}
@@ -447,85 +421,76 @@ const Hero = () => {
               transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
             >
               <div className="relative" style={{ perspective: "1000px" }}>
-                {/* Animated rings around card */}
-                <motion.div
-                  className="absolute -inset-8 rounded-3xl border border-primary/20"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  style={{ transformStyle: "preserve-3d" }}
-                />
-                <motion.div
-                  className="absolute -inset-12 rounded-3xl border border-primary/10"
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                />
-
-                {/* Pulsing glow behind */}
-                <motion.div
-                  className="absolute -inset-6 bg-gradient-to-br from-primary/30 via-primary/20 to-transparent blur-2xl rounded-3xl"
-                  animate={{
-                    opacity: [0.4, 0.7, 0.4],
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-
-                {/* Orbiting particles */}
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-3 h-3 rounded-full bg-primary/60"
-                    style={{
-                      top: "50%",
-                      left: "50%",
-                    }}
-                    animate={{
-                      x: [
-                        Math.cos((i * Math.PI) / 2) * 150,
-                        Math.cos((i * Math.PI) / 2 + Math.PI) * 150,
-                        Math.cos((i * Math.PI) / 2) * 150,
-                      ],
-                      y: [
-                        Math.sin((i * Math.PI) / 2) * 180,
-                        Math.sin((i * Math.PI) / 2 + Math.PI) * 180,
-                        Math.sin((i * Math.PI) / 2) * 180,
-                      ],
-                      opacity: [0.3, 0.8, 0.3],
-                      scale: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 4 + i * 0.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.5,
-                    }}
-                  />
-                ))}
+                {/* Subtle back-glow */}
+                <div className="absolute -inset-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent blur-xl rounded-3xl" />
 
                 <Interactive3DCard>
-                  {/* Profile image container */}
-                  <div className="relative w-52 h-68 md:w-60 md:h-80 lg:w-72 lg:h-96 rounded-2xl overflow-hidden border-2 border-primary/40 bg-card shadow-2xl">
-                    <img
-                      src={profilePhoto}
-                      alt="Aditya Kumar Singh"
-                      className="w-full h-full object-cover object-top"
-                    />
-
-                    {/* Corner decorations */}
-                    <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary/60" />
-                    <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary/60" />
-                    <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary/60" />
-                    <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary/60" />
-
-                    {/* Gradient overlay at bottom with text */}
-                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 via-background/50 to-transparent flex items-end justify-center pb-4">
-                      <motion.span
-                        className="font-mono text-xs text-primary/80"
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                  <div className="relative w-80 h-[480px] md:w-[360px] md:h-[500px] lg:w-[380px] lg:h-[520px] rounded-2xl bg-card border-2 border-foreground shadow-md flex flex-col overflow-hidden z-10">
+                    {/* Tab Switcher */}
+                    <div className="flex border-b-2 border-foreground bg-secondary font-mono text-xs z-10">
+                      <button
+                        onClick={() => setActiveTab("profile")}
+                        className={`flex-1 py-3 text-center font-bold transition-all border-r-2 border-foreground cursor-pointer ${
+                          activeTab === "profile" 
+                            ? "bg-foreground text-background" 
+                            : "hover:bg-accent text-foreground"
+                        }`}
                       >
-                        {"<Developer status=\"active\" />"}
-                      </motion.span>
+                        👤 Profile
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("chat")}
+                        className={`flex-1 py-3 text-center font-bold transition-all cursor-pointer ${
+                          activeTab === "chat" 
+                            ? "bg-foreground text-background" 
+                            : "hover:bg-accent text-foreground"
+                        }`}
+                      >
+                        💬 Ask AI Assistant
+                      </button>
+                    </div>
+
+                    <div className="flex-1 relative overflow-hidden flex flex-col bg-card">
+                      {activeTab === "profile" ? (
+                        /* Profile image container */
+                        <div className="w-full h-full p-4 flex flex-col justify-between">
+                          <div className="w-full h-[85%] rounded-xl overflow-hidden relative border border-border">
+                            <img
+                              src={profilePhoto}
+                              alt="Aditya Kumar Singh"
+                              className="w-full h-full object-cover object-top grayscale contrast-110 hover:grayscale-0 transition-all duration-500 ease-out"
+                            />
+
+                            {/* Corner decorations */}
+                            <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary/60" />
+                            <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary/60" />
+                            <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary/60" />
+                            <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary/60" />
+
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-85" />
+                          </div>
+
+                          {/* Custom overlay with status */}
+                          <div className="font-mono text-xs flex justify-between items-center text-foreground mt-2">
+                            <span>adityasingh.exe</span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                              active_now
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Chat Content inline */
+                        <div className="w-full h-full flex flex-col overflow-hidden">
+                          <Chatbot
+                            isInline={true}
+                            messages={messages}
+                            setMessages={setMessages}
+                            input={input}
+                            setInput={setInput}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Interactive3DCard>

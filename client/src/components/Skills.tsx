@@ -1,5 +1,8 @@
 import { motion } from "framer-motion";
-import { Code2, Palette, Database, Cloud, BookOpen, Wrench, Sparkles } from "lucide-react";
+import { Code2, Palette, Database, Cloud, BookOpen, Wrench, Sparkles, ExternalLink } from "lucide-react";
+import oracleCert from "@/assets/oracle-cert.png";
+import nptelCloudCert from "@/assets/nptel-cloud-cert.png";
+import nptelNetworkingCert from "@/assets/nptel-networking-cert.png";
 
 const skillGroups = [
   {
@@ -121,6 +124,36 @@ const SkillCard = ({
 };
 
 const Skills = () => {
+  const certifications = [
+    {
+      title: "OCI 2025 Certified Foundation Associate",
+      issuer: "Oracle",
+      date: "Aug 2025",
+      gradient: "from-red-500 to-orange-500",
+      emoji: "☁️",
+      link: "https://catalog-education.oracle.com/ords/certview/sharebadge?id=9DC2763D8B6786054E3DF258C1999F07DB5A0BF66C15CFA639399A0DC2C86D61",
+      image: oracleCert,
+    },
+    {
+      title: "Cloud Computing",
+      issuer: "NPTEL · IIT Kharagpur",
+      date: "Jul–Oct 2025",
+      gradient: "from-blue-550 to-indigo-500",
+      emoji: "🏅",
+      link: "https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view",
+      image: nptelCloudCert,
+    },
+    {
+      title: "Demystifying Networking",
+      issuer: "NPTEL · IIT Bombay",
+      date: "Jul–Aug 2025",
+      gradient: "from-emerald-550 to-teal-500",
+      emoji: "🏅",
+      link: "https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view",
+      image: nptelNetworkingCert,
+    },
+  ];
+
   return (
     <section id="skills" className="section-padding bg-card/30 relative overflow-hidden">
       {/* Background decorations */}
@@ -163,60 +196,91 @@ const Skills = () => {
             ))}
           </motion.div>
 
-          {/* Certifications */}
+          {/* Certifications - Optimized 3 Column Grid */}
           <motion.div
-            className="mt-20"
+            className="mt-24"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <div className="text-center mb-10">
+            <div className="text-center mb-12">
               <h3 className="font-display text-2xl md:text-3xl font-bold">
                 <span className="text-gradient-warm">Certifications</span>
               </h3>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-5">
-              {[
-                {
-                  title: "OCI 2025 Certified Foundation Associate",
-                  issuer: "Oracle",
-                  date: "Aug 2025",
-                  gradient: "from-red-500 to-orange-500",
-                },
-                { 
-                  title: "Cloud Computing", 
-                  issuer: "NPTEL", 
-                  date: "Nov 2025",
-                  gradient: "from-blue-500 to-indigo-500",
-                },
-                {
-                  title: "Demystifying Networking",
-                  issuer: "NPTEL",
-                  date: "Sep 2025",
-                  gradient: "from-emerald-500 to-teal-500",
-                },
-              ].map((cert, i) => (
+            <div className="grid md:grid-cols-3 gap-6">
+              {certifications.map((cert, i) => (
                 <motion.div
                   key={cert.title}
-                  className="relative group"
-                  initial={{ opacity: 0, y: 20 }}
+                  className="relative block card-elegant rounded-2xl overflow-hidden h-full transition-all duration-300 group hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex flex-col bg-card"
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ duration: 0.5, delay: i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
                 >
-                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${cert.gradient} rounded-2xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
-                  
-                  <div className="relative card-elegant p-6 text-center rounded-2xl overflow-hidden">
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${cert.gradient}`} />
+                  {/* Hover glow */}
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${cert.gradient} rounded-2xl blur-lg opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
+
+                  {/* Top accent bar */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${cert.gradient}`} />
+
+                  {/* Certificate Image Frame - aspect ratio optimized */}
+                  <div className="relative aspect-[1.5/1] w-full overflow-hidden bg-zinc-950/90 flex items-center justify-center p-2.5 border-b border-border/40 relative group/image">
+                    <img
+                      src={cert.image}
+                      alt={`${cert.title} certificate`}
+                      className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent pointer-events-none" />
                     
-                    <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${cert.gradient} flex items-center justify-center shadow-lg`}>
-                      <span className="text-2xl">🏆</span>
+                    {/* Hover Verify Overlay */}
+                    <a
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 flex items-center justify-center bg-[#0B0D13]/85 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                    >
+                      <span className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-xs shadow-md">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        Verify Credential
+                      </span>
+                    </a>
+                  </div>
+
+                  {/* Content - Optimized spacing */}
+                  <div className="p-4 flex-1 flex flex-col justify-between relative z-10">
+                    <div className="mb-3">
+                      {/* Issuer & Date info */}
+                      <div className="flex justify-between items-center mb-2">
+                        <p className={`font-bold text-xs bg-gradient-to-r ${cert.gradient} bg-clip-text text-transparent`}>
+                          {cert.issuer}
+                        </p>
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/10">
+                          {cert.date}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="font-semibold text-xs text-left leading-snug line-clamp-2 min-h-[32px]">
+                        {cert.title}
+                      </h4>
                     </div>
-                    <p className="font-semibold text-sm mb-2 leading-tight">{cert.title}</p>
-                    <p className={`font-bold text-sm bg-gradient-to-r ${cert.gradient} bg-clip-text text-transparent`}>{cert.issuer}</p>
-                    <p className="text-muted-foreground text-xs font-mono mt-3 px-3 py-1 bg-muted/50 rounded-full inline-block">{cert.date}</p>
+
+                    {/* View Credential Link */}
+                    <div className="pt-2.5 border-t border-border/20 flex justify-between items-center mt-3">
+                      <a
+                        href={cert.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[10px] font-bold text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Verify Credential
+                      </a>
+                      <span className="text-sm">{cert.emoji}</span>
+                    </div>
                   </div>
                 </motion.div>
               ))}

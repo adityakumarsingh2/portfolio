@@ -17,6 +17,219 @@ const SUGGESTIONS = [
   "Tell me about his boxing background 🥊",
 ];
 
+// ── Section nav items shown below the greeting ────────────────────────────
+const GREETING_SECTIONS = [
+  { id: "about",    label: "About" },
+  { id: "skills",   label: "Skills" },
+  { id: "projects", label: "Projects" },
+];
+
+// Timing constants (ms) for the welcome sequence
+const GREETING_DELAY   = 300;   // greeting bubble appears
+const JUMPS_DELAY      = 1100;  // section jump buttons
+const LABEL_DELAY      = 1800;  // "SUGGESTED QUERIES:" label
+const FIRST_CHIP_DELAY = 2100;  // first suggestion chip
+const CHIP_STAGGER     = 180;   // delay between chips
+
+// ── Shared animated welcome sequence ─────────────────────────────────────
+const WelcomeSequence = ({
+  isSmall,
+  onSend,
+}: {
+  isSmall: boolean;   // true = inline (IDE card), false = floating panel
+  onSend: (text: string) => void;
+}) => {
+  // Drive each element in with its own timer so nothing jumps in at once
+  const [showGreeting,    setShowGreeting]    = useState(false);
+  const [showJumps,       setShowJumps]       = useState(false);
+  const [showLabel,       setShowLabel]       = useState(false);
+  const [visibleChips,    setVisibleChips]    = useState(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setShowGreeting(true),  GREETING_DELAY);
+    const t2 = setTimeout(() => setShowJumps(true),     JUMPS_DELAY);
+    const t3 = setTimeout(() => setShowLabel(true),     LABEL_DELAY);
+    // Reveal chips one-by-one
+    const chipTimers = SUGGESTIONS.map((_, i) =>
+      setTimeout(() => setVisibleChips(i + 1), FIRST_CHIP_DELAY + i * CHIP_STAGGER)
+    );
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      chipTimers.forEach(clearTimeout);
+    };
+  }, []);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  if (isSmall) {
+    // ── Inline (IDE card) variant ──────────────────────────────────────
+    return (
+      <div className="space-y-2.5">
+        {/* Greeting bubble */}
+        <AnimatePresence>
+          {showGreeting && (
+            <motion.div
+              className="flex items-start gap-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="w-6 h-6 rounded-lg bg-secondary border border-foreground text-foreground flex items-center justify-center text-[10px] flex-shrink-0 shadow-2xs">
+                <Bot className="w-3 h-3" />
+              </div>
+              <div className="px-3 py-2 border bg-secondary text-foreground border-border/80 rounded-xl rounded-tl-none text-xs leading-relaxed max-w-[80%]">
+                Hi! I'm Aditya's AI Assistant. Ask me anything about his projects, tech stack, certifications, or boxing achievements! 🥊
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Section jump buttons */}
+        <AnimatePresence>
+          {showJumps && (
+            <motion.div
+              className="flex flex-wrap gap-1 pl-8"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {GREETING_SECTIONS.map((sec) => (
+                <button
+                  key={sec.id}
+                  type="button"
+                  onClick={() => scrollTo(sec.id)}
+                  className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                >
+                  ⚓ Jump to {sec.label}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Suggestions label */}
+        <AnimatePresence>
+          {showLabel && (
+            <motion.p
+              className="text-[10px] text-muted-foreground font-mono flex items-center gap-1 pt-0.5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" />
+              SUGGESTED QUERIES:
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        {/* Suggestion chips — one-by-one */}
+        <div className="flex flex-col gap-1.5">
+          {SUGGESTIONS.map((sug, i) => (
+            <AnimatePresence key={sug}>
+              {visibleChips > i && (
+                <motion.button
+                  onClick={() => onSend(sug)}
+                  className="text-[11px] font-mono text-left px-2.5 py-1.5 rounded-xl border border-foreground/60 bg-card hover:bg-secondary hover:border-foreground hover:translate-y-[-1px] transition-all duration-200 shadow-2xs active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_currentColor] text-foreground"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <span className="text-blue-400 mr-1">{">"}</span>
+                  {sug}
+                </motion.button>
+              )}
+            </AnimatePresence>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Floating panel variant ─────────────────────────────────────────────
+  return (
+    <div className="space-y-3">
+      {/* Greeting bubble */}
+      <AnimatePresence>
+        {showGreeting && (
+          <motion.div
+            className="flex items-start gap-2.5"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="w-7 h-7 rounded-lg bg-secondary border border-foreground text-foreground flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+              <Bot className="w-3.5 h-3.5" />
+            </div>
+            <div className="px-3.5 py-2.5 border bg-secondary text-foreground border-border/80 rounded-xl rounded-tl-none text-sm leading-relaxed max-w-[75%] font-sans font-normal">
+              Hi! I'm Aditya's AI Assistant. Ask me anything about his projects, tech stack, certifications, or boxing achievements! 🥊
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Section jump buttons */}
+      <AnimatePresence>
+        {showJumps && (
+          <motion.div
+            className="flex flex-wrap gap-1.5 pl-9"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {GREETING_SECTIONS.map((sec) => (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => scrollTo(sec.id)}
+                className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+              >
+                ⚓ Jump to {sec.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Suggestions label */}
+      <AnimatePresence>
+        {showLabel && (
+          <motion.p
+            className="text-[11px] text-muted-foreground font-mono flex items-center gap-1 pt-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" />
+            SUGGESTED QUERIES:
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      {/* Suggestion chips — one-by-one */}
+      <div className="flex flex-col gap-2">
+        {SUGGESTIONS.map((sug, i) => (
+          <AnimatePresence key={sug}>
+            {visibleChips > i && (
+              <motion.button
+                onClick={() => onSend(sug)}
+                className="text-xs font-mono text-left px-3 py-2 rounded-xl border border-foreground/60 bg-card hover:bg-secondary hover:border-foreground hover:translate-y-[-1px] transition-all duration-200 shadow-2xs active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_currentColor] text-foreground"
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="text-blue-400 mr-1.5">{">"}</span>
+                {sug}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const PROJECTS_DATA = [
   {
     keywords: ["confessit", "confess it", "anonymous confession"],
@@ -447,126 +660,134 @@ const Chatbot = ({
 
         {/* Chat Body */}
         <div ref={bodyRef} className="flex-1 p-3 overflow-y-auto space-y-3.5 custom-scrollbar bg-card">
-          {messages.map((msg, index) => {
-            if (msg.role === "model" && msg.text === "") return null;
+          {/* First message = hardcoded greeting — render the animated welcome sequence */}
+          {messages.length === 1 && !isLoading ? (
+            <WelcomeSequence isSmall onSend={handleSendMessage} />
+          ) : (
+            messages.map((msg, index) => {
+              if (msg.role === "model" && msg.text === "") return null;
+              // Skip index 0 (greeting) once conversation has started — it's
+              // already been seen; skip rendering it again to avoid duplication.
+              if (index === 0) return null;
 
-            return (
-              <div
-                key={index}
-                className={`flex items-start gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-              >
+              return (
                 <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] flex-shrink-0 border border-foreground shadow-2xs ${
-                    msg.role === "user"
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-foreground"
-                  }`}
+                  key={index}
+                  className={`flex items-start gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                 >
-                  {msg.role === "user" ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                </div>
-
-                <div className="flex flex-col max-w-[80%]">
                   <div
-                    className={`px-3 py-2 border rounded-xl text-xs leading-relaxed whitespace-pre-wrap ${
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] flex-shrink-0 border border-foreground shadow-2xs ${
                       msg.role === "user"
-                        ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
-                        : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-foreground"
                     }`}
                   >
-                    {formatMessageText(msg.text)}
+                    {msg.role === "user" ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                   </div>
 
-                  {/* Interactive Buttons for projects and sections */}
-                  {msg.role === "model" && msg.text !== "" && (
-                    <div className="mt-1 space-y-1">
-                      {/* Project redirection buttons */}
-                      {(() => {
-                        const detected = detectProjects(msg.text);
-                        if (detected.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
-                            {detected.map((proj) => (
-                              <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
-                                <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{proj.title}</span>
-                                {proj.live && (
-                                  <a
-                                    href={proj.live}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                  >
-                                    <ExternalLink className="w-2 h-2" /> Live
-                                  </a>
-                                )}
-                                {proj.github && (
-                                  <a
-                                    href={proj.github}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                  >
-                                    <Github className="w-2 h-2" /> Code
-                                  </a>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Certification redirection buttons */}
-                      {(() => {
-                        const detectedCerts = detectCertifications(msg.text);
-                        if (detectedCerts.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
-                            {detectedCerts.map((cert) => (
-                              <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
-                                <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{cert.title}</span>
-                                <a
-                                  href={cert.link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                >
-                                  <ExternalLink className="w-2 h-2" /> Credential
-                                </a>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Section Jumper buttons */}
-                      {(() => {
-                        const detectedSecs = detectSections(msg.text);
-                        if (detectedSecs.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1">
-                            {detectedSecs.map((sec) => (
-                              <button
-                                key={sec.id}
-                                type="button"
-                                onClick={() => {
-                                  const element = document.getElementById(sec.id);
-                                  if (element) {
-                                    element.scrollIntoView({ behavior: "smooth", block: "start" });
-                                  }
-                                }}
-                                className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
-                              >
-                                ⚓ Jump to {sec.label}
-                              </button>
-                            ))}
-                          </div>
-                        );
-                      })()}
+                  <div className="flex flex-col max-w-[80%]">
+                    <div
+                      className={`px-3 py-2 border rounded-xl text-xs leading-relaxed whitespace-pre-wrap ${
+                        msg.role === "user"
+                          ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
+                          : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                      }`}
+                    >
+                      {formatMessageText(msg.text)}
                     </div>
-                  )}
+
+                    {/* Interactive Buttons for projects and sections */}
+                    {msg.role === "model" && msg.text !== "" && (
+                      <div className="mt-1 space-y-1">
+                        {/* Project redirection buttons */}
+                        {(() => {
+                          const detected = detectProjects(msg.text);
+                          if (detected.length === 0) return null;
+                          return (
+                            <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
+                              {detected.map((proj) => (
+                                <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                  <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{proj.title}</span>
+                                  {proj.live && (
+                                    <a
+                                      href={proj.live}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                    >
+                                      <ExternalLink className="w-2 h-2" /> Live
+                                    </a>
+                                  )}
+                                  {proj.github && (
+                                    <a
+                                      href={proj.github}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                    >
+                                      <Github className="w-2 h-2" /> Code
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Certification redirection buttons */}
+                        {(() => {
+                          const detectedCerts = detectCertifications(msg.text);
+                          if (detectedCerts.length === 0) return null;
+                          return (
+                            <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-dashed border-border/30">
+                              {detectedCerts.map((cert) => (
+                                <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                  <span className="text-[9px] font-mono font-semibold text-foreground mr-0.5">{cert.title}</span>
+                                  <a
+                                    href={cert.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 text-[8px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                  >
+                                    <ExternalLink className="w-2 h-2" /> Credential
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Section Jumper buttons */}
+                        {(() => {
+                          const detectedSecs = detectSections(msg.text);
+                          if (detectedSecs.length === 0) return null;
+                          return (
+                            <div className="flex flex-wrap gap-1">
+                              {detectedSecs.map((sec) => (
+                                <button
+                                  key={sec.id}
+                                  type="button"
+                                  onClick={() => {
+                                    const element = document.getElementById(sec.id);
+                                    if (element) {
+                                      element.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                                >
+                                  ⚓ Jump to {sec.label}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
 
           {shouldShowTyping() && (
             <div className="flex items-start gap-2">
@@ -585,27 +806,6 @@ const Chatbot = ({
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-destructive/10 border-2 border-destructive text-destructive font-mono text-[10px] shadow-2xs">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{error}</span>
-            </div>
-          )}
-
-          {/* Suggestions Chips */}
-          {messages.length === 1 && !isLoading && (
-            <div className="pt-1.5 space-y-1.5">
-              <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" /> SUGGESTED QUERIES:
-              </p>
-              <div className="flex flex-col gap-1.5">
-                {SUGGESTIONS.map((sug) => (
-                  <button
-                    key={sug}
-                    onClick={() => handleSendMessage(sug)}
-                    className="text-[11px] font-mono text-left px-2.5 py-1.5 rounded-xl border border-foreground/60 bg-card hover:bg-secondary hover:border-foreground hover:translate-y-[-1px] transition-all duration-200 shadow-2xs active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_currentColor] text-foreground"
-                  >
-                    <span className="text-blue-400 mr-1">{">"}</span>
-                    {sug}
-                  </button>
-                ))}
-              </div>
             </div>
           )}
         </div>
@@ -743,127 +943,109 @@ const Chatbot = ({
 
             {/* Chat Body */}
             <div ref={bodyRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-card">
-              {messages.map((msg, index) => {
-                // If this is the streaming placeholder with no text yet, don't render a blank bubble
-                if (msg.role === "model" && msg.text === "") return null;
+              {/* Initial state: animated welcome sequence */}
+              {messages.length === 1 && !isLoading ? (
+                <WelcomeSequence isSmall={false} onSend={handleSendMessage} />
+              ) : (
+                messages.map((msg, index) => {
+                  if (msg.role === "model" && msg.text === "") return null;
+                  // Greeting (index 0) is handled by WelcomeSequence above;
+                  // skip re-rendering it once conversation starts.
+                  if (index === 0) return null;
 
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-start gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-                  >
+                  return (
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 border border-foreground shadow-2xs ${
-                        msg.role === "user"
-                          ? "bg-foreground text-background"
-                          : "bg-secondary text-foreground"
-                      }`}
+                      key={index}
+                      className={`flex items-start gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                     >
-                      {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
-                    </div>
-
-                    <div className="flex flex-col max-w-[75%]">
                       <div
-                        className={`px-3.5 py-2.5 border rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 border border-foreground shadow-2xs ${
                           msg.role === "user"
-                            ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
-                            : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                            ? "bg-foreground text-background"
+                            : "bg-secondary text-foreground"
                         }`}
                       >
-                        {formatMessageText(msg.text)}
+                        {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                       </div>
 
-                      {/* Interactive Buttons for projects and sections */}
-                      {msg.role === "model" && msg.text !== "" && (
-                        <div className="mt-1 space-y-1.5">
-                          {/* Project redirection buttons */}
-                          {(() => {
-                            const detected = detectProjects(msg.text);
-                            if (detected.length === 0) return null;
-                            return (
-                              <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
-                                {detected.map((proj) => (
-                                  <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
-                                    <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{proj.title}</span>
-                                    {proj.live && (
-                                      <a
-                                        href={proj.live}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                      >
-                                        <ExternalLink className="w-2.5 h-2.5" /> Live
-                                      </a>
-                                    )}
-                                    {proj.github && (
-                                      <a
-                                        href={proj.github}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                      >
-                                        <Github className="w-2.5 h-2.5" /> Code
-                                      </a>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-
-                          {/* Certification redirection buttons */}
-                          {(() => {
-                            const detectedCerts = detectCertifications(msg.text);
-                            if (detectedCerts.length === 0) return null;
-                            return (
-                              <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
-                                {detectedCerts.map((cert) => (
-                                  <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
-                                    <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{cert.title}</span>
-                                    <a
-                                      href={cert.link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
-                                    >
-                                      <ExternalLink className="w-2.5 h-2.5" /> Credential
-                                    </a>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-
-                          {/* Section Jumper buttons */}
-                          {(() => {
-                            const detectedSecs = detectSections(msg.text);
-                            if (detectedSecs.length === 0) return null;
-                            return (
-                              <div className="flex flex-wrap gap-1">
-                                {detectedSecs.map((sec) => (
-                                  <button
-                                    key={sec.id}
-                                    type="button"
-                                    onClick={() => {
-                                      const element = document.getElementById(sec.id);
-                                      if (element) {
-                                        element.scrollIntoView({ behavior: "smooth", block: "start" });
-                                      }
-                                    }}
-                                    className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
-                                  >
-                                    ⚓ Jump to {sec.label}
-                                  </button>
-                                ))}
-                              </div>
-                            );
-                          })()}
+                      <div className="flex flex-col max-w-[75%]">
+                        <div
+                          className={`px-3.5 py-2.5 border rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                            msg.role === "user"
+                              ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
+                              : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                          }`}
+                        >
+                          {formatMessageText(msg.text)}
                         </div>
-                      )}
+
+                        {/* Interactive action buttons — only on AI responses */}
+                        {msg.role === "model" && msg.text !== "" && (
+                          <div className="mt-1 space-y-1.5">
+                            {(() => {
+                              const detected = detectProjects(msg.text);
+                              if (detected.length === 0) return null;
+                              return (
+                                <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
+                                  {detected.map((proj) => (
+                                    <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                      <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{proj.title}</span>
+                                      {proj.live && (
+                                        <a href={proj.live} target="_blank" rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0">
+                                          <ExternalLink className="w-2.5 h-2.5" /> Live
+                                        </a>
+                                      )}
+                                      {proj.github && (
+                                        <a href={proj.github} target="_blank" rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0">
+                                          <Github className="w-2.5 h-2.5" /> Code
+                                        </a>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                            {(() => {
+                              const detectedCerts = detectCertifications(msg.text);
+                              if (detectedCerts.length === 0) return null;
+                              return (
+                                <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
+                                  {detectedCerts.map((cert) => (
+                                    <div key={cert.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
+                                      <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{cert.title}</span>
+                                      <a href={cert.link} target="_blank" rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-[#FFCB6B] text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0">
+                                        <ExternalLink className="w-2.5 h-2.5" /> Credential
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                            {(() => {
+                              const detectedSecs = detectSections(msg.text);
+                              if (detectedSecs.length === 0) return null;
+                              return (
+                                <div className="flex flex-wrap gap-1">
+                                  {detectedSecs.map((sec) => (
+                                    <button key={sec.id} type="button"
+                                      onClick={() => document.getElementById(sec.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                                      className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer">
+                                      ⚓ Jump to {sec.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
 
               {shouldShowTyping() && (
                 <div className="flex items-start gap-2.5">
@@ -882,27 +1064,6 @@ const Chatbot = ({
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border-2 border-destructive text-destructive font-mono text-xs shadow-2xs">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{error}</span>
-                </div>
-              )}
-
-              {/* Suggestions Chips (shown when no conversation other than greeting has occurred) */}
-              {messages.length === 1 && !isLoading && (
-                <div className="pt-2 space-y-2">
-                  <p className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" /> SUGGESTED QUERIES:
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {SUGGESTIONS.map((sug) => (
-                      <button
-                        key={sug}
-                        onClick={() => handleSendMessage(sug)}
-                        className="text-xs font-mono text-left px-3 py-2 rounded-xl border border-foreground/60 bg-card hover:bg-secondary hover:border-foreground hover:translate-y-[-1px] transition-all duration-200 shadow-2xs active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_currentColor] text-foreground"
-                      >
-                        <span className="text-blue-400 mr-1.5">{">"}</span>
-                        {sug}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>

@@ -54,6 +54,8 @@ FREELANCE EXPERIENCE:
      * Handled secure authentication, real-time order tracking, wish list management, and Stripe payments, reducing checkout drop-offs by 35% and improving user engagement by 45%.
      * Followed modular architecture and reusable component design to improve scalability and maintainability.
    - Technologies: React.js, JavaScript, Supabase (Auth & Database), Stripe API, Netlify, Git, Express.js
+   - live link: https://fitkartshop.netlify.app/
+   - github link: https://github.com/adityakumarsingh2/fitkart
 
 2. Freelancer | Shanti Brick Field, Kannauj (Mar 2025 - Apr 2025)
    - Project: Company Website for Shanti Brick Field
@@ -62,6 +64,8 @@ FREELANCE EXPERIENCE:
      * Integrated secure backend functionality using PHP and MySQL, including form handling, file/image uploads, and database-driven product management.
      * Published the website on a custom subdomain via shared cPanel hosting (InfinityFree) with PHPMailer-based email notifications.
    - Technologies: HTML and CSS, JavaScript, jQuery, PHP, MySQL, PHPMailer
+   - live link: https://shantibrickfield.kesug.com/
+   - github link: https://github.com/adityakumarsingh2/shantibrickfield
 
 PROJECTS:
 1. Confess It (Jan 2026 - Apr 2026)
@@ -71,16 +75,22 @@ PROJECTS:
      * Streamlined backend services and MongoDB Atlas queries, improving API response time by 35% and handling 1,000+ API requests with scalable architecture.
      * Deployed the frontend on Vercel, backend on Render, and cloud database on MongoDB Atlas, ensuring reliable and scalable production hosting.
    - Technologies: MERN Stack, Google OAuth, MongoDB Atlas, Passport.js, Vercel, Render
-   -live link: https://justconfessit.vercel.app
-   -github link: https://github.com/adityakumarsingh2/confessit
+   - live link: https://justconfessit.vercel.app
+   - github link: https://github.com/adityakumarsingh2/confessit
+
 2. Personal Portfolio (Dec 2025 - Jan 2026)
    - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, a custom magnetic cursor, and real-time LeetCode statistics integration.
    - Key Responsibilities & Achievements:
      * Optimized the website for SEO using structured metadata and sitemaps, achieving Google indexing and tracking 1,000+ visits via Google Analytics.
      * Hosted the portfolio on a custom domain using Netlify with Cloudflare as the DNS provider.
    - Technologies: React.js, Tailwind CSS, SEO, Netlify, Cloudflare, Google Analytics
-   -live link: https://adityakumaronline.netlify.app
-   -github link: https://github.com/adityakumarsingh2/portfolio
+   - live link: https://adityakumaronline.netlify.app
+   - github link: https://github.com/adityakumarsingh2/portfolio
+
+3. Set Intern (Jan 2025 - Apr 2025)
+   - Description: An AI-based smart internship allocation platform matching students with internships based on CV, LinkedIn activity, CGPA, and eligibility rules.
+   - Technologies: PHP, MySQL, JavaScript, Machine Learning
+   - github link: https://github.com/adityakumarsingh2/setintern
 CERTIFICATIONS:
 - Cloud Computing | NPTEL (Nov 2025)
 - Demystifying Networking | NPTEL (Sep 2025)

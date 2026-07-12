@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
+import { 
+  MessageSquare, X, Send, Bot, User, Sparkles, AlertCircle,
+  Github, ExternalLink, Mic, MicOff, Download, Command, ChevronRight
+} from "lucide-react";
 
 interface Message {
   role: "user" | "model";
@@ -14,6 +17,88 @@ const SUGGESTIONS = [
   "Tell me about his boxing background 🥊",
 ];
 
+const PROJECTS_DATA = [
+  {
+    keywords: ["confessit", "confess it", "anonymous confession"],
+    title: "ConfessIt",
+    live: "https://justconfessit.vercel.app",
+    github: "https://github.com/adityakumarsingh2/confessit"
+  },
+  {
+    keywords: ["fitkart", "fit kart", "try-on", "e-commerce"],
+    title: "FitKart",
+    live: "https://fitkartshop.netlify.app/",
+    github: "https://github.com/adityakumarsingh2/fitkart"
+  },
+  {
+    keywords: ["shanti brick field", "shanti brickfield", "brick field"],
+    title: "Shanti Brick Field",
+    live: "https://shantibrickfield.kesug.com/",
+    github: "https://github.com/adityakumarsingh2/shantibrickfield"
+  },
+  {
+    keywords: ["set intern", "setintern", "internship allocation"],
+    title: "Set Intern",
+    github: "https://github.com/adityakumarsingh2/setintern"
+  },
+  {
+    keywords: ["portfolio", "personal website"],
+    title: "Personal Portfolio",
+    live: "https://adityakumaronline.netlify.app",
+    github: "https://github.com/adityakumarsingh2/portfolio"
+  }
+];
+
+const SECTIONS_DATA = [
+  { keywords: ["about", "profile", "bio", "background"], id: "about", label: "About" },
+  { keywords: ["skills", "tech stack", "technologies", "languages"], id: "skills", label: "Skills" },
+  { keywords: ["experience", "job", "freelance", "work history"], id: "experience", label: "Experience" },
+  { keywords: ["projects", "work", "portfolio projects"], id: "projects", label: "Projects" },
+  { keywords: ["contact", "email", "reach out"], id: "contact", label: "Contact" }
+];
+
+const COMMANDS = [
+  { cmd: "/projects", desc: "Aditya's projects", query: "Tell me about his projects" },
+  { cmd: "/skills", desc: "His technical stack", query: "What is his tech stack?" },
+  { cmd: "/experience", desc: "Freelance & work history", query: "Tell me about his professional experience" },
+  { cmd: "/contact", desc: "Contact details", query: "How can I contact Aditya?" },
+  { cmd: "/boxing", desc: "Boxing accolades 🥊", query: "Tell me about his boxing background 🥊" },
+  { cmd: "/resume", desc: "Download CV / Resume", query: "Can I download his resume?" }
+];
+
+const detectProjects = (text: string) => {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return PROJECTS_DATA.filter((proj) =>
+    proj.keywords.some((kw) => lower.includes(kw))
+  );
+};
+
+const detectSections = (text: string) => {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return SECTIONS_DATA.filter((sec) =>
+    sec.keywords.some((kw) => lower.includes(kw))
+  );
+};
+
+const getISTStatus = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const istTime = new Date(utc + (3600000 * 5.5));
+  const hours = istTime.getHours();
+  
+  if (hours >= 23 || hours < 7) {
+    return { emoji: "💤", text: "Sleeping (Dreaming in code)" };
+  } else if (hours >= 18 && hours < 20) {
+    return { emoji: "🥊", text: "Training at boxing gym" };
+  } else if (hours >= 9 && hours < 18) {
+    return { emoji: "💻", text: "Coding & Building things" };
+  } else {
+    return { emoji: "☕", text: "Learning & Exploring" };
+  }
+};
+
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -25,6 +110,10 @@ const Chatbot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Speech Recognition state
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +126,71 @@ const Chatbot = () => {
       scrollToBottom();
     }
   }, [messages, isOpen, isLoading]);
+
+  // Speech Recognition initialization
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput((prev) => prev + (prev ? " " : "") + transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser. Try Chrome or Edge!");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
+
+  const exportChatTranscript = () => {
+    if (messages.length <= 1) return;
+    
+    let transcript = `# Aditya Kumar Singh AI Assistant Chat Transcript\n`;
+    transcript += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    
+    messages.forEach((msg) => {
+      const roleName = msg.role === "user" ? "You (User)" : "AI Assistant";
+      transcript += `### **${roleName}**:\n${msg.text}\n\n`;
+    });
+    
+    const blob = new Blob([transcript], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Aditya_Chat_Transcript_${new Date().toISOString().slice(0,10)}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim()) return;
@@ -204,6 +358,10 @@ const Chatbot = () => {
     return lastMsg.role === "user" || (lastMsg.role === "model" && lastMsg.text === "");
   };
 
+  const matchingCommands = input.startsWith("/") 
+    ? COMMANDS.filter((cmd) => cmd.cmd.startsWith(input.toLowerCase()))
+    : [];
+
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
       <AnimatePresence>
@@ -213,30 +371,55 @@ const Chatbot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-4 w-[380px] h-[550px] max-w-[calc(100vw-2rem)] bg-card border-2 border-foreground rounded-2xl shadow-md flex flex-col overflow-hidden"
+            className="mb-4 w-[380px] h-[550px] max-w-[calc(100vw-2rem)] bg-card border-2 border-foreground rounded-2xl shadow-md flex flex-col overflow-hidden relative"
           >
-            {/* Header: Neo-Brutalist Code Bar */}
-            <div className="p-4 bg-secondary border-b-2 border-foreground flex items-center justify-between font-mono text-sm">
-              <div className="flex items-center gap-2.5">
-                {/* Simulated CLI indicator */}
-                <div className="flex gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-red-500 border border-foreground/30" />
-                  <span className="w-3 h-3 rounded-full bg-yellow-500 border border-foreground/30" />
-                  <span className="w-3 h-3 rounded-full bg-green-500 border border-foreground/30" />
+            {/* Header: Neo-Brutalist Code Bar with Live Status */}
+            <div className="p-3 bg-secondary border-b-2 border-foreground flex items-center justify-between font-mono text-xs">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  {/* Simulated CLI indicator */}
+                  <div className="flex gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 border border-foreground/30" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 border border-foreground/30" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 border border-foreground/30" />
+                  </div>
+                  <div className="ml-1 flex items-center gap-1 text-foreground font-semibold">
+                    <span className="text-blue-500">const</span>
+                    <span>assistant</span>
+                    <span className="text-foreground/70">=</span>
+                    <span className="text-gradient-warm font-bold font-sans">AI;</span>
+                  </div>
                 </div>
-                <div className="ml-2 flex items-center gap-1.5 text-foreground font-semibold">
-                  <span className="text-blue-500">const</span>
-                  <span>assistant</span>
-                  <span className="text-foreground/70">=</span>
-                  <span className="text-gradient-warm font-bold font-sans">AI;</span>
+                
+                {/* Live status activity indicator */}
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground pl-0.5 mt-0.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  </span>
+                  <span>Activity: {getISTStatus().emoji} {getISTStatus().text}</span>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-secondary transition-all text-foreground/80 hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center gap-1">
+                {/* Export Conversation Button */}
+                {messages.length > 1 && (
+                  <button
+                    onClick={exportChatTranscript}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-card border border-transparent hover:border-foreground/30 transition-all text-foreground/80 hover:text-foreground"
+                    title="Export Conversation"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-card border border-transparent hover:border-foreground/30 transition-all text-foreground/80 hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Chat Body */}
@@ -270,6 +453,71 @@ const Chatbot = () => {
                       >
                         {formatMessageText(msg.text)}
                       </div>
+
+                      {/* Interactive Buttons for projects and sections */}
+                      {msg.role === "model" && msg.text !== "" && (
+                        <div className="mt-1 space-y-1.5">
+                          {/* Project redirection buttons */}
+                          {(() => {
+                            const detected = detectProjects(msg.text);
+                            if (detected.length === 0) return null;
+                            return (
+                              <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
+                                {detected.map((proj) => (
+                                  <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1.5 shadow-2xs">
+                                    <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{proj.title}</span>
+                                    {proj.live && (
+                                      <a
+                                        href={proj.live}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-green-400 dark:bg-green-500/90 text-black px-1.5 py-0.5 border border-black rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                      >
+                                        <ExternalLink className="w-2.5 h-2.5" /> Live
+                                      </a>
+                                    )}
+                                    {proj.github && (
+                                      <a
+                                        href={proj.github}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold bg-card hover:bg-accent text-foreground px-1.5 py-0.5 border border-foreground/50 rounded transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+                                      >
+                                        <Github className="w-2.5 h-2.5" /> Code
+                                      </a>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Section Jumper buttons */}
+                          {(() => {
+                            const detectedSecs = detectSections(msg.text);
+                            if (detectedSecs.length === 0) return null;
+                            return (
+                              <div className="flex flex-wrap gap-1">
+                                {detectedSecs.map((sec) => (
+                                  <button
+                                    key={sec.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const element = document.getElementById(sec.id);
+                                      if (element) {
+                                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 border border-blue-400/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                                  >
+                                    ⚓ Jump to {sec.label}
+                                  </button>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -319,22 +567,65 @@ const Chatbot = () => {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Autocomplete Command Dropdown */}
+            {input.startsWith("/") && matchingCommands.length > 0 && (
+              <div className="absolute bottom-[60px] left-3 right-3 bg-card border-2 border-foreground rounded-xl shadow-md z-20 overflow-hidden max-h-[180px] overflow-y-auto">
+                <div className="bg-secondary p-2 border-b border-foreground text-[10px] font-mono text-muted-foreground flex items-center gap-1">
+                  <Command className="w-3 h-3 text-primary" /> COMMAND QUICK SHORTCUTS
+                </div>
+                <div className="flex flex-col">
+                  {matchingCommands.map((cmd) => (
+                    <button
+                      key={cmd.cmd}
+                      type="button"
+                      onClick={() => {
+                        setInput(cmd.query);
+                        handleSendMessage(cmd.query);
+                      }}
+                      className="w-full text-left font-mono text-xs p-2.5 hover:bg-secondary border-b border-border/40 last:border-0 flex items-center justify-between text-foreground"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-blue-400 font-bold">{cmd.cmd}</span>
+                        <span className="text-muted-foreground text-[10px]">— {cmd.desc}</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Chat Input */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSendMessage(input);
               }}
-              className="p-3 border-t-2 border-foreground bg-secondary/40 flex items-center gap-2"
+              className="p-3 border-t-2 border-foreground bg-secondary/40 flex items-center gap-2 relative"
             >
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me something about Aditya..."
+                placeholder="Type a message or '/' for commands..."
                 className="flex-1 min-w-0 bg-card border-2 border-foreground rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-0 font-mono text-foreground"
                 disabled={isLoading}
               />
+
+              {/* Web Speech microphone button */}
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`p-2.5 rounded-xl border-2 border-foreground transition-all duration-150 flex-shrink-0 ${
+                  isListening
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-card text-foreground hover:bg-secondary"
+                }`}
+                title={isListening ? "Listening... Click to Stop" : "Speech-to-Text Input"}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}

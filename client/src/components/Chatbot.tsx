@@ -141,10 +141,15 @@ const Chatbot = ({
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (bodyRef.current) {
+      bodyRef.current.scrollTo({
+        top: bodyRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
   };
 
   useEffect(() => {
@@ -392,7 +397,7 @@ const Chatbot = ({
     return (
       <div className="w-full h-full bg-card flex flex-col overflow-hidden relative text-foreground">
         {/* Minimal header showing activity status */}
-        <div className="p-2.5 bg-secondary/60 border-b border-foreground/30 flex items-center justify-between font-mono text-[10px]">
+        <div className="p-2.5 bg-secondary/60 border-b border-border/30 flex items-center justify-between font-mono text-[10px]">
           <div className="flex items-center gap-1.5">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -400,19 +405,10 @@ const Chatbot = ({
             </span>
             <span>Status: {getISTStatus().emoji} {getISTStatus().text}</span>
           </div>
-          {messages.length > 1 && (
-            <button
-              onClick={exportChatTranscript}
-              className="px-2 py-0.5 rounded border border-foreground/30 hover:bg-card flex items-center gap-1 font-bold transition-all text-[9px]"
-              title="Export Conversation"
-            >
-              <Download className="w-3 h-3" /> Export
-            </button>
-          )}
         </div>
 
         {/* Chat Body */}
-        <div className="flex-1 p-3 overflow-y-auto space-y-3.5 custom-scrollbar bg-card">
+        <div ref={bodyRef} className="flex-1 p-3 overflow-y-auto space-y-3.5 custom-scrollbar bg-card">
           {messages.map((msg, index) => {
             if (msg.role === "model" && msg.text === "") return null;
 
@@ -551,8 +547,6 @@ const Chatbot = ({
               </div>
             </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Autocomplete Command Dropdown */}
@@ -576,7 +570,7 @@ const Chatbot = ({
                     <span className="text-blue-400 font-bold">{cmd.cmd}</span>
                     <span className="text-muted-foreground text-[9px]">— {cmd.desc}</span>
                   </div>
-                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               ))}
             </div>
@@ -687,7 +681,7 @@ const Chatbot = ({
             </div>
 
             {/* Chat Body */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-card">
+            <div ref={bodyRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-card">
               {messages.map((msg, index) => {
                 // If this is the streaming placeholder with no text yet, don't render a blank bubble
                 if (msg.role === "model" && msg.text === "") return null;
@@ -728,7 +722,7 @@ const Chatbot = ({
                             return (
                               <div className="flex flex-wrap gap-1.5 mt-1 pt-1.5 border-t border-dashed border-border/30">
                                 {detected.map((proj) => (
-                                  <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1.5 shadow-2xs">
+                                  <div key={proj.title} className="flex flex-wrap items-center gap-1 bg-secondary border border-foreground/30 rounded-lg p-1 shadow-2xs">
                                     <span className="text-[10px] font-mono font-semibold text-foreground mr-1">{proj.title}</span>
                                     {proj.live && (
                                       <a
@@ -827,8 +821,6 @@ const Chatbot = ({
                   </div>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Autocomplete Command Dropdown */}

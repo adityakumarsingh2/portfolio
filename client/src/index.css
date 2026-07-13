@@ -269,8 +269,8 @@
 
 /* Selection */
 ::selection {
-  background: hsl(15 85% 60% / 0.3);
-  color: hsl(40 30% 95%);
+  background: hsl(var(--foreground) / 0.15);
+  color: hsl(var(--foreground));
 }
 
 /* Scrollbar */
@@ -288,7 +288,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(15 85% 60%);
+  background: hsl(var(--foreground) / 0.5);
 }
 
 /* Firefox */
@@ -298,18 +298,42 @@
 }
 
 /* ─── Blob background animation ────────────────────────────────────────────── */
-/* Pure CSS so the browser scheduler can handle it without a JS rAF loop.       */
 @keyframes blob-pulse {
   0%, 100% { transform: scale(1);    opacity: 0.5; }
   50%       { transform: scale(1.12); opacity: 0.75; }
 }
-
 .animate-blob-slow {
   animation: blob-pulse 10s ease-in-out infinite;
-  /* Explicitly promote only these decorative blobs so the rest of the page
-     is unaffected by extra compositing layers */
   will-change: transform, opacity;
 }
+
+/* ─── Shimmer sweep (used on stat cards & CTA) ──────────────────────────────── */
+@keyframes shimmer {
+  from { transform: translateX(-100%) skewX(-12deg); }
+  to   { transform: translateX(220%)  skewX(-12deg); }
+}
+.animate-shimmer {
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+
+/* ─── Gentle vertical float (decorative chips) ─────────────────────────────── */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-8px); }
+}
+.animate-float { animation: float-y 5s ease-in-out infinite; }
+
+/* ─── Rotating border gradient (IDE card ring) ─────────────────────────────── */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+/* ─── Pulse ring (availability indicator) ──────────────────────────────────── */
+@keyframes ping-slow {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
 
 /* ─── Custom scrollbar for chatbot / overflow panels ───────────────────────── */
 .custom-scrollbar::-webkit-scrollbar       { width: 4px; }

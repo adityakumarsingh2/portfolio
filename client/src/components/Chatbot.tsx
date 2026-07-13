@@ -383,6 +383,10 @@ const Chatbot = ({
   const recognitionRef = useRef<any>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Track whether the user has scrolled up manually during streaming
+  const userScrolledRef = useRef(false);
+  // Ref to the start of the latest model message bubble
+  const latestModelMsgRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     if (bodyRef.current) {
@@ -393,11 +397,37 @@ const Chatbot = ({
     }
   };
 
+  // Scroll to top of latest AI message (ChatGPT-style) — only on first chunk
+  const scrollToLatestMessage = () => {
+    if (latestModelMsgRef.current && bodyRef.current) {
+      const container = bodyRef.current;
+      const el = latestModelMsgRef.current;
+      const targetTop = el.offsetTop - 12; // 12px breathing room
+      container.scrollTo({ top: targetTop, behavior: "smooth" });
+    }
+  };
+
+  // Track when user manually scrolls during streaming
+  useEffect(() => {
+    const container = bodyRef.current;
+    if (!container) return;
+    const onScroll = () => {
+      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+      if (!nearBottom) {
+        userScrolledRef.current = true;
+      }
+    };
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [isOpen, isInline]);
+
+  // When chat opens for first time — scroll to bottom to show full history
   useEffect(() => {
     if (isOpen || isInline) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isInline, isLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Speech Recognition initialization
   useEffect(() => {
@@ -474,9 +504,14 @@ const Chatbot = ({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    // Reset user scroll flag so new message auto-scrolls correctly
+    userScrolledRef.current = false;
 
     // Append a placeholder model response that we will stream text into
     setMessages((prev) => [...prev, { role: "model", text: "" }]);
+
+    // Scroll to bottom to show the user message before response starts
+    setTimeout(() => scrollToBottom(), 50);
 
     try {
       const history = messages.slice(1); // skip the greeting
@@ -517,6 +552,7 @@ const Chatbot = ({
       let done = false;
       let accumulatedText = "";
       let buffer = "";
+      let isFirstChunk = true;
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
@@ -552,6 +588,12 @@ const Chatbot = ({
                     }
                     return updated;
                   });
+
+                  // On the very first chunk: scroll so the AI bubble top is visible
+                  if (isFirstChunk && !userScrolledRef.current) {
+                    isFirstChunk = false;
+                    setTimeout(() => scrollToLatestMessage(), 80);
+                  }
                 }
               } catch (e) {
                 // Ignore parsing errors for incomplete JSON segments
@@ -635,11 +677,13 @@ const Chatbot = ({
   };
 
   // Helper to determine if we should show the typing loading indicator
+  // Only show dots when waiting for first byte — not while text is streaming
   const shouldShowTyping = () => {
     if (!isLoading) return false;
     if (messages.length === 0) return false;
     const lastMsg = messages[messages.length - 1];
-    return lastMsg.role === "user" || (lastMsg.role === "model" && lastMsg.text === "");
+    // Show indicator only when model message is empty (waiting for first chunk)
+    return lastMsg.role === "model" && lastMsg.text === "";
   };
 
   const matchingCommands = input.startsWith("/") 
@@ -675,6 +719,7 @@ const Chatbot = ({
               return (
                 <div
                   key={index}
+                  ref={msg.role === "model" && index === messages.length - 1 ? latestModelMsgRef : undefined}
                   className={`flex items-start gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                 >
                   <div
@@ -958,6 +1003,7 @@ const Chatbot = ({
                   return (
                     <div
                       key={index}
+                      ref={msg.role === "model" && index === messages.length - 1 ? latestModelMsgRef : undefined}
                       className={`flex items-start gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                     >
                       <div

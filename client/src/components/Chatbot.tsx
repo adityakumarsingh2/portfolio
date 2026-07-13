@@ -321,6 +321,8 @@ const detectSections = (text: string) => {
   );
 };
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const getISTStatus = () => {
   const now = new Date();
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -479,7 +481,7 @@ const Chatbot = ({
     try {
       const history = messages.slice(1); // skip the greeting
 
-      const response = await fetch("http://localhost:5000/api/chat", {
+      const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

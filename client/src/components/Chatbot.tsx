@@ -380,9 +380,15 @@ const Chatbot = ({
   
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
+  // Guards against double-tap: true while recognition is in the process of starting
+  const isStartingRef = useRef(false);
   const recognitionRef = useRef<any>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Keep a stable ref to the current input so speech recognition can
+  // read it without the useEffect needing setInput as a dependency.
+  const inputRef = useRef(input);
+  useEffect(() => { inputRef.current = input; }, [input]);
   // Track whether the user has scrolled up manually during streaming
   const userScrolledRef = useRef(false);
   // Ref to the start of the latest model message bubble
@@ -429,47 +435,71 @@ const Chatbot = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Speech Recognition initialization
+  // Speech Recognition initialization — run once on mount only.
+  // We use inputRef to read current input without needing setInput in deps.
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
+    if (!SpeechRecognition) return;
 
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
 
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInput((prev) => prev + (prev ? " " : "") + transcript);
-      };
+    recognition.onstart = () => {
+      isStartingRef.current = false;
+      setIsListening(true);
+    };
 
-      recognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
+    recognition.onresult = (event: any) => {
+      const transcript = (event.results[0][0].transcript as string).trim();
+      // Read current value via ref — avoids stale closure and the
+      // broken (prev) => ... pattern on a plain string setter.
+      const current = inputRef.current;
+      setInput(current ? `${current} ${transcript}` : transcript);
+    };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      isStartingRef.current = false;
+      setIsListening(false);
+    };
 
-      recognitionRef.current = recognition;
-    }
-  }, [setInput]);
+    recognition.onend = () => {
+      isStartingRef.current = false;
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      // Clean up if component unmounts while listening
+      try { recognition.abort(); } catch (_) { /* ignore */ }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — initialised once
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
       alert("Speech recognition is not supported in this browser. Try Chrome or Edge!");
       return;
     }
+    // Block if a start is already in flight — prevents double-tap blink
+    if (isStartingRef.current) return;
 
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
+    try {
+      if (isListening) {
+        recognitionRef.current.stop();
+      } else {
+        isStartingRef.current = true;
+        // Abort any lingering session before starting a fresh one
+        try { recognitionRef.current.abort(); } catch (_) { /* ignore */ }
+        recognitionRef.current.start();
+      }
+    } catch (err) {
+      console.error("toggleListening error:", err);
+      isStartingRef.current = false;
+      setIsListening(false);
     }
   };
 
@@ -902,18 +932,25 @@ const Chatbot = ({
             disabled={isLoading}
           />
 
-          {/* Web Speech microphone button */}
+          {/* Web Speech microphone button — inline variant */}
           <button
             type="button"
             onClick={toggleListening}
-            className={`p-2 rounded-xl border-2 border-foreground transition-all duration-150 flex-shrink-0 ${
+            className={`relative p-2 rounded-xl border-2 border-foreground transition-colors duration-150 flex-shrink-0 ${
               isListening
-                ? "bg-red-500 text-white animate-pulse"
+                ? "bg-red-500 text-white border-red-500"
                 : "bg-card text-foreground hover:bg-secondary"
             }`}
             title={isListening ? "Listening..." : "Speech Input"}
           >
             {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            {/* Stable pulsing dot — only the dot pulses, not the whole button */}
+            {isListening && (
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
+              </span>
+            )}
           </button>
 
           <button
@@ -1161,18 +1198,25 @@ const Chatbot = ({
                 disabled={isLoading}
               />
 
-              {/* Web Speech microphone button */}
+              {/* Web Speech microphone button — floating panel variant */}
               <button
                 type="button"
                 onClick={toggleListening}
-                className={`p-2.5 rounded-xl border-2 border-foreground transition-all duration-150 flex-shrink-0 ${
+                className={`relative p-2.5 rounded-xl border-2 border-foreground transition-colors duration-150 flex-shrink-0 ${
                   isListening
-                    ? "bg-red-500 text-white animate-pulse"
+                    ? "bg-red-500 text-white border-red-500"
                     : "bg-card text-foreground hover:bg-secondary"
                 }`}
                 title={isListening ? "Listening... Click to Stop" : "Speech-to-Text Input"}
               >
                 {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {/* Stable pulsing dot — only the dot pulses, not the whole button */}
+                {isListening && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
+                  </span>
+                )}
               </button>
 
               <button

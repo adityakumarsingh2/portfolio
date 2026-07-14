@@ -80,7 +80,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
   }, [activeTab, hasBooted]);
 
   return (
-    <section id="home" className="relative h-screen min-h-[680px] max-h-[1080px] flex flex-col overflow-hidden bg-background">
+    <section id="home" className="relative h-screen min-h-[680px] max-h-[1080px] flex flex-col overflow-hidden bg-background pt-[68px] lg:pt-[72px]">
 
       {/* ═══════════════════ BACKGROUND ═══════════════════════════════ */}
 
@@ -111,8 +111,9 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
       <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/[0.07] to-transparent z-[1] pointer-events-none" style={{ top: "50%" }} />
 
       {/* Top/bottom vignette */}
-      <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-background to-transparent z-[2] pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent z-[2] pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background to-transparent z-[2] pointer-events-none" />
+      {/* Bottom vignette stops before the ticker bar (40px) so it doesn't cover it */}
+      <div className="absolute inset-x-0 bottom-10 h-24 bg-gradient-to-t from-background to-transparent z-[2] pointer-events-none" />
 
       {/* ═══════════════════ MAIN CONTENT ══════════════════════════════ */}
       <div className="relative z-10 flex-1 flex flex-col">
@@ -120,13 +121,13 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
         {/* Main grid — takes up the central viewport */}
         <div className="flex-1 flex items-center">
           <div className="container mx-auto px-6 xl:px-12 w-full">
-            <div className="max-w-[1400px] mx-auto grid lg:grid-cols-[1fr_auto] gap-12 xl:gap-20 items-center">
+            <div className="max-w-[1400px] mx-auto w-full grid lg:grid-cols-[1fr_minmax(0,45%)] gap-8 xl:gap-16 items-center">
 
               {/* ══════════ LEFT COLUMN ══════════════════════════════ */}
               <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
 
                 {/* Index tag + availability */}
-                <motion.div className="flex items-center gap-4 mb-8"
+                <motion.div className="flex items-center gap-4 mb-5 lg:mb-7"
                   initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
@@ -147,13 +148,13 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                 </motion.div>
 
                 {/* ── HERO NAME — editorial contrast ── */}
-                <div className="mb-6 overflow-hidden">
+                <div className="mb-4 lg:mb-5 overflow-hidden">
                   {/* "Aditya Kumar" — medium weight, spacious tracking */}
                   <motion.div
                     initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <span className="block font-display font-medium text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem] xl:text-[3.4rem] text-foreground/55 tracking-[0.02em] leading-none">
+                    <span className="block font-display font-medium text-[2rem] sm:text-[2.6rem] lg:text-[2.7rem] xl:text-[3.2rem] text-foreground/55 tracking-[0.02em] leading-none">
                       Aditya Kumar
                     </span>
                   </motion.div>
@@ -163,7 +164,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                     initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.75, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <span className="block font-display font-black text-[5rem] sm:text-[6.5rem] md:text-[7.5rem] lg:text-[7rem] xl:text-[8.5rem] text-foreground leading-[0.88] tracking-[-0.02em] uppercase select-none">
+                    <span className="block font-display font-black text-[4.5rem] sm:text-[6rem] md:text-[7rem] lg:text-[6.2rem] xl:text-[7.8rem] text-foreground leading-[0.88] tracking-[-0.02em] uppercase select-none">
                       Singh
                     </span>
                     {/* Animated underline — grows in */}
@@ -175,18 +176,23 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                   </motion.div>
                 </div>
 
-                {/* Tagline with thin rule */}
+                {/* Tagline with thin rule — fixed height prevents layout shift */}
                 <motion.div
-                  className="flex items-center gap-3 mb-6 justify-center lg:justify-start w-full"
+                  className="flex items-center gap-3 mb-4 lg:mb-5 justify-center lg:justify-start w-full h-8"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.38 }}
                 >
                   <span className="hidden lg:block h-px w-10 bg-foreground/20 flex-shrink-0" />
-                  <span className="text-base md:text-lg font-mono text-foreground/50 tracking-wide min-w-[260px] lg:min-w-0">
+                  {/* Reserve height equal to one line of text so surrounding
+                      elements never shift when the typed string changes length */}
+                  <span
+                    className="text-base md:text-lg font-mono text-foreground/50 tracking-wide"
+                    style={{ minWidth: "260px", display: "inline-block", lineHeight: "1.75rem" }}
+                  >
                     {typed}
                   </span>
                   <motion.span
-                    className="inline-block w-[2px] h-5 bg-foreground/50 rounded-sm"
+                    className="inline-block w-[2px] h-5 bg-foreground/50 rounded-sm flex-shrink-0"
                     animate={{ opacity: [1, 0] }}
                     transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                   />
@@ -194,7 +200,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
 
                 {/* Bio */}
                 <motion.p
-                  className="text-sm md:text-[0.9375rem] text-foreground/40 leading-[1.7] mb-7 max-w-[460px] mx-auto lg:mx-0"
+                  className="text-sm md:text-[0.9375rem] text-foreground/40 leading-[1.7] mb-4 lg:mb-6 max-w-[460px] mx-auto lg:mx-0"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.48 }}
                 >
@@ -207,7 +213,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
 
                 {/* ── STAT ROW ── */}
                 <motion.div
-                  className="grid grid-cols-3 gap-3 mb-8 w-full max-w-[460px] mx-auto lg:mx-0"
+                  className="grid grid-cols-3 gap-3 mb-4 lg:mb-6 w-full max-w-[460px] mx-auto lg:mx-0"
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.56 }}
                 >
@@ -228,7 +234,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
 
                 {/* ── CTAs ── */}
                 <motion.div
-                  className="flex flex-wrap gap-3 mb-7 justify-center lg:justify-start items-center"
+                  className="flex flex-wrap gap-3 mb-4 lg:mb-6 justify-center lg:justify-start items-center"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.64 }}
                 >
@@ -297,12 +303,12 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
 
               {/* ══════════ RIGHT — IDE CARD ═════════════════════════ */}
               <motion.div
-                className="hidden lg:flex justify-center flex-shrink-0"
+                className="hidden lg:flex justify-center flex-shrink-0 w-full"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="relative">
+                <div className="relative w-full">
                   {/* Static border glow — no spinning */}
                   <div className="absolute -inset-px rounded-[20px] pointer-events-none z-0"
                     style={{ background: "linear-gradient(135deg, hsl(var(--foreground)/0.18), hsl(var(--foreground)/0.04) 50%, hsl(var(--foreground)/0.12))" }}
@@ -314,8 +320,8 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
 
                   {/* IDE shell */}
                   <div
-                    className="relative z-10 w-[390px] xl:w-[430px] rounded-[19px] bg-[#0A0C12] border border-white/[0.08] shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col overflow-hidden"
-                    style={{ height: "min(calc(100vh - 130px), 600px)" }}
+                    className="relative z-10 w-full rounded-[19px] bg-[#0A0C12] border border-white/[0.08] shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col overflow-hidden"
+                    style={{ height: "min(calc(100vh - 200px), 560px)" }}
                   >
                     {/* Title bar */}
                     <div className="flex-shrink-0 bg-[#0E1018] px-4 py-3 border-b border-white/[0.05] flex items-center justify-between select-none">
@@ -358,8 +364,8 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                           {/* Photo */}
                           <div className="flex-1 rounded-xl overflow-hidden relative min-h-0 group/img" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
                             <img src={profilePhoto} alt="Aditya Kumar Singh"
-                              className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/img:scale-[1.04]"
-                            />
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-[1.04]"
+                              style={{ objectPosition: "center 8%" }} />
                             {/* Corner brackets — white */}
                             <div className="absolute top-3 left-3 w-5 h-5 border-l-2 border-t-2 border-white/30" />
                             <div className="absolute top-3 right-3 w-5 h-5 border-r-2 border-t-2 border-white/30" />
@@ -450,7 +456,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
       {/* ── Scroll indicator ─────────────────────────────────────── */}
       <motion.a href="#about"
         onClick={e => { e.preventDefault(); document.getElementById("about")?.scrollIntoView({ behavior: "smooth" }); }}
-        className="absolute bottom-14 right-8 z-20 hidden lg:flex flex-col items-center gap-2 text-foreground/20 hover:text-foreground/50 transition-colors group"
+        className="absolute bottom-[3.25rem] right-8 z-20 hidden lg:flex flex-col items-center gap-2 text-foreground/20 hover:text-foreground/50 transition-colors group"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
         aria-label="Scroll down"
       >

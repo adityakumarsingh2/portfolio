@@ -61,7 +61,7 @@ One of the most unique features of this portfolio is its **built-in AI assistant
 
 ### How It Works
 
-The chatbot is powered by **Google Gemini Flash** (`gemini-3.1-flash-lite`), a fast and efficient large language model (LLM) from Google DeepMind. The integration uses the official **`@google/generative-ai`** Node.js SDK.
+The chatbot is powered by **Google Gemini Flash** (`gemini-2.5-flash`), a fast and efficient large language model (LLM) from Google DeepMind. The integration uses the official **`@google/generative-ai`** Node.js SDK.
 
 ```
 User Message
@@ -73,7 +73,7 @@ React Frontend (Chatbot.tsx)
 Express Backend (server/index.js)
      │  Rate Limiter → Validation → Gemini SDK
      ▼
-Google Gemini Flash API (gemini-3.1-flash-lite)
+Google Gemini Flash API (gemini-2.5-flash)
      │  Server-Sent Events (SSE) streaming response
      ▼
 Frontend streams & renders tokens in real-time

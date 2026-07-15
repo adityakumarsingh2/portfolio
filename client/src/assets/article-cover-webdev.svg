@@ -1,0 +1,239 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#060612;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0a0a18;stop-opacity:1"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="40%" cy="40%" r="45%">
+      <stop offset="0%" style="stop-color:#6d28d9;stop-opacity:0.18"/>
+      <stop offset="100%" style="stop-color:#060612;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="65%" r="35%">
+      <stop offset="0%" style="stop-color:#16a34a;stop-opacity:0.14"/>
+      <stop offset="100%" style="stop-color:#060612;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="20%" cy="70%" r="28%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#060612;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <rect width="1200" height="675" fill="url(#glow1)"/>
+  <rect width="1200" height="675" fill="url(#glow2)"/>
+  <rect width="1200" height="675" fill="url(#glow3)"/>
+
+  <!-- Grid -->
+  <g opacity="0.055" stroke="#ffffff" stroke-width="0.5">
+    <line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="480" x2="1200" y2="480"/>
+    <line x1="0" y1="560" x2="1200" y2="560"/>
+    <line x1="0" y1="640" x2="1200" y2="640"/>
+    <line x1="110" y1="0" x2="110" y2="675"/>
+    <line x1="220" y1="0" x2="220" y2="675"/>
+    <line x1="330" y1="0" x2="330" y2="675"/>
+    <line x1="440" y1="0" x2="440" y2="675"/>
+    <line x1="550" y1="0" x2="550" y2="675"/>
+    <line x1="660" y1="0" x2="660" y2="675"/>
+    <line x1="770" y1="0" x2="770" y2="675"/>
+    <line x1="880" y1="0" x2="880" y2="675"/>
+    <line x1="990" y1="0" x2="990" y2="675"/>
+    <line x1="1100" y1="0" x2="1100" y2="675"/>
+  </g>
+
+  <!-- Terminal / Code editor aesthetic -->
+  <!-- Main window frame -->
+  <rect x="60" y="90" width="720" height="480" rx="10" fill="#0d0d1a" stroke="#1e1e3f" stroke-width="1.5" opacity="0.95"/>
+
+  <!-- Title bar -->
+  <rect x="60" y="90" width="720" height="38" rx="10" fill="#111128" opacity="1"/>
+  <rect x="60" y="108" width="720" height="20" fill="#111128" opacity="1"/>
+
+  <!-- Traffic lights -->
+  <circle cx="88" cy="109" r="6" fill="#ff5f57" opacity="0.85"/>
+  <circle cx="108" cy="109" r="6" fill="#ffbd2e" opacity="0.85"/>
+  <circle cx="128" cy="109" r="6" fill="#28c840" opacity="0.85"/>
+
+  <!-- File tabs -->
+  <rect x="150" y="96" width="100" height="26" rx="4" fill="#1e1e3f" opacity="0.8"/>
+  <text x="200" y="113" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa" opacity="0.9">App.tsx</text>
+  <rect x="258" y="96" width="90" height="26" rx="4" fill="#0d0d1a" opacity="0.6"/>
+  <text x="303" y="113" text-anchor="middle" font-family="monospace" font-size="10" fill="#6b7280" opacity="0.7">index.css</text>
+  <rect x="356" y="96" width="110" height="26" rx="4" fill="#0d0d1a" opacity="0.6"/>
+  <text x="411" y="113" text-anchor="middle" font-family="monospace" font-size="10" fill="#6b7280" opacity="0.7">hooks.ts</text>
+
+  <!-- Code lines -->
+  <!-- Line numbers -->
+  <g font-family="monospace" font-size="12" opacity="0.3" fill="#6b7280">
+    <text x="78" y="158">1</text>
+    <text x="78" y="180">2</text>
+    <text x="78" y="202">3</text>
+    <text x="78" y="224">4</text>
+    <text x="78" y="246">5</text>
+    <text x="78" y="268">6</text>
+    <text x="78" y="290">7</text>
+    <text x="78" y="312">8</text>
+    <text x="78" y="334">9</text>
+    <text x="72" y="356">10</text>
+    <text x="72" y="378">11</text>
+    <text x="72" y="400">12</text>
+    <text x="72" y="422">13</text>
+    <text x="72" y="444">14</text>
+    <text x="72" y="466">15</text>
+    <text x="72" y="488">16</text>
+    <text x="72" y="510">17</text>
+    <text x="72" y="532">18</text>
+  </g>
+
+  <!-- Code content -->
+  <g font-family="monospace" font-size="12">
+    <!-- import React from 'react' -->
+    <text x="100" y="158" fill="#c792ea" opacity="0.9">import</text>
+    <text x="148" y="158" fill="#e2e8f0" opacity="0.85"> React </text>
+    <text x="195" y="158" fill="#c792ea" opacity="0.9">from</text>
+    <text x="228" y="158" fill="#c3e88d" opacity="0.9"> 'react'</text>
+
+    <!-- import { useState } -->
+    <text x="100" y="180" fill="#c792ea" opacity="0.9">import</text>
+    <text x="148" y="180" fill="#e2e8f0" opacity="0.85"> { </text>
+    <text x="163" y="180" fill="#82aaff" opacity="0.9">useState</text>
+    <text x="220" y="180" fill="#e2e8f0" opacity="0.85">, </text>
+    <text x="232" y="180" fill="#82aaff" opacity="0.9">useEffect</text>
+    <text x="298" y="180" fill="#e2e8f0" opacity="0.85"> } </text>
+    <text x="316" y="180" fill="#c792ea" opacity="0.9">from</text>
+    <text x="349" y="180" fill="#c3e88d" opacity="0.9"> 'react'</text>
+
+    <!-- blank line -->
+    <!-- const App = () => { -->
+    <text x="100" y="224" fill="#c792ea" opacity="0.9">const</text>
+    <text x="137" y="224" fill="#82aaff" opacity="0.9"> App</text>
+    <text x="163" y="224" fill="#e2e8f0" opacity="0.75"> = () </text>
+    <text x="198" y="224" fill="#89ddff" opacity="0.9">=&gt;</text>
+    <text x="218" y="224" fill="#e2e8f0" opacity="0.75"> {</text>
+
+    <!-- const [count, setCount] -->
+    <text x="115" y="246" fill="#c792ea" opacity="0.9">  const</text>
+    <text x="155" y="246" fill="#e2e8f0" opacity="0.75"> [</text>
+    <text x="163" y="246" fill="#82aaff" opacity="0.9">data</text>
+    <text x="191" y="246" fill="#e2e8f0" opacity="0.75">, </text>
+    <text x="203" y="246" fill="#82aaff" opacity="0.9">setData</text>
+    <text x="248" y="246" fill="#e2e8f0" opacity="0.75">] = </text>
+    <text x="272" y="246" fill="#82aaff" opacity="0.9">useState</text>
+    <text x="328" y="246" fill="#e2e8f0" opacity="0.75">&lt;</text>
+    <text x="337" y="246" fill="#ffcb6b" opacity="0.9">User</text>
+    <text x="361" y="246" fill="#e2e8f0" opacity="0.75">[]&gt;([])</text>
+
+    <!-- useEffect -->
+    <text x="115" y="268" fill="#82aaff" opacity="0.9">  useEffect</text>
+    <text x="185" y="268" fill="#e2e8f0" opacity="0.75">(() </text>
+    <text x="209" y="268" fill="#89ddff" opacity="0.9">=&gt;</text>
+    <text x="229" y="268" fill="#e2e8f0" opacity="0.75"> {</text>
+
+    <text x="130" y="290" fill="#c792ea" opacity="0.9">    const</text>
+    <text x="177" y="290" fill="#e2e8f0" opacity="0.75"> result = </text>
+    <text x="237" y="290" fill="#c792ea" opacity="0.9">await</text>
+    <text x="274" y="290" fill="#82aaff" opacity="0.9"> fetchUsers</text>
+    <text x="338" y="290" fill="#e2e8f0" opacity="0.75">()</text>
+
+    <!-- setData -->
+    <text x="130" y="312" fill="#82aaff" opacity="0.9">    setData</text>
+    <text x="185" y="312" fill="#e2e8f0" opacity="0.75">(result)</text>
+
+    <text x="115" y="334" fill="#e2e8f0" opacity="0.75">  }, [])</text>
+
+    <!-- return -->
+    <text x="115" y="356" fill="#c792ea" opacity="0.9">  return</text>
+    <text x="163" y="356" fill="#e2e8f0" opacity="0.75"> (</text>
+
+    <!-- JSX -->
+    <text x="130" y="378" fill="#89ddff" opacity="0.9">    &lt;</text>
+    <text x="145" y="378" fill="#ffcb6b" opacity="0.9">div</text>
+    <text x="173" y="378" fill="#c3e88d" opacity="0.75"> className</text>
+    <text x="243" y="378" fill="#e2e8f0" opacity="0.75">=</text>
+    <text x="252" y="378" fill="#c3e88d" opacity="0.9">"container"</text>
+    <text x="322" y="378" fill="#89ddff" opacity="0.9">&gt;</text>
+
+    <text x="145" y="400" fill="#e2e8f0" opacity="0.5">      {data.</text>
+    <text x="208" y="400" fill="#82aaff" opacity="0.85">map</text>
+    <text x="228" y="400" fill="#e2e8f0" opacity="0.5">((</text>
+    <text x="240" y="400" fill="#ffcb6b" opacity="0.85">user</text>
+    <text x="264" y="400" fill="#e2e8f0" opacity="0.5">) </text>
+    <text x="278" y="400" fill="#89ddff" opacity="0.85">=&gt;</text>
+    <text x="298" y="400" fill="#e2e8f0" opacity="0.5"> (</text>
+
+    <!-- cursor blink -->
+    <rect x="100" y="444" width="2" height="18" fill="#f97316" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0;0.9" dur="1.2s" repeatCount="indefinite"/>
+    </rect>
+
+    <text x="130" y="488" fill="#89ddff" opacity="0.85">    &lt;/</text>
+    <text x="163" y="488" fill="#ffcb6b" opacity="0.85">div</text>
+    <text x="191" y="488" fill="#89ddff" opacity="0.85">&gt;</text>
+    <text x="115" y="510" fill="#e2e8f0" opacity="0.5">  )</text>
+    <text x="100" y="532" fill="#e2e8f0" opacity="0.5">}</text>
+  </g>
+
+  <!-- Component tree on the right -->
+  <g opacity="0.85">
+    <!-- Tree root -->
+    <rect x="830" y="110" width="120" height="40" rx="6" fill="#1e1e3f" stroke="#6d28d9" stroke-width="1.5" opacity="0.9"/>
+    <text x="890" y="134" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa">&lt;App /&gt;</text>
+
+    <!-- Level 2 nodes -->
+    <line x1="890" y1="150" x2="890" y2="175" stroke="#6d28d9" stroke-width="1" opacity="0.5"/>
+    <line x1="890" y1="175" x2="800" y2="175" stroke="#6d28d9" stroke-width="1" opacity="0.5"/>
+    <line x1="890" y1="175" x2="980" y2="175" stroke="#6d28d9" stroke-width="1" opacity="0.5"/>
+    <line x1="800" y1="175" x2="800" y2="190" stroke="#6d28d9" stroke-width="1" opacity="0.5"/>
+    <line x1="980" y1="175" x2="980" y2="190" stroke="#6d28d9" stroke-width="1" opacity="0.5"/>
+
+    <rect x="750" y="190" width="100" height="36" rx="5" fill="#1e1e3f" stroke="#16a34a" stroke-width="1.2" opacity="0.85"/>
+    <text x="800" y="212" text-anchor="middle" font-family="monospace" font-size="9" fill="#4ade80">&lt;Navbar /&gt;</text>
+
+    <rect x="930" y="190" width="100" height="36" rx="5" fill="#1e1e3f" stroke="#0ea5e9" stroke-width="1.2" opacity="0.85"/>
+    <text x="980" y="212" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">&lt;Router /&gt;</text>
+
+    <!-- Level 3 nodes under Router -->
+    <line x1="980" y1="226" x2="980" y2="252" stroke="#0ea5e9" stroke-width="1" opacity="0.4"/>
+    <line x1="980" y1="252" x2="900" y2="252" stroke="#0ea5e9" stroke-width="1" opacity="0.4"/>
+    <line x1="980" y1="252" x2="1060" y2="252" stroke="#0ea5e9" stroke-width="1" opacity="0.4"/>
+    <line x1="900" y1="252" x2="900" y2="268" stroke="#0ea5e9" stroke-width="1" opacity="0.4"/>
+    <line x1="1060" y1="252" x2="1060" y2="268" stroke="#0ea5e9" stroke-width="1" opacity="0.4"/>
+
+    <rect x="856" y="268" width="88" height="32" rx="5" fill="#1e1e3f" stroke="#f97316" stroke-width="1" opacity="0.75"/>
+    <text x="900" y="288" text-anchor="middle" font-family="monospace" font-size="8" fill="#fb923c">&lt;Hero /&gt;</text>
+
+    <rect x="1016" y="268" width="88" height="32" rx="5" fill="#1e1e3f" stroke="#f97316" stroke-width="1" opacity="0.75"/>
+    <text x="1060" y="288" text-anchor="middle" font-family="monospace" font-size="8" fill="#fb923c">&lt;Articles /&gt;</text>
+
+    <!-- Level 4 under Articles -->
+    <line x1="1060" y1="300" x2="1060" y2="320" stroke="#f97316" stroke-width="0.8" opacity="0.35"/>
+    <line x1="1060" y1="320" x2="1000" y2="320" stroke="#f97316" stroke-width="0.8" opacity="0.35"/>
+    <line x1="1060" y1="320" x2="1120" y2="320" stroke="#f97316" stroke-width="0.8" opacity="0.35"/>
+    <line x1="1000" y1="320" x2="1000" y2="332" stroke="#f97316" stroke-width="0.8" opacity="0.35"/>
+    <line x1="1120" y1="320" x2="1120" y2="332" stroke="#f97316" stroke-width="0.8" opacity="0.35"/>
+
+    <rect x="962" y="332" width="76" height="28" rx="4" fill="#1e1e3f" stroke="#7c3aed" stroke-width="0.8" opacity="0.65"/>
+    <text x="1000" y="350" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#a78bfa">&lt;Card /&gt;</text>
+
+    <rect x="1082" y="332" width="76" height="28" rx="4" fill="#1e1e3f" stroke="#7c3aed" stroke-width="0.8" opacity="0.65"/>
+    <text x="1120" y="350" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#a78bfa">&lt;Search /&gt;</text>
+
+    <!-- Glowing dots on selected nodes -->
+    <circle cx="890" cy="130" r="3" fill="#f97316" opacity="0.9"/>
+    <circle cx="890" cy="130" r="7" fill="#f97316" opacity="0.2"/>
+  </g>
+
+  <!-- Label -->
+  <text x="60" y="620" font-family="monospace" font-size="13" fill="#f97316" opacity="0.7">// Web Development · React · TypeScript · Full-Stack</text>
+
+  <!-- Vignette -->
+  <radialGradient id="vig" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" style="stop-color:#000000;stop-opacity:0"/>
+    <stop offset="100%" style="stop-color:#000000;stop-opacity:0.55"/>
+  </radialGradient>
+  <rect width="1200" height="675" fill="url(#vig)"/>
+</svg>

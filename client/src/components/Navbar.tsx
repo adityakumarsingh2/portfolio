@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Download, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Link, useLocation } from "react-router-dom";
 
 const navLinks = [
   { name: "About", href: "#about" },
@@ -16,6 +17,8 @@ const Navbar = () => {
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
+  const isArticlesRoute = location.pathname.startsWith("/articles");
 
   useEffect(() => {
     setMounted(true);
@@ -108,8 +111,23 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
+            {/* Articles link — router-based */}
+            <Link
+              to="/articles"
+              className={`transition-colors duration-300 font-medium relative group ${
+                isArticlesRoute ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Articles
+              <span
+                className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                  isArticlesRoute ? 'w-full' : 'w-0 group-hover:w-full'
+                }`}
+              />
+            </Link>
+
             {navLinks.map((link) => {
-              const isActive = activeSection === link.href.replace('#', '');
+              const isActive = !isArticlesRoute && activeSection === link.href.replace('#', '');
               return (
                 <a
                   key={link.name}
@@ -171,8 +189,19 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden pt-6 pb-4 animate-fade">
             <div className="flex flex-col gap-4">
+              {/* Articles mobile link */}
+              <Link
+                to="/articles"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`transition-colors duration-300 font-medium text-lg py-2 ${
+                  isArticlesRoute ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                Articles
+              </Link>
+
               {navLinks.map((link) => {
-                const isActive = activeSection === link.href.replace('#', '');
+                const isActive = !isArticlesRoute && activeSection === link.href.replace('#', '');
                 return (
                   <a
                     key={link.name}

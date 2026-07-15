@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArticleSearch } from "./ArticleSearch";
 import { CategoryFilter } from "./CategoryFilter";
 import type { ArticleCategory, SortOption } from "@/types/article";
+import { getUniqueTopicCount, getUsedCategories } from "@/content/articles";
 
 interface ArticlesHeroProps {
   query: string;
@@ -73,6 +74,25 @@ export function ArticlesHero({
             A collection of engineering articles, AI research, startup learnings, and software
             development guides. Deep dives, not hot takes.
           </motion.p>
+
+          {/* Metadata Strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+            className="flex flex-wrap items-center gap-3 text-sm font-mono text-muted-foreground mb-10"
+          >
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              {totalCount} Articles
+            </span>
+            <span className="text-border">·</span>
+            <span>{getUsedCategories().length} Categories</span>
+            <span className="text-border">·</span>
+            <span>{getUniqueTopicCount()} Topics</span>
+            <span className="text-border">·</span>
+            <span>Updated {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+          </motion.div>
 
           {/* Search */}
           <motion.div

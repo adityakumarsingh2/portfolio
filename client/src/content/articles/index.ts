@@ -112,4 +112,21 @@ export function getAllTags(): string[] {
   return Array.from(tags).sort();
 }
 
+/** Get the total number of unique topics (tags) */
+export function getUniqueTopicCount(): number {
+  return getAllTags().length;
+}
+
+/** Get all articles in a specific series, ordered by seriesOrder */
+export function getArticlesInSeries(seriesName: string): Article[] {
+  return articles
+    .filter((a) => a.series === seriesName)
+    .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0));
+}
+
+/** Get all articles belonging to a specific collection */
+export function getCollectionArticles(collectionName: string): Article[] {
+  return articles.filter((a) => a.collections?.includes(collectionName));
+}
+
 export { articlesData };

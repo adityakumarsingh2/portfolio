@@ -56,14 +56,28 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
       <div className="flex flex-col flex-1 p-5">
         {/* Meta row */}
         <div className="flex items-center justify-between mb-3">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${categoryStyle}`}>
-            {article.category}
-          </span>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground font-mono">
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${categoryStyle}`}>
+              {article.category}
+            </span>
+            {article.difficulty && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border text-muted-foreground bg-muted/30 border-border/40">
+                {article.difficulty}
+              </span>
+            )}
+          </div>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground font-mono shrink-0">
             <Clock className="w-3 h-3" />
             {article.readingTime} min
           </span>
         </div>
+
+        {/* Series Indicator */}
+        {article.series && (
+          <div className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-primary/70">
+            Part {article.seriesOrder}: {article.series}
+          </div>
+        )}
 
         {/* Title */}
         <Link to={`/articles/${article.slug}`}>

@@ -168,6 +168,16 @@
        it when the animation finishes. Keeping it here permanently on dozens of
        wrappers creates unnecessary GPU layers and causes scroll jank. */
   }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -349,7 +359,7 @@
 /* ─── Article prose styles ──────────────────────────────────────────────────── */
 .article-prose {
   font-size: 1.0625rem;
-  line-height: 1.8;
+  line-height: 1.85; /* Improved reading rhythm */
   color: hsl(var(--foreground) / 0.85);
 }
 

@@ -31,7 +31,7 @@ export function FeaturedArticle({ article }: FeaturedArticleProps) {
       {/* Section label */}
       <div className="flex items-center gap-3 mb-6">
         <span className="font-mono text-xs text-primary/60 tracking-widest uppercase">
-          {`// featured`}
+          {`// spotlight`}
         </span>
         <div className="flex-1 h-px bg-border/40" />
       </div>
@@ -54,7 +54,7 @@ export function FeaturedArticle({ article }: FeaturedArticleProps) {
               <div className="absolute top-4 left-4">
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 font-mono text-xs text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping-slow" />
-                  Featured
+                  Spotlight
                 </span>
               </div>
             </div>

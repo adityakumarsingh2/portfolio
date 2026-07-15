@@ -11,6 +11,7 @@ import { TableOfContents } from "@/components/articles/TableOfContents";
 import { ArticleShare } from "@/components/articles/ArticleShare";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { PrevNextNav } from "@/components/articles/PrevNextNav";
+import { ArticleFooter } from "@/components/articles/ArticleFooter";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
 import { ArrowLeft } from "lucide-react";
@@ -33,12 +34,65 @@ export default function ArticleDetail() {
       document.head.appendChild(metaDesc);
     }
     metaDesc.setAttribute("content", article.seoDescription);
+    // Update existing or create new OG tags
+    const ogTags = [
+      { property: 'og:title', content: article.seoTitle },
+      { property: 'og:description', content: article.seoDescription },
+      { property: 'og:type', content: 'article' },
+      { property: 'article:published_time', content: article.publishedDate },
+    ];
+    
+    if (article.ogImage || article.coverImage) {
+      ogTags.push({ property: 'og:image', content: article.ogImage || article.coverImage });
+    }
+    
+    ogTags.forEach(({ property, content }) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute("property", property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute("content", content);
+    });
+
+    // JSON-LD Schema
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": article.seoTitle,
+      "description": article.seoDescription,
+      "image": article.ogImage || article.coverImage,
+      "datePublished": article.publishedDate,
+      "dateModified": article.updatedDate || article.publishedDate,
+      "author": [{
+          "@type": "Person",
+          "name": article.author.name
+      }]
+    };
+    
+    let script = document.querySelector('#article-schema');
+    if (!script) {
+      script = document.createElement('script');
+      script.setAttribute('id', 'article-schema');
+      script.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(schema);
+
     window.scrollTo({ top: 0 });
 
     return () => {
       document.title = "Aditya Kumar Singh — Full-Stack Engineer & AI Builder";
+      // Cleanup dynamically added tags if needed, but often okay to leave or replace
+      ogTags.forEach(({ property }) => {
+        const el = document.querySelector(`meta[property="${property}"]`);
+        if (el) el.remove();
+      });
+      const schemaEl = document.querySelector('#article-schema');
+      if (schemaEl) schemaEl.remove();
     };
-  }, [article?.slug, article?.seoTitle, article?.seoDescription]);
+  }, [article]);
 
   // Redirect after hooks run
   if (!article) {
@@ -143,22 +197,17 @@ export default function ArticleDetail() {
 
                 <PrevNextNav prev={prev} next={next} />
 
-                <div className="mt-12">
-                  <Link
-                    to="/articles"
-                    className="inline-flex items-center gap-2 font-mono text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Articles
-                  </Link>
-                </div>
+                <ArticleFooter />
               </motion.div>
 
               {/* TOC sidebar — desktop only */}
-              <TableOfContents items={tocItems} activeId={activeId} />
+              <TableOfContents items={tocItems} activeId={activeId} readingTime={article.readingTime} />
             </div>
           </div>
         </div>
+        
+        {/* Radial Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       </main>
 
       <Footer />

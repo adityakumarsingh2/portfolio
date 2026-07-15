@@ -26,12 +26,23 @@ export interface Article {
   tags: string[];
   /** Estimated reading time in minutes */
   readingTime: number;
+  wordCount?: number;
   featured: boolean;
   draft: boolean;
+  
+  /** Content organization */
+  series?: string;
+  seriesOrder?: number;
+  difficulty?: "Beginner" | "Intermediate" | "Advanced";
+  audience?: string[];
+  collections?: string[];
+  
   /** SEO / OG fields */
   seoTitle: string;
   seoDescription: string;
   ogImage?: string;
+  canonicalUrl?: string;
+  lastReviewed?: string; // ISO 8601
   /** Author (future-ready for multi-author) */
   author: {
     name: string;

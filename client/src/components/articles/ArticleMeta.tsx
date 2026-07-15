@@ -60,14 +60,32 @@ export function ArticleMeta({ article }: ArticleMetaProps) {
 
       <span className="text-border">·</span>
 
-      {/* Category */}
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${categoryStyle}`}>
-        {article.category}
-      </span>
+      {/* Series */}
+      {article.series && (
+        <>
+          <div className="flex items-center gap-1.5 font-mono text-xs">
+            <span className="text-primary/70">Part {article.seriesOrder}:</span>
+            <span className="font-medium text-foreground">{article.series}</span>
+          </div>
+          <span className="text-border">·</span>
+        </>
+      )}
+
+      {/* Category & Difficulty */}
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${categoryStyle}`}>
+          {article.category}
+        </span>
+        {article.difficulty && (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border text-muted-foreground bg-muted/30 border-border/40">
+            {article.difficulty}
+          </span>
+        )}
+      </div>
 
       {/* Tags */}
       {article.tags.length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap ml-2">
           <Tag className="w-3 h-3 text-muted-foreground/60" />
           {article.tags.map((tag) => (
             <span

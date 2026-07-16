@@ -9,7 +9,9 @@ const app = express();
 
 // Secure CORS Configurations
 const allowedOrigins = [
-  "https://adityakumaronline.netlify.app"
+  "https://adityakumaronline.netlify.app",
+  "https://www.adityakumarsingh.tech",
+  "https://adityakumarsingh.tech"
 ];
 
 app.use(cors({

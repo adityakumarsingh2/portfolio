@@ -1,0 +1,149 @@
+---
+title: "Designing Scalable APIs: Patterns I've Learned the Hard Way"
+subtitle: "From REST anti-patterns to production-grade API design: rate limiting, versioning, pagination, and error handling"
+slug: "designing-scalable-apis"
+description: "After building APIs for apps serving thousands of users, I've learned that the difference between a good API and a great one isn't features—it's the 20% of decisions that prevent you from being paged at 3am."
+category: "System Design"
+tags: ["API Design", "REST", "Node.js", "Backend", "System Design", "Rate Limiting"]
+difficulty: "Advanced"
+audience: ["Backend Developers", "Tech Leads"]
+published: "2026-07-01T00:00:00.000Z"
+draft: false
+featured: false
+readingTime: 9
+wordCount: 1420
+coverImage: "/articles/covers/system-design.svg"
+canonical: "https://adityakumarsingh.tech/articles/designing-scalable-apis"
+keywords: ["API design", "REST API", "rate limiting", "API versioning", "cursor pagination", "idempotency"]
+seoTitle: "Designing Scalable APIs: Patterns I've Learned the Hard Way | Aditya Kumar Singh"
+seoDescription: "Production-grade API design patterns covering versioning, rate limiting, cursor pagination, idempotency keys, error handling, and observability."
+author:
+  name: "Aditya Kumar Singh"
+  title: "Full-Stack Engineer & AI Builder"
+---
+
+## The API as a Contract
+
+An API is a promise to your consumers. Break that promise—change a field name, remove an endpoint, alter error formats—and you break every client that depends on you. The principles in this article are all about making promises you can keep.
+
+## Versioning Strategy
+
+The most common mistake: shipping v1 with no versioning plan, then scrambling when you need breaking changes. Here are the three main approaches:
+
+| Strategy | Example | Pros | Cons |
+|----------|---------|------|------|
+| URI versioning | `/api/v1/users` | Explicit, cacheable | URL pollution |
+| Header versioning | `Accept: application/vnd.api+json;v=1` | Clean URLs | Harder to test in browser |
+| Query param | `/api/users?version=1` | Simple | Often forgotten |
+
+I use URI versioning for public APIs and header versioning for internal microservice communication. Consistency matters more than which you choose.
+
+## Rate Limiting That Doesn't Hurt Good Users
+
+Naive rate limiting (global fixed window) punishes legitimate burst traffic. Instead, implement token bucket or sliding window per user/IP:
+
+```javascript
+import { RateLimiter } from 'limiter';
+
+const limiters = new Map();
+
+function getRateLimiter(userId) {
+  if (!limiters.has(userId)) {
+    // 100 requests per minute, refill smoothly
+    limiters.set(userId, new RateLimiter({ 
+      tokensPerInterval: 100, 
+      interval: 'minute' 
+    }));
+  }
+  return limiters.get(userId);
+}
+
+async function rateLimitMiddleware(req, res, next) {
+  const limiter = getRateLimiter(req.userId);
+  const remaining = await limiter.removeTokens(1);
+  
+  res.setHeader('X-RateLimit-Remaining', Math.max(0, remaining));
+  res.setHeader('X-RateLimit-Reset', Date.now() + 60000);
+  
+  if (remaining < 0) {
+    return res.status(429).json({
+      error: 'rate_limit_exceeded',
+      message: 'Too many requests. Please retry after 60 seconds.',
+      retryAfter: 60
+    });
+  }
+  next();
+}
+```
+
+## Consistent Error Responses
+
+Nothing is more frustrating than an API that returns different error shapes on every endpoint. Define a single error envelope and stick to it:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The request body contains invalid fields.",
+    "details": [
+      {
+        "field": "email",
+        "message": "Must be a valid email address",
+        "value": "not-an-email"
+      }
+    ],
+    "requestId": "req_01HX9KPQX7Z...",
+    "timestamp": "2026-07-10T14:23:11.000Z",
+    "docs": "https://docs.yourapi.com/errors/VALIDATION_ERROR"
+  }
+}
+```
+
+<Callout type="info">
+Always include a `requestId` in every response — both success and error. This single field saves hours of debugging when correlating logs across services.
+</Callout>
+
+## Pagination Done Right
+
+Offset pagination (`?page=5&limit=20`) is an anti-pattern for large datasets. As data changes, pages shift, causing duplicate or missing items. Use cursor-based pagination instead:
+
+```javascript
+// Cursor-based pagination
+async function getUsers(cursor, limit = 20) {
+  const users = await db.users
+    .where('id', '>', decodeCursor(cursor))
+    .orderBy('id', 'asc')
+    .limit(limit + 1) // fetch one extra to know if there's a next page
+    .get();
+  
+  const hasNextPage = users.length > limit;
+  const items = hasNextPage ? users.slice(0, limit) : users;
+  
+  return {
+    data: items,
+    pagination: {
+      hasNextPage,
+      nextCursor: hasNextPage ? encodeCursor(items[items.length - 1].id) : null,
+      count: items.length
+    }
+  };
+}
+```
+
+## Idempotency Keys
+
+For any state-mutating operation (payments, order creation, resource allocation), require clients to send an idempotency key. Store results keyed by this value and return cached responses on duplicate requests:
+
+<Callout type="warning">
+Without idempotency keys, network retries can double-charge customers or create duplicate orders. This is non-negotiable for any financial or high-stakes mutation.
+</Callout>
+
+## Observability from Day One
+
+Log structured JSON with: `requestId`, `userId`, `endpoint`, `method`, `statusCode`, `durationMs`, `errorCode`. Ship these to a log aggregator (Loki, Datadog, CloudWatch). Add metrics for p50/p95/p99 latency per endpoint. Set up alerts on error rate spikes.
+
+If you can't answer "what's my 95th percentile latency on POST /orders?" within 30 seconds of being asked, your observability is insufficient.
+
+## The 3am Test
+
+For every API decision, ask: "Will I regret this at 3am when something goes wrong?" Versioning, idempotency, structured errors, and observability all pass this test. Clever shortcuts rarely do.

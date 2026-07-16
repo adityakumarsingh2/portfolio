@@ -1,0 +1,154 @@
+---
+title: "Building a RAG System from Scratch"
+subtitle: "A deep-dive into Retrieval-Augmented Generation: embeddings, vector databases, and production-ready pipelines"
+slug: "building-rag-from-scratch"
+description: "RAG is transforming how AI applications handle knowledge. In this guide, I break down every layer of a production RAG pipeline—from chunking strategies and embedding models to vector search, re-ranking, and LLM prompt engineering."
+category: "AI"
+series: "Building Production RAG"
+seriesOrder: 1
+tags: ["RAG", "LLM", "Vector DB", "Python", "AI Engineering", "Embeddings"]
+difficulty: "Intermediate"
+audience: ["AI Engineers", "Backend Developers"]
+published: "2026-07-10T00:00:00.000Z"
+updated: "2026-07-14T00:00:00.000Z"
+draft: false
+featured: true
+featuredPriority: 1
+readingTime: 12
+wordCount: 1850
+coverImage: "/articles/covers/ai.svg"
+canonical: "https://adityakumarsingh.tech/articles/building-rag-from-scratch"
+keywords: ["RAG", "retrieval augmented generation", "vector database", "LLM", "embeddings", "AI pipeline"]
+seoTitle: "Building a RAG System from Scratch | Aditya Kumar Singh"
+seoDescription: "A comprehensive guide to building production-ready Retrieval-Augmented Generation (RAG) systems — covering chunking, embeddings, vector databases, hybrid search, and prompt engineering."
+author:
+  name: "Aditya Kumar Singh"
+  title: "Full-Stack Engineer & AI Builder"
+---
+
+## What is RAG?
+
+Retrieval-Augmented Generation (RAG) is an AI architecture that combines a retrieval system with a generative language model. Instead of relying solely on parametric knowledge baked into LLM weights, RAG queries an external knowledge base at inference time, fetching relevant context that is then injected into the prompt.
+
+This approach solves two fundamental problems: hallucination and knowledge staleness. By grounding the model's responses in retrieved documents, we get factually accurate, up-to-date answers without costly fine-tuning.
+
+## Architecture Overview
+
+A production RAG system has five core stages:
+
+- **Document ingestion** — parsing, cleaning, and chunking raw documents
+- **Embedding generation** — transforming text chunks into dense vector representations
+- **Vector storage** — indexing embeddings in a vector database for similarity search
+- **Retrieval** — finding the most relevant chunks for a given query
+- **Generation** — feeding retrieved context to an LLM and returning the response
+
+## Chunking Strategies
+
+The quality of your RAG system lives and dies by your chunking strategy. Chunks that are too small lose semantic context. Chunks that are too large introduce noise and hit token limits.
+
+I've tested four strategies in production:
+
+### Fixed-Size Chunking
+
+The simplest approach: split documents into chunks of N tokens with M tokens of overlap.
+
+```python
+def fixed_size_chunk(text: str, chunk_size: int = 512, overlap: int = 64) -> list[str]:
+    tokens = tokenizer.encode(text)
+    chunks = []
+    start = 0
+    while start < len(tokens):
+        end = min(start + chunk_size, len(tokens))
+        chunk = tokenizer.decode(tokens[start:end])
+        chunks.append(chunk)
+        start += chunk_size - overlap
+    return chunks
+```
+
+Works well for uniform documents. Falls apart with structured content like markdown or code.
+
+### Semantic Chunking
+
+Group sentences by embedding similarity, creating chunks that are semantically coherent rather than arbitrarily split. Requires an embedding call per sentence, so it's slower but produces significantly better retrieval quality.
+
+## Choosing an Embedding Model
+
+The embedding model determines how well semantic similarity maps to your domain. My current recommendations:
+
+<Callout type="info">
+**For general-purpose RAG:** Use `text-embedding-3-small` (OpenAI) — 1536 dimensions, excellent cost/performance ratio at $0.02/1M tokens.
+</Callout>
+
+<Callout type="warning">
+**For privacy-sensitive deployments:** Run `nomic-embed-text` or `mxbai-embed-large` locally via Ollama. Comparable quality to proprietary models, zero data egress.
+</Callout>
+
+## Vector Databases
+
+Your choice of vector database significantly impacts latency and scalability. Here's a quick comparison of the top options:
+
+| Database | Hosting | Latency (p99) | Best For |
+|----------|---------|---------------|----------|
+| Pinecone | Managed | ~50ms | Production, scale-up |
+| Weaviate | Self/Managed | ~30ms | Hybrid search |
+| Qdrant | Self/Managed | ~20ms | High-throughput |
+| ChromaDB | Self | ~10ms | Prototyping |
+| pgvector | PostgreSQL | ~80ms | Existing Postgres |
+
+## The Retrieval Pipeline
+
+Naive vector search retrieves the top-K chunks by cosine similarity. This works for simple cases but fails with complex queries that require multi-hop reasoning or where common terms dominate the embedding space.
+
+### Hybrid Search
+
+Combine dense vector search with sparse BM25 retrieval using Reciprocal Rank Fusion (RRF):
+
+```python
+def hybrid_retrieve(query: str, k: int = 10) -> list[Document]:
+    # Dense retrieval
+    query_embedding = embed(query)
+    dense_results = vector_store.similarity_search(query_embedding, k=k*2)
+    
+    # Sparse retrieval (BM25)
+    sparse_results = bm25_index.search(query, k=k*2)
+    
+    # Reciprocal Rank Fusion
+    return rrf_merge(dense_results, sparse_results, k=k)
+```
+
+### Re-ranking
+
+After initial retrieval, pass results through a cross-encoder re-ranker (e.g., Cohere Rerank or `cross-encoder/ms-marco-MiniLM-L-6-v2`). Re-rankers are slower but dramatically improve precision because they compute query-document relevance jointly rather than independently.
+
+## Prompt Engineering for RAG
+
+The prompt template is where retrieval quality meets generation quality. Key principles:
+
+- Inject retrieved context before the user query, not after
+- Explicitly instruct the model to answer only from context
+- Include a fallback: "If the answer is not in the context, say so"
+- Add source attribution instructions for verifiability
+
+```python
+RAG_PROMPT = """You are a precise technical assistant. Answer the question using ONLY the context provided below.
+If the answer cannot be found in the context, respond with: "I don't have enough information to answer that."
+
+CONTEXT:
+{context}
+
+QUESTION: {query}
+
+ANSWER:"""
+```
+
+## Production Considerations
+
+<Callout type="success">
+**Performance wins I've shipped:** Query caching with Redis (semantic deduplication reduces LLM calls by ~40%), async embedding generation pipelines, streaming responses with `async for chunk in llm.stream(prompt)`.
+</Callout>
+
+## What's Next
+
+In Part 2, I'll cover advanced topics: agentic RAG with multi-step retrieval, graph RAG for relationship-heavy domains, and evaluation frameworks (RAGAS, TruLens) for measuring retrieval quality in production.
+
+If you're building a RAG system, reach out — I'm happy to talk architecture.

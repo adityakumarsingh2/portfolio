@@ -1,18 +1,34 @@
 import React from "react";
+import type { ComponentType } from "react";
+import { MDXProvider } from "@mdx-js/react";
 import { CodeBlock } from "./CodeBlock";
 import { Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { mdxComponents } from "@/lib/mdx/components";
 
 interface ArticleContentProps {
-  content: string;
+  content: string | ComponentType;
 }
 
 /**
- * Renders article HTML-like content string into premium React elements.
- * Handles: h2/h3, p, ul/ol, pre>code, blockquote, table, callout, figure.
- * No external MDX runtime — fast and dependency-free.
+ * Renders article content.
+ * - MDX ComponentType → rendered via MDXProvider with our styled component map
+ * - HTML string      → parsed by the existing parseContent() function (unchanged)
  */
 export function ArticleContent({ content }: ArticleContentProps) {
-  const rendered = parseContent(content);
+  // ── MDX path (new) ───────────────────────────────────────────────────────
+  if (typeof content !== "string") {
+    const MDXContent = content as ComponentType;
+    return (
+      <MDXProvider components={mdxComponents}>
+        <div className="article-prose">
+          <MDXContent />
+        </div>
+      </MDXProvider>
+    );
+  }
+
+  // ── Legacy HTML string path (unchanged) ──────────────────────────────────
+  const rendered = parseContent(content as string);
   return (
     <div className="article-prose">
       {rendered}

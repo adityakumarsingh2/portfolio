@@ -242,7 +242,7 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "healthy", model: modelName, time: new Date() });
+  res.json({ status: "ok" });
 });
 
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 interface CodeBlockProps {
@@ -87,31 +87,69 @@ function renderSyntaxHighlight(code: string, language: string): React.ReactNode 
 function highlightLine(line: string, lang: string): React.ReactNode {
   // Simple keyword highlighting
   if (lang === "json") {
-    return (
-      <span
-        dangerouslySetInnerHTML={{
-          __html: line
-            .replace(/("[\w-]+")\s*:/g, '<span class="text-blue-400">$1</span>:')
-            .replace(/:\s*(".*?")/g, ': <span class="text-green-400">$1</span>')
-            .replace(/:\s*(\d+)/g, ': <span class="text-orange-400">$1</span>')
-            .replace(/:\s*(true|false|null)/g, ': <span class="text-purple-400">$1</span>'),
-        }}
-      />
-    );
+    // Group 1: key, Group 2: string, Group 3: number, Group 4: boolean/null
+    const jsonRegex = /("[\w-]+"(?=\s*:))|(".*?")|(\b\d+\b)|(\b(?:true|false|null)\b)/g;
+    return tokenizeAndRender(line, jsonRegex, (match, g1, g2, g3, g4) => {
+      if (g1) return <span className="text-blue-400">{g1}</span>;
+      if (g2) return <span className="text-green-400">{g2}</span>;
+      if (g3) return <span className="text-orange-400">{g3}</span>;
+      if (g4) return <span className="text-purple-400">{g4}</span>;
+      return match;
+    });
   }
 
-  return (
-    <span
-      dangerouslySetInnerHTML={{
-        __html: line
-          .replace(
-            /\b(import|export|from|const|let|var|function|async|await|return|if|else|for|while|class|interface|type|extends|implements|default|new|throw|try|catch|finally|of|in|and|or|not|def|self|print|with|as|yield)\b/g,
-            '<span class="text-purple-400">$1</span>'
-          )
-          .replace(/(\/\/.*$|#.*$)/g, '<span class="text-muted-foreground/60 italic">$1</span>')
-          .replace(/(".*?"|'.*?'|`.*?`)/g, '<span class="text-green-400">$1</span>')
-          .replace(/\b(\d+)\b/g, '<span class="text-orange-400">$1</span>'),
-      }}
-    />
-  );
+  // General code highlighting (javascript, typescript, python, bash)
+  // Group 1: comments (//... or #...)
+  // Group 2: strings ("..." or '...' or `...`)
+  // Group 3: keywords
+  // Group 4: numbers
+  const codeRegex = /(\/\/.*$|#.*$)|(".*?"|'.*?'|`.*?`)|(\b(?:import|export|from|const|let|var|function|async|await|return|if|else|for|while|class|interface|type|extends|implements|default|new|throw|try|catch|finally|of|in|and|or|not|def|self|print|with|as|yield)\b)|(\b\d+\b)/g;
+
+  return tokenizeAndRender(line, codeRegex, (match, g1, g2, g3, g4) => {
+    if (g1) return <span className="text-muted-foreground/60 italic">{g1}</span>;
+    if (g2) return <span className="text-green-400">{g2}</span>;
+    if (g3) return <span className="text-purple-400">{g3}</span>;
+    if (g4) return <span className="text-orange-400">{g4}</span>;
+    return match;
+  });
+}
+
+function tokenizeAndRender(
+  text: string,
+  regex: RegExp,
+  renderToken: (match: string, ...groups: (string | undefined)[]) => React.ReactNode
+): React.ReactNode {
+  const result: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  regex.lastIndex = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    const matchIndex = match.index;
+    const matchText = match[0];
+
+    if (matchIndex > lastIndex) {
+      result.push(text.slice(lastIndex, matchIndex));
+    }
+
+    const groups = match.slice(1);
+    result.push(
+      <React.Fragment key={matchIndex}>
+        {renderToken(matchText, ...groups)}
+      </React.Fragment>
+    );
+
+    lastIndex = regex.lastIndex;
+
+    if (matchText.length === 0) {
+      regex.lastIndex++;
+    }
+  }
+
+  if (lastIndex < text.length) {
+    result.push(text.slice(lastIndex));
+  }
+
+  return <>{result}</>;
 }

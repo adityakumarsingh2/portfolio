@@ -2,7 +2,7 @@
 
 > A premium, full-stack developer portfolio with an integrated AI chatbot powered by **Google Gemini Flash** — built to leave a lasting first impression.
 
-🌐 **Live:** [adityakumarsingh.tech](https://adityakumarsingh.tech)
+🌐 **Live:** [adityakumaronline.netlify.app](https://adityakumaronline.netlify.app)
 
 ---
 
@@ -11,8 +11,6 @@
 This is not your average portfolio. It is a **production-grade, full-stack web application** built to showcase skills, freelance experience, projects, achievements, and LeetCode performance in an interactive and visually stunning way.
 
 The portfolio features a **dark-mode-first design aesthetic** with editorial typography, glassmorphism-inspired card styles, smooth scroll animations, a custom magnetic cursor, and a fully integrated **AI assistant chatbot** — powered by Google's **Gemini Flash LLM** — that can answer questions about Aditya in real-time.
-
-Frontend deployed on **Vercel**, backend on **Render**, served under the custom domain **[adityakumarsingh.tech](https://adityakumarsingh.tech)**.
 
 ---
 
@@ -175,7 +173,7 @@ The portfolio uses a **monochromatic dark-first theme** built entirely on CSS cu
 
 ## 🔒 Security Practices
 
-- **CORS Whitelist:** Only `*.vercel.app`, `adityakumarsingh.tech`, and `localhost` origins are accepted
+- **CORS Whitelist:** Only `*.netlify.app`, `*.vercel.app`, and `localhost` origins are accepted
 - **Rate Limiting:** Custom in-memory IP-based rate limiter — 30 requests / 15 min, with automatic stale-entry cleanup every 10 minutes
 - **Input Sanitization:** Message length capped at 600 chars, type-validated before LLM call
 - **API Key Safety:** `GEMINI_API_KEY` lives exclusively in the server `.env` — never bundled or exposed to the client
@@ -254,9 +252,9 @@ npm start
 
 | Layer | Platform |
 |---|---|
-| **Frontend** | [Vercel](https://vercel.com) — auto-deploys from GitHub |
+| **Frontend** | [Netlify](https://netlify.com) — auto-deploys from GitHub |
 | **Backend** | [Render](https://render.com) — Node.js web service |
-| **Custom Domain** | [adityakumarsingh.tech](https://adityakumarsingh.tech) |
+| **DNS** | [Cloudflare](https://cloudflare.com) |
 | **Analytics** | Google Analytics |
 
 ---
@@ -268,7 +266,7 @@ npm start
 | **Email** | adityakumarsingh909@outlook.com |
 | **LinkedIn** | [linkedin.com/in/adityakumarsingh2](https://linkedin.com/in/adityakumarsingh2) |
 | **GitHub** | [github.com/adityakumarsingh2](https://github.com/adityakumarsingh2) |
-| **Portfolio** | [adityakumarsingh.tech](https://adityakumarsingh.tech) |
+| **Portfolio** | [adityakumaronline.netlify.app](https://adityakumaronline.netlify.app) |
 
 ---
 

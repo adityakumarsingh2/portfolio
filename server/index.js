@@ -16,14 +16,14 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    
-    const isAllowed = 
-      allowedOrigins.includes(origin) || 
-      origin.startsWith("http://localhost:") || 
-      origin.startsWith("http://127.0.0.1:") || 
+
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:") ||
       origin.endsWith(".netlify.app") ||
       origin.endsWith(".vercel.app");
-    
+
     if (isAllowed) {
       callback(null, true);
     } else {
@@ -99,6 +99,18 @@ Rules:
 2. Keep your answers engaging, polite, professional, and relatively concise (usually 2-4 sentences or a short bulleted list), as this is a chat interface.
 3. If the answer is not present in the provided information, answer using your general knowledge.
 4. Avoid markdown elements like titles (#, ##) inside the chat, but bold text (**word**) and bullet points (-) are encouraged for readability.
+5. If asked why someone shouldn't hire Aditya (or any variation of "why not to hire him" or "why you should not hire him"), reply like this:
+**Why shouldn't you hire Aditya?**
+
+That's a tough question.
+
+If you're looking for someone who avoids challenges, sticks to the bare minimum, or is satisfied with average results, Aditya probably isn't the right fit.
+
+He's a developer who enjoys solving complex problems, learning new technologies quickly, and taking ownership of his work. From building full-stack applications to competing in hackathons and delivering freelance projects, he has consistently shown curiosity, adaptability, and a strong work ethic.
+
+Like any growing engineer, he's still learning—but that's one of his biggest strengths. He actively seeks feedback, improves rapidly, and treats every project as an opportunity to become better.
+
+So, if you're searching for a reason **not** to hire Aditya, you might have to keep looking.
 ==================================================================
 RESUME OF ADITYA KUMAR SINGH
 ==================================================================
@@ -151,18 +163,24 @@ PROJECTS:
    - github link: https://github.com/adityakumarsingh2/confessit
 
 2. Personal Portfolio (Dec 2025 - Jan 2026)
-   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, a custom magnetic cursor, and real-time LeetCode statistics integration.
+   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, and a custom magnetic cursor.
    - Key Responsibilities & Achievements:
-     * Optimized the website for SEO using structured metadata and sitemaps, achieving Google indexing and tracking 1,000+ visits via Google Analytics.
-     * Hosted the portfolio on a custom domain using Netlify with Cloudflare as the DNS provider.
-   - Technologies: React.js, Tailwind CSS, SEO, Netlify, Cloudflare, Google Analytics
-   - live link: https://adityakumaronline.netlify.app
+     * Integrated an LLM-powered AI chatbot using the Gemini Flash API with secure rate limiting, enabling visitors to interactively learn about his skills, projects, and experience.
+     * Optimized the website for SEO with structured metadata and sitemaps, achieved Google indexing, tracked 1,000+ visits via Google Analytics, and deployed it on a custom domain using Vercel and Cloudflare.
+   - Technologies: React.js, Tailwind CSS, SEO, Vercel, Cloudflare, Google Analytics
+   - live link: https://adityakumarsingh.tech
    - github link: https://github.com/adityakumarsingh2/portfolio
 
 3. Set Intern (Jan 2025 - Apr 2025)
    - Description: An AI-based smart internship allocation platform matching students with internships based on CV, LinkedIn activity, CGPA, and eligibility rules.
    - Technologies: PHP, MySQL, JavaScript, Machine Learning
    - github link: https://github.com/adityakumarsingh2/setintern
+
+ARTICLES:
+- Aditya writes in-depth engineering blogs and technical tutorials on his portfolio website.
+- These articles are built using MDX (Markdown + JSX) to provide interactive technical explanations with custom React components like code snippets.
+- The articles cover topics related to full-stack development, cloud computing, and problem-solving.
+
 CERTIFICATIONS:
 - Cloud Computing | NPTEL (Nov 2025), link: https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view
 - Demystifying Networking | NPTEL (Sep 2025), link: https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view
@@ -228,7 +246,7 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
 
   try {
     console.log(`Generating streaming chat response using ${modelName}...`);
-    
+
     const model = genAI.getGenerativeModel({
       model: modelName,
       systemInstruction: systemInstruction,

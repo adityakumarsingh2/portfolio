@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d0a1a;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="40%" r="40%">
+      <stop offset="0%" style="stop-color:#c2410c;stop-opacity:0.18" />
+      <stop offset="100%" style="stop-color:#0a0a0f;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="60%" r="35%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:0.22" />
+      <stop offset="100%" style="stop-color:#0a0a0f;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow3" cx="55%" cy="25%" r="25%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:#0a0a0f;stop-opacity:0" />
+    </radialGradient>
+    <filter id="blur-sm">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <rect width="1200" height="675" fill="url(#glow1)"/>
+  <rect width="1200" height="675" fill="url(#glow2)"/>
+  <rect width="1200" height="675" fill="url(#glow3)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.06" stroke="#ffffff" stroke-width="0.5">
+    <line x1="0" y1="75" x2="1200" y2="75"/><line x1="0" y1="150" x2="1200" y2="150"/><line x1="0" y1="225" x2="1200" y2="225"/><line x1="0" y1="300" x2="1200" y2="300"/><line x1="0" y1="375" x2="1200" y2="375"/><line x1="0" y1="450" x2="1200" y2="450"/><line x1="0" y1="525" x2="1200" y2="525"/><line x1="0" y1="600" x2="1200" y2="600"/>
+    <line x1="100" y1="0" x2="100" y2="675"/><line x1="200" y1="0" x2="200" y2="675"/><line x1="300" y1="0" x2="300" y2="675"/><line x1="400" y1="0" x2="400" y2="675"/><line x1="500" y1="0" x2="500" y2="675"/><line x1="600" y1="0" x2="600" y2="675"/><line x1="700" y1="0" x2="700" y2="675"/><line x1="800" y1="0" x2="800" y2="675"/><line x1="900" y1="0" x2="900" y2="675"/><line x1="1000" y1="0" x2="1000" y2="675"/><line x1="1100" y1="0" x2="1100" y2="675"/>
+  </g>
+
+  <!-- Neural network -->
+  <g opacity="0.9">
+    <line x1="220" y1="180" x2="440" y2="240" stroke="#f97316" stroke-width="0.8" opacity="0.3"/><line x1="220" y1="280" x2="440" y2="240" stroke="#f97316" stroke-width="0.8" opacity="0.3"/><line x1="220" y1="380" x2="440" y2="240" stroke="#7c3aed" stroke-width="0.6" opacity="0.25"/><line x1="220" y1="180" x2="440" y2="340" stroke="#7c3aed" stroke-width="0.6" opacity="0.2"/><line x1="220" y1="280" x2="440" y2="340" stroke="#f97316" stroke-width="0.8" opacity="0.3"/><line x1="220" y1="380" x2="440" y2="340" stroke="#f97316" stroke-width="0.8" opacity="0.3"/>
+    <line x1="440" y1="240" x2="660" y2="200" stroke="#f97316" stroke-width="1" opacity="0.4"/><line x1="440" y1="240" x2="660" y2="300" stroke="#f97316" stroke-width="1" opacity="0.35"/><line x1="440" y1="340" x2="660" y2="300" stroke="#f97316" stroke-width="1" opacity="0.4"/><line x1="440" y1="340" x2="660" y2="400" stroke="#f97316" stroke-width="0.8" opacity="0.3"/>
+    <line x1="660" y1="200" x2="880" y2="270" stroke="#f97316" stroke-width="1.2" opacity="0.5"/><line x1="660" y1="300" x2="880" y2="270" stroke="#f97316" stroke-width="1.2" opacity="0.5"/><line x1="660" y1="400" x2="880" y2="400" stroke="#f97316" stroke-width="1" opacity="0.4"/>
+    <line x1="880" y1="270" x2="1020" y2="337" stroke="#f97316" stroke-width="1.5" opacity="0.6"/><line x1="880" y1="400" x2="1020" y2="337" stroke="#f97316" stroke-width="1.2" opacity="0.5"/>
+    <circle cx="220" cy="180" r="6" fill="#f97316" opacity="0.7"/><circle cx="220" cy="280" r="7" fill="#f97316" opacity="0.8"/><circle cx="220" cy="380" r="5" fill="#7c3aed" opacity="0.7"/>
+    <circle cx="440" cy="240" r="8" fill="#f97316" opacity="0.85"/><circle cx="440" cy="340" r="9" fill="#f97316" opacity="0.9"/>
+    <circle cx="660" cy="200" r="7" fill="#f97316" opacity="0.8"/><circle cx="660" cy="300" r="10" fill="#f97316" opacity="0.95"/><circle cx="660" cy="400" r="9" fill="#7c3aed" opacity="0.85"/>
+    <circle cx="880" cy="270" r="11" fill="#f97316" opacity="0.95"/><circle cx="880" cy="400" r="8" fill="#7c3aed" opacity="0.8"/>
+    <circle cx="1020" cy="337" r="14" fill="#f97316" opacity="1"/><circle cx="1020" cy="337" r="30" fill="#f97316" opacity="0.2"/><circle cx="1020" cy="337" r="46" fill="#f97316" opacity="0.08"/>
+  </g>
+
+  <text x="60" y="620" font-family="monospace" font-size="13" fill="#f97316" opacity="0.7">// AI · Machine Learning · RAG</text>
+  <radialGradient id="vig" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" style="stop-color:#000000;stop-opacity:0" />
+    <stop offset="100%" style="stop-color:#000000;stop-opacity:0.5" />
+  </radialGradient>
+  <rect width="1200" height="675" fill="url(#vig)"/>
+</svg>

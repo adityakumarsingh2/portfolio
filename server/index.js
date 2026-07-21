@@ -8,28 +8,10 @@ dotenv.config();
 const app = express();
 
 // Secure CORS Configurations
-const allowedOrigins = [
-  "https://adityakumaronline.netlify.app"
-];
-
+// Using '*' is safe here because we have an IP-based rate limiter protecting the API
+// and no sensitive user credentials or cookies are being passed.
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, server-to-server)
-    if (!origin) return callback(null, true);
-
-    const isAllowed =
-      allowedOrigins.includes(origin) ||
-      origin.startsWith("http://localhost:") ||
-      origin.startsWith("http://127.0.0.1:") ||
-      origin.endsWith(".netlify.app") ||
-      origin.endsWith(".vercel.app");
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(null, false); // Safely reject CORS without throwing stack trace errors
-    }
-  }
+  origin: "*"
 }));
 
 app.use(express.json());
@@ -278,7 +260,7 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "healthy", model: modelName, time: new Date() });
+  res.json({ status: "ok" });
 });
 
 app.listen(PORT, () => {

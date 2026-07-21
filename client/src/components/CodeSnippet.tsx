@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 
 interface CodeSnippetProps {
@@ -60,30 +61,60 @@ const CodeSnippet = ({
 };
 
 // Simple syntax highlighting
-const highlightSyntax = (line: string) => {
-  const keywords = ['const', 'let', 'var', 'function', 'return', 'import', 'export', 'from', 'if', 'else', 'for', 'while', 'class', 'interface', 'type', 'async', 'await'];
-  const types = ['string', 'number', 'boolean', 'void', 'any', 'null', 'undefined'];
-  
-  let result = line;
-  
-  // This is a simplified version - in a real app, use a proper syntax highlighter
-  keywords.forEach(keyword => {
-    const regex = new RegExp(`\\b(${keyword})\\b`, 'g');
-    result = result.replace(regex, `<span class="text-purple-400">$1</span>`);
+const highlightSyntax = (line: string): React.ReactNode => {
+  // Group 1: comments (//...)
+  // Group 2: strings ("..." or '...' or `...`)
+  // Group 3: keywords
+  // Group 4: types
+  const regex = /(\/\/.*$)|(["'`].*?["'`])|(\b(?:const|let|var|function|return|import|export|from|if|else|for|while|class|interface|type|async|await)\b)|(\b(?:string|number|boolean|void|any|null|undefined)\b)/g;
+
+  return tokenizeAndRender(line, regex, (match, g1, g2, g3, g4) => {
+    if (g1) return <span className="text-muted-foreground/60">{g1}</span>;
+    if (g2) return <span className="text-green-400">{g2}</span>;
+    if (g3) return <span className="text-purple-400">{g3}</span>;
+    if (g4) return <span className="text-yellow-400">{g4}</span>;
+    return match;
   });
-  
-  types.forEach(type => {
-    const regex = new RegExp(`\\b(${type})\\b`, 'g');
-    result = result.replace(regex, `<span class="text-yellow-400">$1</span>`);
-  });
-  
-  // Highlight strings
-  result = result.replace(/(["'`].*?["'`])/g, '<span class="text-green-400">$1</span>');
-  
-  // Highlight comments
-  result = result.replace(/(\/\/.*$)/g, '<span class="text-muted-foreground/60">$1</span>');
-  
-  return <span dangerouslySetInnerHTML={{ __html: result }} />;
 };
+
+function tokenizeAndRender(
+  text: string,
+  regex: RegExp,
+  renderToken: (match: string, ...groups: (string | undefined)[]) => React.ReactNode
+): React.ReactNode {
+  const result: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  regex.lastIndex = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    const matchIndex = match.index;
+    const matchText = match[0];
+
+    if (matchIndex > lastIndex) {
+      result.push(text.slice(lastIndex, matchIndex));
+    }
+
+    const groups = match.slice(1);
+    result.push(
+      <React.Fragment key={matchIndex}>
+        {renderToken(matchText, ...groups)}
+      </React.Fragment>
+    );
+
+    lastIndex = regex.lastIndex;
+
+    if (matchText.length === 0) {
+      regex.lastIndex++;
+    }
+  }
+
+  if (lastIndex < text.length) {
+    result.push(text.slice(lastIndex));
+  }
+
+  return <>{result}</>;
+}
 
 export default CodeSnippet;

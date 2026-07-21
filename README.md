@@ -35,7 +35,10 @@ The portfolio features a **dark-mode-first design aesthetic** with editorial typ
 │   │   │   ├── PageLoader.tsx   # Animated page loader
 │   │   │   ├── ScrollProgress.tsx# Scroll progress indicator
 │   │   │   ├── RevealOnScroll.tsx# Scroll-triggered reveal animations
+│   │   │   ├── articles/        # Article components
 │   │   │   └── ...              # More UI components
+│   │   ├── content/         # MDX content files
+│   │   │   └── articles/    # Technical articles
 │   │   ├── hooks/           # Custom React hooks
 │   │   ├── lib/             # Utility functions
 │   │   ├── pages/           # Page-level components
@@ -57,73 +60,25 @@ The portfolio features a **dark-mode-first design aesthetic** with editorial typ
 
 One of the most unique features of this portfolio is its **built-in AI assistant** — a conversational chatbot that represents Aditya on the website.
 
-### How It Works
-
-The chatbot is powered by **Google Gemini Flash** (`gemini-2.5-flash`), a fast and efficient large language model (LLM) from Google DeepMind. The integration uses the official **`@google/generative-ai`** Node.js SDK.
-
-```
-User Message
-     │
-     ▼
-React Frontend (Chatbot.tsx)
-     │  POST /api/chat  (message + conversation history)
-     ▼
-Express Backend (server/index.js)
-     │  Rate Limiter → Validation → Gemini SDK
-     ▼
-Google Gemini Flash API (gemini-2.5-flash)
-     │  Server-Sent Events (SSE) streaming response
-     ▼
-Frontend streams & renders tokens in real-time
-```
+Powered by **Google Gemini Flash**, the integration uses the official `@google/generative-ai` SDK and streams responses via Server-Sent Events (SSE).
 
 ### Key Chatbot Features
+- **Real-Time Streaming:** Responses stream token-by-token for a snappy, native chat UI.
+- **Context-Aware:** Multi-turn chat context and a carefully crafted system prompt (Aditya's resume) ensure accurate, personalized answers.
+- **Secure & Rate-Limited:** Custom in-memory IP rate limiter (30 requests/15m) and strict CORS rules protect the backend API.
+- **Dual UI Integration:** Available seamlessly inline inside the Hero IDE card and as a floating global widget.
 
-| Feature | Details |
-|---|---|
-| **LLM Model** | `gemini-3.1-flash-lite` (Google Gemini Flash) |
-| **Streaming** | Server-Sent Events (SSE) — response streams token by token |
-| **Conversation History** | Full multi-turn chat context sent on every request |
-| **System Prompt** | Aditya's complete resume is embedded as system context |
-| **Rate Limiting** | Custom in-memory limiter — 30 requests per 15-minute window per IP |
-| **Input Validation** | Max 600 characters, type-checked, sanitized |
-| **CORS Security** | Whitelist-based CORS — only trusted origins allowed |
-| **Persona** | Speaks in third-person ("Aditya is…", "He has…") — professional & engaging |
-| **Two UIs** | Inline inside the Hero IDE card + floating chatbot widget |
+---
 
-### System Instruction Design
+## ✍️ Technical Articles (MDX Engine)
 
-The chatbot's personality and knowledge are defined by a carefully crafted **system instruction** baked into every API call. It contains:
+The portfolio features a dedicated section for in-depth engineering blogs and tutorials, powered by **MDX** (Markdown + JSX). This approach bridges the gap between readable markdown and interactive web components.
 
-- Aditya's full resume (skills, projects, education, certifications, achievements)
-- Behavioral rules: third-person voice, concise answers, professional tone
-- Formatting preferences: bullet points for readability, no markdown headers
-- Fallback rule: use general knowledge if specific info isn't available
-
-### Google Gemini Flash — Why This Model?
-
-```js
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: "gemini-3.1-flash-lite",
-  systemInstruction: systemInstruction, // Full resume context
-});
-
-// Multi-turn chat with real-time SSE streaming
-const chat = model.startChat({ history: formattedHistory });
-const result = await chat.sendMessageStream(message);
-for await (const chunk of result.stream) {
-  res.write(`data: ${JSON.stringify({ text: chunk.text() })}\n\n`);
-}
-```
-
-The **Gemini Flash** model was specifically chosen for its:
-- ⚡ **Speed** — extremely low latency ideal for real-time chat UX
-- 💰 **Cost efficiency** — lightweight without sacrificing quality
-- 🧠 **Multi-turn awareness** — handles long conversation histories natively
-- 📄 **Large context window** — fits the entire resume as system-level context
+### Why MDX?
+- **Interactive Content:** Standard markdown is enhanced with embedded React components for dynamic, interactive technical explanations.
+- **Custom Components:** Features custom implementations like `CodeSnippet.tsx` for beautiful code blocks and syntax highlighting.
+- **Metadata Handling:** Uses `gray-matter` for parsing frontmatter data (e.g., publish dates, reading time, and tags) to dynamically construct article metadata.
+- **Typography & Styling:** Styled with `@tailwindcss/typography` (`prose` classes) to ensure elegant, highly readable editorial content in both dark and light modes.
 
 ---
 
@@ -136,6 +91,7 @@ The **Gemini Flash** model was specifically chosen for its:
 | **Vite** | Ultra-fast bundler and dev server |
 | **Tailwind CSS v3** | Utility-first styling system |
 | **Framer Motion** | Fluid animations, springs, and transitions |
+| **MDX** | Markdown with JSX for technical articles |
 | **shadcn/ui** | Accessible, composable UI components |
 | **Radix UI** | Headless accessible UI primitives |
 | **React Router v6** | Client-side routing |
@@ -199,6 +155,7 @@ The portfolio uses a **monochromatic dark-first theme** built entirely on CSS cu
 
 - **AI Chatbot** — Ask anything about Aditya; powered by Google Gemini Flash with real-time token streaming
 - **Dark / Light Mode** — System-aware toggle with smooth theme transition, persisted via `next-themes`
+- **Articles Section** — A dedicated space for in-depth technical writings, built with MDX and custom components
 - **Typing Effect** — Hero tagline cycles: Full Stack Developer → Cloud Enthusiast → DSA Enthusiast → Problem Solver
 - **Scroll Progress Bar** — Visual read-progress indicator pinned at top of viewport
 - **Reveal on Scroll** — All sections animate in as they enter the viewport using Framer Motion

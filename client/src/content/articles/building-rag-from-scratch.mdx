@@ -95,6 +95,8 @@ Your choice of vector database significantly impacts latency and scalability. He
 | ChromaDB | Self | ~10ms | Prototyping |
 | pgvector | PostgreSQL | ~80ms | Existing Postgres |
 
+My choice is Qdrant, because it offers...
+
 ## The Retrieval Pipeline
 
 Naive vector search retrieves the top-K chunks by cosine similarity. This works for simple cases but fails with complex queries that require multi-hop reasoning or where common terms dominate the embedding space.

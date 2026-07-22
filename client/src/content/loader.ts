@@ -33,6 +33,11 @@ function frontmatterToArticle(
   Component: ComponentType,
   filePath: string
 ): Article {
+  if (!fm) {
+    console.error(`Missing frontmatter in file: ${filePath}`);
+    // return a dummy article or throw a better error
+    throw new Error(`Missing frontmatter in file: ${filePath}`);
+  }
   const slug = fm.slug || slugFromPath(filePath);
   const readingTime =
     fm.readingTime ??

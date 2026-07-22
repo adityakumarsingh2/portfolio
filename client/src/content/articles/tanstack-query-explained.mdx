@@ -1,0 +1,151 @@
+---
+title: "TanStack Query: The Data Layer React Never Had"
+subtitle: "Caching, refetching, and query keys explained simply"
+slug: "tanstack-query-explained"
+description: "A short, practical guide to TanStack Query — what it is, the problem it solves, and how caching, useQuery, and useMutation actually work."
+category: "Web Development"
+tags: ["TanStack Query", "React", "State Management", "Caching", "JavaScript"]
+difficulty: "Intermediate"
+audience: ["Frontend Developers", "Full-Stack Engineers"]
+published: "2026-07-22T00:00:00.000Z"
+updated: "2026-07-22T00:00:00.000Z"
+draft: false
+readingTime: 6
+wordCount: 950
+coverImage: "/articles/covers/react.svg"
+canonical: "https://adityakumarsingh.tech/articles/tanstack-query-explained"
+keywords: ["TanStack Query", "React Query", "server state", "caching", "useQuery", "useMutation"]
+seoTitle: "TanStack Query Explained Simply | Aditya Kumar Singh"
+seoDescription: "What TanStack Query is, why React needed it, and how caching, useQuery, and useMutation work — explained with simple examples."
+author:
+  name: "Aditya Kumar Singh"
+  title: "Full-Stack Engineer & AI Builder"
+---
+
+## What Is TanStack Query?
+
+TanStack Query is a library that manages **server data** in a React app — fetching it, caching it, and keeping it fresh, so you don't have to write that logic by hand in every component.
+
+It's not a replacement for `fetch`. It's a layer that sits on top of your API calls and handles everything around them: loading states, errors, caching, and re-fetching when data goes stale.
+
+The short version: React is great at rendering state. It was never built to manage state that lives on a server. TanStack Query fills that gap.
+
+## The Problem It Solves
+
+Without it, fetching data usually looks like this:
+
+```jsx
+function Notes() {
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/notes")
+      .then((res) => res.json())
+      .then(setNotes)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  return notes.map((note) => <div key={note.id}>{note.title}</div>);
+}
+```
+
+Fine for one component. But if a dashboard, a sidebar, and a search panel all need the same notes, each one runs its own `useEffect` — so the same request fires three separate times for data that hasn't changed. Nothing is shared, nothing is cached.
+
+<Callout type="info">
+Every one of those `useEffect` calls also has to reimplement loading state, error state, and edge cases like the component unmounting mid-fetch. That's a lot of repeated code for something that should just work once.
+</Callout>
+
+## How It Works: Cache by Key
+
+TanStack Query keeps a cache, and every piece of data in it is identified by a **query key** — think of it like a label on a shelf.
+
+```
+Component A ──┐
+Component B ──┼── useQuery(["notes"]) ──→ Cache ──→ one network request
+Component C ──┘
+```
+
+The first component asking for `["notes"]` triggers the fetch. Every other component asking for the same key gets the cached result instantly — no extra request.
+
+## Setting It Up
+
+```tsx
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Dashboard />
+    </QueryClientProvider>
+  );
+}
+```
+
+`QueryClient` is the cache itself. `QueryClientProvider` makes that one cache available to every component in the tree, no matter how deep.
+
+<Callout type="info">
+In a project like Microcosm — a note-taking app structured as Workspace → Notebook → Section → Page — this means the sidebar, dashboard, and AI panel all read the same cached workspace data instead of each fetching it separately.
+</Callout>
+
+## Reading Data: useQuery
+
+```tsx
+const { data, isLoading } = useQuery({
+  queryKey: ["notebooks", workspaceId],
+  queryFn: () => fetchNotebooks(workspaceId),
+});
+```
+
+Two parts matter:
+
+- **`queryKey`** — the cache address. Change `workspaceId` and it's treated as a different entry entirely.
+- **`queryFn`** — any function that returns a promise. Fetch, axios, whatever you already use.
+
+When cached data exists, it's shown instantly while TanStack Query quietly checks the server in the background and updates the UI only if something actually changed.
+
+A useful habit: make query keys hierarchical, general to specific — `["notes"]`, then `["notes", workspaceId]`, then `["notes", workspaceId, pageId]`. This makes it easy to invalidate exactly the right slice of cache later.
+
+## Writing Data: useMutation
+
+Reads use `useQuery`. Writes use `useMutation`:
+
+```tsx
+const createPage = useMutation({
+  mutationFn: (newPage) => api.post("/pages", newPage),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["notes", workspaceId] });
+  },
+});
+```
+
+`invalidateQueries` tells TanStack Query "this data might be stale now, refetch it." Every component watching that key updates automatically — no manual passing of data between components.
+
+<Callout type="warning">
+Invalidate the narrowest key that covers the change. Invalidating all of `["notes"]` after editing one page throws away cache for every workspace, not just the one that changed.
+</Callout>
+
+## One Setting Worth Knowing: staleTime
+
+By default, TanStack Query treats data as stale the instant it arrives, which means it may refetch often. `staleTime` controls how long data is trusted before that happens:
+
+```tsx
+useQuery({
+  queryKey: ["notebooks", workspaceId],
+  queryFn: () => fetchNotebooks(workspaceId),
+  staleTime: 60 * 1000, // trust this data for 1 minute
+});
+```
+
+Set it based on how often the data actually changes — a workspace list can stay fresh for minutes; a page being actively edited shouldn't.
+
+## The Big Picture
+
+```
+React Components → TanStack Query (cache, loading, refetching) → Your API → Backend
+```
+
+React renders. Your backend owns the data. TanStack Query is the layer between them that turns "fetch, track loading, keep fresh, share everywhere" from boilerplate you'd write in every component into something you configure once per query.

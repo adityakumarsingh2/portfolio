@@ -67,7 +67,7 @@ export function CodeBlock({ code, language = "code", filename }: CodeBlockProps)
 
 /** Lightweight syntax highlighting via regex — no heavy library needed */
 function renderSyntaxHighlight(code: string, language: string): React.ReactNode {
-  if (!["javascript", "typescript", "python", "json", "bash"].includes(language)) {
+  if (!["javascript", "typescript", "python", "json", "bash", "jsx", "tsx"].includes(language)) {
     return <span className="text-foreground/90">{code}</span>;
   }
 

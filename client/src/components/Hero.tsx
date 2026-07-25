@@ -218,7 +218,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                   transition={{ duration: 0.5, delay: 0.56 }}
                 >
                   {[
-                    { icon: Trophy, num: "#1543", sub: "LeetCode / 30k+" },
+                    { icon: Github, num: "500+", sub: "GitHub Commits" },
                     { icon: Code2,  num: "MERN",  sub: "Stack + Cloud" },
                     { icon: Zap,    num: "3+",    sub: "Live Projects" },
                   ].map(({ icon: Icon, num, sub }) => (

@@ -8,7 +8,7 @@
 
 ## ✨ Overview
 
-This is not your average portfolio. It is a **production-grade, full-stack web application** built to showcase skills, freelance experience, projects, achievements, and LeetCode performance in an interactive and visually stunning way.
+This is not your average portfolio. It is a **production-grade, full-stack web application** built to showcase skills, freelance experience, projects, achievements, and GitHub activity in an interactive and visually stunning way.
 
 The portfolio features a **dark-mode-first design aesthetic** with editorial typography, glassmorphism-inspired card styles, smooth scroll animations, a custom magnetic cursor, and a fully integrated **AI assistant chatbot** — powered by Google's **Gemini Flash LLM** — that can answer questions about Aditya in real-time.
 
@@ -27,7 +27,7 @@ The portfolio features a **dark-mode-first design aesthetic** with editorial typ
 │   │   │   ├── Skills.tsx       # Tech skills grid
 │   │   │   ├── Projects.tsx     # Project showcase cards
 │   │   │   ├── Experience.tsx   # Freelance experience timeline
-│   │   │   ├── LeetCodeStats.tsx# Real-time LeetCode stats integration
+│   │   │   ├── GitHubHeatmap.tsx# Real-time GitHub activity heatmap integration
 │   │   │   ├── Contact.tsx      # Terminal-style contact section
 │   │   │   ├── CustomCursor.tsx # Custom magnetic cursor
 │   │   │   ├── Navbar.tsx       # Sticky navigation bar
@@ -159,7 +159,7 @@ The portfolio uses a **monochromatic dark-first theme** built entirely on CSS cu
 - **Typing Effect** — Hero tagline cycles: Full Stack Developer → Cloud Enthusiast → DSA Enthusiast → Problem Solver
 - **Scroll Progress Bar** — Visual read-progress indicator pinned at top of viewport
 - **Reveal on Scroll** — All sections animate in as they enter the viewport using Framer Motion
-- **Real-time LeetCode Stats** — Live integration with LeetCode public API (rank, problems, contest data)
+- **Real-time GitHub Heatmap** — Live integration with GitHub contribution API (commits, streak, repos, community stats)
 - **Terminal-style Contact Section** — CLI-inspired contact form with typed command output feel
 - **Projects Showcase** — Cards with live links, GitHub links, tech stack badges, and descriptions
 - **Freelance Experience Timeline** — Detailed timeline of professional freelance engagements

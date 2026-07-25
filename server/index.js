@@ -151,7 +151,7 @@ PROJECTS:
    - github link: https://github.com/adityakumarsingh2/confessit
 
 2. Personal Portfolio (Dec 2025 - Jan 2026)
-   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, a custom magnetic cursor, and real-time LeetCode statistics integration.
+   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, a custom magnetic cursor, and real-time GitHub activity heatmap integration.
    - Key Responsibilities & Achievements:
      * Optimized the website for SEO using structured metadata and sitemaps, achieving Google indexing and tracking 1,000+ visits via Google Analytics.
      * Hosted the portfolio on a custom domain using Netlify with Cloudflare as the DNS provider.

@@ -1,6 +1,6 @@
 import { motion, Variants } from "framer-motion";
 import { GraduationCap, Trophy, Code2 } from "lucide-react";
-import LeetCodeStats from "./LeetCodeStats";
+import GitHubHeatmap from "./GitHubHeatmap";
 
 const leftCardVariants: Variants = {
   hidden: { opacity: 0, x: -30 },
@@ -92,6 +92,39 @@ const About = () => {
               </div>
             </motion.div>
 
+            {/* What I Do Card */}
+            <motion.div
+              custom={2}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={leftCardVariants}
+              className="card-elegant card-glow p-6 transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-green-500/10">
+                  <Code2 className="w-6 h-6 text-green-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display text-xl font-semibold mb-3">What I Do</h3>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <span className="text-blue-400 font-mono">→</span>
+                      Building e-commerce & AI-powered applications
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-400 font-mono">→</span>
+                      Full-stack development with React & Node.js
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-purple-400 font-mono">→</span>
+                      Cloud deployment on AWS & Oracle Cloud
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Achievements Card - at bottom of left column */}
             <motion.div
               custom={3}
@@ -135,43 +168,10 @@ const About = () => {
             </motion.div>
           </div>
 
-          {/* Right Column - What I Do, LeetCode Stats & Fun Fact */}
+          {/* Right Column - GitHub Heatmap & Fun Fact */}
           <div className="space-y-5">
-            {/* What I Do Card */}
-            <motion.div
-              custom={0}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={rightCardVariants}
-              className="card-elegant card-glow p-6 transition-all duration-300"
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-green-500/10">
-                  <Code2 className="w-6 h-6 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-display text-xl font-semibold mb-3">What I Do</h3>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p className="flex items-center gap-2">
-                      <span className="text-blue-400 font-mono">→</span>
-                      Building e-commerce & AI-powered applications
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-400 font-mono">→</span>
-                      Full-stack development with React & Node.js
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-purple-400 font-mono">→</span>
-                      Cloud deployment on AWS & Oracle Cloud
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* LeetCode Stats Widget */}
-            <LeetCodeStats />
+            {/* GitHub Activity Heatmap Widget */}
+            <GitHubHeatmap />
 
             {/* Fun Fact */}
             <motion.div

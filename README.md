@@ -2,7 +2,7 @@
 
 > A premium, full-stack developer portfolio with an integrated AI chatbot powered by **Google Gemini Flash** — built to leave a lasting first impression.
 
-🌐 **Live:** [adityakumaronline.netlify.app](https://adityakumaronline.netlify.app)
+🌐 **Live:** [adityakumarsingh.tech](https://adityakumarsingh.tech)
 
 ---
 

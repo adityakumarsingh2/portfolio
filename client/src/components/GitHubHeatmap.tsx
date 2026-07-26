@@ -14,7 +14,7 @@ interface GitHubStatsData {
   currentStreak: number;
   repos: number;
   followers: number;
-  weeks: DayContribution[][];
+  weeks: (DayContribution | null)[][];
 }
 
 const GitHubHeatmapSkeleton = () => (
@@ -132,16 +132,25 @@ const GitHubHeatmap = () => {
           followers = profileJson.followers || followers;
         }
 
-        let weeks: DayContribution[][] = [];
+        let weeks: (DayContribution | null)[][] = [];
         if (contribRes.status === "fulfilled" && contribRes.value.ok) {
           const contribJson = await contribRes.value.json();
           if (contribJson && Array.isArray(contribJson.contributions)) {
-            weeks = contribJson.contributions.map((week: any[]) =>
-              week.map((day: any) => ({
-                date: day.date,
-                contributionCount: day.contributionCount || 0,
-              }))
-            );
+            weeks = contribJson.contributions.map((week: any[]) => {
+              const fullWeek: (DayContribution | null)[] = Array(7).fill(null);
+              week.forEach((day: any) => {
+                if (day && day.date) {
+                  const parts = day.date.split("-").map(Number);
+                  const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                  const dayOfWeek = dateObj.getDay();
+                  fullWeek[dayOfWeek] = {
+                    date: day.date,
+                    contributionCount: day.contributionCount || 0,
+                  };
+                }
+              });
+              return fullWeek;
+            });
           }
         }
 
@@ -149,7 +158,7 @@ const GitHubHeatmap = () => {
           weeks = generateFallbackWeeks();
         }
 
-        const allDays = weeks.flat();
+        const allDays = weeks.flat().filter((d): d is DayContribution => d !== null);
         const totalContributions = allDays.reduce((sum, day) => sum + day.contributionCount, 0);
         const streaks = calculateStreaks(allDays);
 
@@ -212,8 +221,9 @@ const GitHubHeatmap = () => {
     let lastMonth = -1;
 
     stats.weeks.forEach((week, idx) => {
-      if (week[0]) {
-        const month = new Date(week[0].date).getMonth();
+      const firstValidDay = week.find((d): d is DayContribution => d !== null);
+      if (firstValidDay) {
+        const month = new Date(firstValidDay.date).getMonth();
         if (month !== lastMonth && idx % 3 === 0) {
           const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
           labels.push({ name: monthNames[month], colIndex: idx });
@@ -348,19 +358,26 @@ const GitHubHeatmap = () => {
                       </div>
 
                       {/* Heatmap Squares */}
-                      <div className="flex gap-[3px] items-center">
+                      <div className="flex gap-[3px] items-start">
                         {stats?.weeks.map((week, wIdx) => (
                           <div key={wIdx} className="flex flex-col gap-[3px]">
-                            {week.map((day) => (
-                              <motion.div
-                                key={day.date}
-                                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
-                                  day.contributionCount
-                                )}`}
-                                onMouseEnter={() => setHoveredDay(day)}
-                                whileHover={{ scale: 1.3, zIndex: 10 }}
-                              />
-                            ))}
+                            {week.map((day, dIdx) =>
+                              day ? (
+                                <motion.div
+                                  key={day.date}
+                                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
+                                    day.contributionCount
+                                  )}`}
+                                  onMouseEnter={() => setHoveredDay(day)}
+                                  whileHover={{ scale: 1.3, zIndex: 10 }}
+                                />
+                              ) : (
+                                <div
+                                  key={`empty-${wIdx}-${dIdx}`}
+                                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] opacity-0 pointer-events-none"
+                                />
+                              )
+                            )}
                           </div>
                         ))}
                       </div>

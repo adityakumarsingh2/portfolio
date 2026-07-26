@@ -219,7 +219,7 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                   {[
                     { icon: Github, num: "500+", sub: "GitHub Commits" },
                     { icon: Code2,  num: "AI+Web", sub: "MERN & RAG" },
-                    { icon: Zap,    num: "3+",    sub: "Live Systems" },
+                    { icon: Zap,    num: "10+",   sub: "Live Systems" },
                   ].map(({ icon: Icon, num, sub }) => (
                     <div key={num}
                       className="flex flex-col gap-1 px-3.5 py-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] hover:bg-foreground/[0.06] hover:border-foreground/[0.15] transition-all duration-300 cursor-default group"

@@ -55,14 +55,14 @@ interface HeroProps {
 
 // Scrolling ticker tags
 const TICKER_TAGS = [
-  "React", "Node.js", "TypeScript", "MongoDB", "AWS", "Oracle Cloud",
-  "Express.js", "Tailwind CSS", "C++", "DSA", "REST APIs", "Git",
-  "Supabase", "Vercel", "Linux", "Python", "Java", "PostgreSQL",
+  "React", "Next.js", "TypeScript", "LangChain", "Gemini AI", "OpenAI",
+  "Node.js", "MongoDB", "RAG Pipelines", "Tailwind CSS", "C++", "DSA",
+  "REST APIs", "Vector DBs", "Supabase", "Vercel", "Python", "PostgreSQL",
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
-  const taglines = ["Full Stack Developer", "Cloud Enthusiast", "DSA Enthusiast", "Problem Solver"];
+  const taglines = ["Full Stack Engineer", "AI & LLM Engineer", "RAG Systems Architect", "Competitive Programmer"];
   const typed = useTypingEffect(taglines);
 
   const [activeTab, setActiveTab] = useState<"profile" | "chat">("profile");
@@ -206,9 +206,8 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                 >
                   B.Tech CSE at{" "}
                   <span className="text-foreground/70 font-semibold">LPU</span>. Building
-                  production-grade full-stack products with the{" "}
-                  <span className="text-foreground/70 font-semibold">MERN stack</span>, deployed on{" "}
-                  <span className="text-foreground/70 font-semibold">AWS & Oracle Cloud</span>.
+                  production-grade <span className="text-foreground/70 font-semibold">MERN architecture</span> and{" "}
+                  intelligent <span className="text-foreground/70 font-semibold">AI & RAG pipelines</span>.
                 </motion.p>
 
                 {/* ── STAT ROW ── */}
@@ -219,8 +218,8 @@ const Hero = ({ messages, setMessages, input, setInput }: HeroProps) => {
                 >
                   {[
                     { icon: Github, num: "500+", sub: "GitHub Commits" },
-                    { icon: Code2,  num: "MERN",  sub: "Stack + Cloud" },
-                    { icon: Zap,    num: "3+",    sub: "Live Projects" },
+                    { icon: Code2,  num: "AI+Web", sub: "MERN & RAG" },
+                    { icon: Zap,    num: "3+",    sub: "Live Systems" },
                   ].map(({ icon: Icon, num, sub }) => (
                     <div key={num}
                       className="flex flex-col gap-1 px-3.5 py-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] hover:bg-foreground/[0.06] hover:border-foreground/[0.15] transition-all duration-300 cursor-default group"

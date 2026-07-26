@@ -6,40 +6,40 @@ import nptelNetworkingCert from "@/assets/nptel-networking-cert.png";
 
 const skillGroups = [
   {
+    title: "AI & RAG Systems",
+    icon: Sparkles,
+    gradient: "from-purple-500 to-indigo-400",
+    skills: ["LangChain", "Gemini API", "OpenAI", "Vector DBs", "RAG Pipelines"],
+  },
+  {
     title: "Languages",
     icon: Code2,
     gradient: "from-blue-500 to-cyan-400",
-    skills: ["C/C++", "Java", "JavaScript", "PHP", "Python"],
+    skills: ["TypeScript", "JavaScript", "Python", "C/C++", "Java"],
   },
   {
-    title: "Frontend",
+    title: "Modern Frontend",
     icon: Palette,
     gradient: "from-pink-500 to-rose-400",
-    skills: ["HTML5", "CSS3", "Tailwind CSS", "React", "jQuery"],
+    skills: ["React.js", "Next.js", "Tailwind CSS", "Redux Toolkit", "Framer Motion"],
   },
   {
     title: "Backend & DB",
     icon: Database,
     gradient: "from-emerald-500 to-green-400",
-    skills: ["PHP", "MySQL", "XAMPP", "Node.js", "REST APIs"],
-  },
-  {
-    title: "Cloud (OCI)",
-    icon: Cloud,
-    gradient: "from-orange-500 to-amber-400",
-    skills: ["Compute", "Storage", "Networking", "IAM", "Autonomous DB"],
+    skills: ["Node.js", "Express.js", "MongoDB Atlas", "PostgreSQL", "REST APIs"],
   },
   {
     title: "CS Fundamentals",
     icon: BookOpen,
     gradient: "from-violet-500 to-purple-400",
-    skills: ["DSA", "OS", "Networks", "OOPs", "DBMS"],
+    skills: ["DSA (500+)", "System Design", "OS", "Networks", "DBMS"],
   },
   {
-    title: "Tools & DevOps",
-    icon: Wrench,
-    gradient: "from-yellow-500 to-lime-400",
-    skills: ["Git", "GitHub", "VS Code", "Docker", "Linux"],
+    title: "Cloud & DevOps",
+    icon: Cloud,
+    gradient: "from-orange-500 to-amber-400",
+    skills: ["Docker", "AWS", "Oracle Cloud", "Vercel", "Git/Linux"],
   },
 ];
 

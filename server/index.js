@@ -106,11 +106,12 @@ CONTACT DETAILS:
 - Portfolio/Website: adityakumaronline.netlify.app
 
 SKILLS:
-- Languages: C/C++, Java, JavaScript, PHP
-- Frameworks & Libraries: HTML and CSS, Tailwind CSS, React.js, Node.js, Express.js
-- Tools & Platforms: MySQL, Git, GitHub, MongoDB Compass, Postman, VS Code, XAMPP, Netlify, Supabase
-- Core CS Fundamentals: Data Structures and Algorithms (DSA), Operating Systems, Computer Networks, OOPs, DBMS
-- Soft Skills: Problem-Solving, Teamwork, Leadership, Discipline, Resilience, Adaptability
+- AI & RAG Engineering: LangChain, LlamaIndex, Google Gemini API, OpenAI API, Vector DBs (Pinecone, ChromaDB, pgvector), RAG Pipelines, Prompt Engineering
+- Languages: TypeScript, JavaScript, Python, C/C++, Java, PHP
+- Frameworks & Libraries: React.js, Next.js, Node.js, Express.js, Tailwind CSS, Redux Toolkit, Framer Motion
+- Tools & Platforms: MongoDB Atlas, PostgreSQL, Supabase, Docker, AWS, Oracle Cloud (OCI), Vercel, Git, GitHub
+- Core CS Fundamentals: Data Structures and Algorithms (500+ solved), System Design, Operating Systems, Computer Networks, DBMS
+- Soft Skills: Problem-Solving, Teamwork, Leadership, Discipline (Boxing Champion), Resilience, Adaptability
 
 FREELANCE EXPERIENCE:
 1. Freelancer | Fit Kart, Begusarai (Nov 2025 - Dec 2025)
@@ -161,7 +162,7 @@ PROJECTS:
 ARTICLES:
 - Aditya writes in-depth engineering blogs and technical tutorials on his portfolio website.
 - These articles are built using MDX (Markdown + JSX) to provide interactive technical explanations with custom React components like code snippets.
-- The articles cover topics related to full-stack development, cloud computing, and problem-solving.
+- The articles cover topics related to full-stack architecture, applied AI & RAG systems (like "Building Production RAG from Scratch"), and problem-solving.
 
 CERTIFICATIONS:
 - Cloud Computing | NPTEL (Nov 2025), link: https://drive.google.com/file/d/187CFo6VbufxGicOaZHFFDU3OLRUGT-oz/view

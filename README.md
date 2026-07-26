@@ -156,7 +156,7 @@ The portfolio uses a **monochromatic dark-first theme** built entirely on CSS cu
 - **AI Chatbot** — Ask anything about Aditya; powered by Google Gemini Flash with real-time token streaming
 - **Dark / Light Mode** — System-aware toggle with smooth theme transition, persisted via `next-themes`
 - **Articles Section** — A dedicated space for in-depth technical writings, built with MDX and custom components
-- **Typing Effect** — Hero tagline cycles: Full Stack Developer → Cloud Enthusiast → DSA Enthusiast → Problem Solver
+- **Typing Effect** — Hero tagline cycles: Full Stack Engineer → AI & LLM Engineer → RAG Systems Architect → Competitive Programmer
 - **Scroll Progress Bar** — Visual read-progress indicator pinned at top of viewport
 - **Reveal on Scroll** — All sections animate in as they enter the viewport using Framer Motion
 - **Real-time GitHub Heatmap** — Live integration with GitHub contribution API (commits, streak, repos, community stats)

@@ -63,9 +63,8 @@ const About = () => {
             >
               <span className="text-green-400">{"// Background"}</span>
               <p className="text-muted-foreground mt-2 leading-relaxed">
-                I'm a <span className="text-foreground font-medium">Computer Science student</span> with 
-                hands-on experience in full-stack development and cloud technologies. Passionate about 
-                building scalable applications that solve real-world problems.
+                I'm an <span className="text-foreground font-medium">Oracle Certified Developer</span> and 
+                Computer Science student with hands-on experience in full-stack MERN architecture and artificial intelligence (LLMs & RAG).
               </p>
             </motion.div>
 
@@ -110,15 +109,15 @@ const About = () => {
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <p className="flex items-center gap-2">
                       <span className="text-blue-400 font-mono">→</span>
-                      Building e-commerce & AI-powered applications
+                      Architecting RAG pipelines & autonomous LLM workflows
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="text-green-400 font-mono">→</span>
-                      Full-stack development with React & Node.js
+                      Full-stack MERN & Next.js development
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="text-purple-400 font-mono">→</span>
-                      Cloud deployment on AWS & Oracle Cloud
+                      High-concurrency systems & database optimization
                     </p>
                   </div>
                 </div>

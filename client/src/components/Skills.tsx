@@ -60,14 +60,6 @@ const itemVariants = {
   },
 };
 
-const SkillPill = ({ skill }: { skill: string }) => {
-  return (
-    <span className="px-2.5 py-1 rounded-md bg-muted/40 hover:bg-muted border border-border/40 font-mono text-xs text-foreground/80 hover:text-foreground transition-all duration-200 cursor-default">
-      {skill}
-    </span>
-  );
-};
-
 const SkillCard = ({
   group,
 }: {
@@ -78,22 +70,29 @@ const SkillCard = ({
       className="relative group h-full"
       variants={itemVariants}
     >
-      <div className="card-elegant card-glow p-6 md:p-8 h-full rounded-2xl border border-border/40 hover:border-border transition-all duration-300 flex flex-col justify-between bg-card/50">
+      <div className="card-elegant card-glow p-6 md:p-8 h-full rounded-2xl border border-border/60 hover:border-foreground/30 transition-all duration-300 flex flex-col justify-between bg-card/70 shadow-sm">
         <div>
-          <div className="flex items-center gap-3.5 mb-6">
-            <div className="p-2.5 rounded-xl bg-primary/5 border border-border/30 text-foreground group-hover:bg-primary/10 group-hover:border-border/60 transition-all duration-300">
-              <group.icon className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300">
-                {group.title}
-              </h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-muted/80 border border-border/80 text-foreground group-hover:bg-primary/10 group-hover:border-primary/30 group-hover:text-primary transition-all duration-300 shadow-2xs">
+                <group.icon className="w-5 h-5 transition-colors duration-300" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-bold text-foreground tracking-tight group-hover:text-primary transition-colors duration-300">
+                  {group.title}
+                </h3>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {group.skills.map((skill) => (
-              <SkillPill key={skill} skill={skill} />
+              <span
+                key={skill}
+                className="px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted border border-border/70 font-mono text-xs text-foreground/90 font-medium shadow-2xs hover:border-foreground/50 hover:text-foreground transition-all duration-200 cursor-default"
+              >
+                {skill}
+              </span>
             ))}
           </div>
         </div>
@@ -146,21 +145,23 @@ const Skills = () => {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <span className="font-mono text-primary text-sm tracking-wider block mb-2">
-              <Code2 className="inline w-4 h-4 mr-2" />
-              {">"} Technical Arsenal
-            </span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mt-2">
-              <span className="font-mono text-primary/70">npx</span>
-              <span className="text-gradient-warm">{" skills-check"}</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 shadow-sm">
+              <Code2 className="w-4 h-4 text-primary" />
+              <span className="font-mono text-xs font-semibold text-primary uppercase tracking-wider">Tech Arsenal</span>
+            </div>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mt-2">
+              <span className="font-mono text-blue-400">{"import "}</span>
+              <span className="text-foreground">{"{ Skills }"}</span>
+              <span className="font-mono text-blue-400">{" from "}</span>
+              <span className="text-green-400">{"'./production'"}</span>
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-sm md:text-base">
-              A curated breakdown of my production toolkit, from high-concurrency backend services and RAG architectures to modern frontend frameworks.
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-base leading-relaxed font-normal">
+              A high-contrast overview of my technical stack, from scalable backend microservices and RAG intelligence to responsive frontend architectures.
             </p>
           </motion.div>
 
           <motion.div
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -180,7 +181,7 @@ const Skills = () => {
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="text-center mb-12">
-              <span className="font-mono text-xs text-muted-foreground tracking-wider block mb-2 uppercase">
+              <span className="font-mono text-xs text-primary font-semibold tracking-wider block mb-2 uppercase">
                 {"// verified credentials"}
               </span>
               <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground">
@@ -188,33 +189,33 @@ const Skills = () => {
               </h3>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {certifications.map((cert, i) => (
                 <motion.div
                   key={cert.title}
-                  className="relative block card-elegant card-glow rounded-2xl overflow-hidden h-full transition-all duration-300 group hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex flex-col bg-card/60 border border-border/40"
+                  className="relative block card-elegant card-glow rounded-2xl overflow-hidden h-full transition-all duration-300 group hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex flex-col bg-card/70 border border-border/60 shadow-sm"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   {/* Certificate Image Frame */}
-                  <div className="relative aspect-[1.5/1] w-full overflow-hidden bg-zinc-950/90 flex items-center justify-center p-2.5 border-b border-border/40 group/image">
+                  <div className="relative aspect-[1.5/1] w-full overflow-hidden bg-zinc-950 flex items-center justify-center p-3 border-b border-border/70 group/image">
                     <img
                       src={cert.image}
                       alt={`${cert.title} certificate`}
-                      className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent pointer-events-none" />
                     
                     {/* Hover Verify Overlay */}
                     <a
                       href={cert.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute inset-0 flex items-center justify-center bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                      className="absolute inset-0 flex items-center justify-center bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 backdrop-blur-xs"
                     >
-                      <span className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background font-semibold text-xs shadow-md hover:bg-foreground/90 transition-colors">
+                      <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background font-mono font-bold text-xs shadow-xl hover:bg-foreground/90 transition-all scale-95 group-hover:scale-100 duration-300">
                         <ExternalLink className="w-3.5 h-3.5" />
                         Verify Credential
                       </span>
@@ -222,36 +223,36 @@ const Skills = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between relative z-10">
-                    <div className="mb-3">
+                  <div className="p-6 flex-1 flex flex-col justify-between relative z-10 bg-card/70">
+                    <div className="mb-4">
                       {/* Issuer & Date info */}
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="font-mono text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                      <div className="flex justify-between items-center mb-2.5">
+                        <span className="font-mono text-xs font-bold text-primary tracking-wide uppercase">
                           {cert.issuer}
-                        </p>
-                        <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded border border-border/40">
+                        </span>
+                        <span className="text-[11px] font-mono font-medium text-foreground/80 bg-muted px-2.5 py-0.5 rounded-md border border-border/60 shadow-2xs">
                           {cert.date}
                         </span>
                       </div>
 
                       {/* Title */}
-                      <h4 className="font-semibold text-sm text-foreground text-left leading-snug line-clamp-2 min-h-[36px] mt-1">
+                      <h4 className="font-display font-bold text-base text-foreground text-left leading-snug line-clamp-2 min-h-[44px] mt-1 group-hover:text-primary transition-colors">
                         {cert.title}
                       </h4>
                     </div>
 
                     {/* View Credential Link */}
-                    <div className="pt-3 border-t border-border/30 flex justify-between items-center mt-3">
+                    <div className="pt-3.5 border-t border-border/60 flex justify-between items-center mt-2">
                       <a
                         href={cert.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-foreground/70 hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-foreground/80 hover:text-primary transition-colors"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         Verify Credential
                       </a>
-                      <span className="text-sm">{cert.emoji}</span>
+                      <span className="text-base">{cert.emoji}</span>
                     </div>
                   </div>
                 </motion.div>

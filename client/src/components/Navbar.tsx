@@ -33,7 +33,7 @@ const Navbar = () => {
     const computeSectionMeta = () => {
       sectionMeta.length = 0;
       for (const link of navLinks) {
-        const id = link.href.replace('#', '');
+        const id = link.href.replace("#", "");
         const el = document.getElementById(id);
         if (!el) continue;
         const rect = el.getBoundingClientRect();
@@ -44,9 +44,9 @@ const Navbar = () => {
 
     const update = () => {
       const y = window.scrollY;
-      setIsScrolled(y > 50);
+      setIsScrolled(y > 30);
 
-      const scrollPosition = y + 100;
+      const scrollPosition = y + 120;
       let nextActive = "";
       for (const s of sectionMeta) {
         if (scrollPosition >= s.top && scrollPosition < s.bottom) {
@@ -71,7 +71,6 @@ const Navbar = () => {
       handleScroll();
     };
 
-    // Defer initial layout reads to after first paint
     requestAnimationFrame(() => {
       computeSectionMeta();
       update();
@@ -88,47 +87,49 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? "bg-background/90 backdrop-blur-md border-b border-border/50 py-3" 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-border/60 py-3.5 shadow-sm"
           : "bg-transparent py-5"
       }`}
     >
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 max-w-7xl">
         <div className="flex items-center justify-between">
-          {/* Logo - React style */}
-          <a 
-            href="#home" 
+          {/* Logo */}
+          <a
+            href="#home"
             onClick={(e) => {
               e.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="font-mono text-xl font-bold group"
+            className="font-mono text-xl font-bold group flex items-center cursor-pointer select-none"
           >
-            <span className="text-blue-400">{"<"}</span>
-            <span className="group-hover:text-primary transition-colors">Aditya</span>
-            <span className="text-blue-400">{" />"}</span>
+            <span className="text-purple-400">{"<"}</span>
+            <span className="text-foreground group-hover:text-purple-400 transition-colors duration-200">
+              Aditya
+            </span>
+            <span className="text-purple-400">{" />"}</span>
           </a>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {/* Articles link — router-based */}
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             <Link
               to="/articles"
-              className={`transition-colors duration-300 font-medium relative group ${
-                isArticlesRoute ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              className={`text-sm font-mono transition-colors duration-200 relative py-1 ${
+                isArticlesRoute
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Articles
-              <span
-                className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
-                  isArticlesRoute ? 'w-full' : 'w-0 group-hover:w-full'
-                }`}
-              />
+              {isArticlesRoute && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400 rounded-full" />
+              )}
             </Link>
 
             {navLinks.map((link) => {
-              const isActive = !isArticlesRoute && activeSection === link.href.replace('#', '');
+              const isActive =
+                !isArticlesRoute && activeSection === link.href.replace("#", "");
               return (
                 <a
                   key={link.name}
@@ -137,72 +138,94 @@ const Navbar = () => {
                     e.preventDefault();
                     const element = document.querySelector(link.href);
                     if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      element.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
                   }}
-                  className={`transition-colors duration-300 font-medium relative group ${
-                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  className={`text-sm font-mono transition-colors duration-200 relative py-1 ${
+                    isActive
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {link.name}
-                  <span 
-                    className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
-                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                    }`} 
-                  />
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400 rounded-full" />
+                  )}
                 </a>
               );
             })}
-            
-            {/* Theme Toggle */}
+          </div>
+
+          {/* Right Controls */}
+          <div className="hidden lg:flex items-center gap-4">
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2.5 rounded-full bg-secondary border border-border hover:border-primary hover:text-primary transition-all duration-300"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2.5 rounded-xl bg-muted/50 hover:bg-muted border border-border/60 text-foreground transition-all duration-200"
               aria-label="Toggle theme"
+              title="Switch theme"
             >
-              {mounted && (theme === 'dark' ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              ))}
+              {mounted &&
+                (theme === "dark" ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-blue-500" />
+                ))}
             </button>
-            
-            <a 
-              href="/AdityaResume.pdf" 
+
+            <a
+              href="/AdityaResume.pdf"
               download="Aditya_Kumar_Singh_Resume.pdf"
-              className="btn-primary inline-flex items-center gap-2 text-sm py-2.5 px-5"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-foreground text-background font-mono text-xs font-bold hover:bg-foreground/90 transition-all duration-200 shadow-sm"
             >
-              <Download className="w-4 h-4" />
-              Resume
+              <Download className="w-3.5 h-3.5" />
+              <span>Resume</span>
             </a>
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 text-foreground"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/60 text-foreground transition-all duration-200"
+              aria-label="Toggle theme"
+            >
+              {mounted &&
+                (theme === "dark" ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-blue-500" />
+                ))}
+            </button>
+
+            <button
+              className="p-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/60 text-foreground"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden pt-6 pb-4 animate-fade">
-            <div className="flex flex-col gap-4">
-              {/* Articles mobile link */}
+          <div className="lg:hidden mt-4 pt-4 pb-6 border-t border-border/60 animate-fade">
+            <div className="flex flex-col gap-2.5">
               <Link
                 to="/articles"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`transition-colors duration-300 font-medium text-lg py-2 ${
-                  isArticlesRoute ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                className={`text-base font-mono py-1.5 px-3 rounded-lg ${
+                  isArticlesRoute
+                    ? "text-purple-400 font-semibold bg-muted/50"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Articles
               </Link>
 
               {navLinks.map((link) => {
-                const isActive = !isArticlesRoute && activeSection === link.href.replace('#', '');
+                const isActive =
+                  !isArticlesRoute && activeSection === link.href.replace("#", "");
                 return (
                   <a
                     key={link.name}
@@ -212,36 +235,28 @@ const Navbar = () => {
                       setIsMobileMenuOpen(false);
                       const element = document.querySelector(link.href);
                       if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
                       }
                     }}
-                    className={`transition-colors duration-300 font-medium text-lg py-2 ${
-                      isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                    className={`text-base font-mono py-1.5 px-3 rounded-lg ${
+                      isActive
+                        ? "text-purple-400 font-semibold bg-muted/50"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {link.name}
                   </a>
                 );
               })}
-              <div className="flex items-center gap-4 mt-2">
-                <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="p-2.5 rounded-full bg-secondary border border-border hover:border-primary hover:text-primary transition-all duration-300"
-                  aria-label="Toggle theme"
-                >
-                  {mounted && (theme === 'dark' ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  ))}
-                </button>
-                <a 
-                  href="/AdityaResume.pdf" 
+
+              <div className="mt-4 pt-4 border-t border-border/40">
+                <a
+                  href="/AdityaResume.pdf"
                   download="Aditya_Kumar_Singh_Resume.pdf"
-                  className="btn-primary inline-flex items-center gap-2"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-foreground text-background font-mono text-xs font-bold"
                 >
                   <Download className="w-4 h-4" />
-                  Resume
+                  <span>Download Resume</span>
                 </a>
               </div>
             </div>

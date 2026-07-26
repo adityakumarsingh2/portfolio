@@ -42,13 +42,14 @@ const Training = () => {
               </h3>
             </div>
 
-            <div className="card-elegant card-glow p-8 rounded-2xl border border-border/40 hover:border-border transition-all duration-300 bg-card/50">
+            <div className="card-elegant card-glow p-8 rounded-2xl border border-border/60 hover:border-foreground/30 transition-all duration-300 bg-card/70 shadow-sm group">
+
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                 <div>
-                  <h4 className="font-display text-xl font-semibold text-foreground">CodeQuest — DSA using C++</h4>
+                  <h4 className="font-display text-xl font-bold text-foreground">CodeQuest — DSA using C++</h4>
                   <p className="text-primary font-medium mt-1">Lovely Professional University</p>
                 </div>
-                <span className="font-mono text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded border border-border/40 mt-2 md:mt-0">
+                <span className="font-mono text-xs text-foreground/80 bg-muted px-3 py-1 rounded-md border border-border/60 mt-2 md:mt-0 shadow-2xs">
                   Jun 2025 – Jul 2025
                 </span>
               </div>

@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { Github, ExternalLink, GitCommit, Flame, BookOpen, Users, Calendar } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DayContribution {
   date: string;
   contributionCount: number;
+  level: number;
 }
 
 interface GitHubStatsData {
@@ -16,6 +17,58 @@ interface GitHubStatsData {
   followers: number;
   weeks: (DayContribution | null)[][];
 }
+
+// Timezone-safe local date formatting
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+// Timezone-safe date string parsing
+const parseDateString = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+// Calculate month labels with minimum separation to prevent overlap
+const getMonthLabels = (weeks: (DayContribution | null)[][]) => {
+  const labels: { name: string; colIndex: number }[] = [];
+  let lastLabelCol = -10;
+
+  weeks.forEach((week, idx) => {
+    const firstDay = week.find((d): d is DayContribution => d !== null);
+    if (!firstDay) return;
+
+    const currentDate = parseDateString(firstDay.date);
+    const currentMonth = currentDate.getMonth();
+
+    let isNewMonth = false;
+    if (idx === 0) {
+      isNewMonth = true;
+    } else {
+      const prevWeek = weeks[idx - 1];
+      const prevFirstDay = prevWeek.find((d): d is DayContribution => d !== null);
+      if (prevFirstDay) {
+        const prevDate = parseDateString(prevFirstDay.date);
+        isNewMonth = currentMonth !== prevDate.getMonth();
+      }
+    }
+
+    if (isNewMonth) {
+      // Ensure at least 3 columns gap to prevent labels from overlapping
+      if (idx - lastLabelCol >= 3) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        labels.push({ name: monthNames[currentMonth], colIndex: idx });
+        lastLabelCol = idx;
+      }
+    }
+  });
+
+  return labels;
+};
+
 
 const GitHubHeatmapSkeleton = () => (
   <div className="space-y-6">
@@ -60,30 +113,45 @@ const GitHubHeatmap = () => {
   const [hoveredDay, setHoveredDay] = useState<DayContribution | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const monthLabels = useMemo(() => {
+    if (!stats?.weeks) return [];
+    return getMonthLabels(stats.weeks);
+  }, [stats?.weeks]);
+
+
   // Generate fallback weeks if API is unavailable or offline
   const generateFallbackWeeks = (): DayContribution[][] => {
     const weeks: DayContribution[][] = [];
     const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 364);
+    today.setHours(0, 0, 0, 0);
 
-    // Align to Sunday
-    while (startDate.getDay() !== 0) {
-      startDate.setDate(startDate.getDate() - 1);
-    }
+    const currentSunday = new Date(today);
+    currentSunday.setDate(today.getDate() - today.getDay());
+
+    const startDate = new Date(currentSunday);
+    startDate.setDate(currentSunday.getDate() - 52 * 7);
 
     let currDate = new Date(startDate);
-    for (let w = 0; w < 52; w++) {
+    for (let w = 0; w < 53; w++) {
       const week: DayContribution[] = [];
       for (let d = 0; d < 7; d++) {
-        const dateStr = currDate.toISOString().split("T")[0];
-        const isWeekend = d === 0 || d === 6;
-        const rand = Math.random();
+        const dateStr = formatLocalDate(currDate);
         let count = 0;
-        if (rand > 0.35) {
-          count = isWeekend ? Math.floor(Math.random() * 4) : Math.floor(Math.random() * 11) + 1;
+        let level = 0;
+
+        if (currDate <= today) {
+          const isWeekend = d === 0 || d === 6;
+          const rand = Math.random();
+          if (rand > 0.4) {
+            count = isWeekend ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 8) + 1;
+            if (count === 0) level = 0;
+            else if (count <= 2) level = 1;
+            else if (count <= 4) level = 2;
+            else if (count <= 7) level = 3;
+            else level = 4;
+          }
         }
-        week.push({ date: dateStr, contributionCount: count });
+        week.push({ date: dateStr, contributionCount: count, level });
         currDate.setDate(currDate.getDate() + 1);
       }
       weeks.push(week);
@@ -91,37 +159,85 @@ const GitHubHeatmap = () => {
     return weeks;
   };
 
-  const calculateStreaks = (allDays: DayContribution[]) => {
+  const calculateStreaks = (sortedContributions: { date: string; count: number; level: number }[]) => {
     let longest = 0;
-    let current = 0;
     let tempStreak = 0;
 
-    for (let i = 0; i < allDays.length; i++) {
-      if (allDays[i].contributionCount > 0) {
+    sortedContributions.forEach((day) => {
+      if (day.count > 0) {
         tempStreak++;
         if (tempStreak > longest) longest = tempStreak;
       } else {
         tempStreak = 0;
       }
-    }
+    });
 
-    for (let i = allDays.length - 1; i >= 0; i--) {
-      if (allDays[i].contributionCount > 0) {
-        current++;
-      } else if (i !== allDays.length - 1 && current > 0) {
-        break;
+    let current = 0;
+    const todayStr = formatLocalDate(new Date());
+
+    let todayIdx = sortedContributions.findIndex((d) => d.date === todayStr);
+
+    // If today is not in the list, look for the most recent past date
+    if (todayIdx === -1) {
+      for (let i = sortedContributions.length - 1; i >= 0; i--) {
+        if (sortedContributions[i].date <= todayStr) {
+          todayIdx = i;
+          break;
+        }
       }
     }
 
-    return { longest: Math.max(longest, 14), current: Math.max(current, 5) };
+    if (todayIdx !== -1) {
+      const todayContributed = sortedContributions[todayIdx].count > 0;
+      let startIdx = todayIdx;
+
+      if (!todayContributed) {
+        const yesterdayIdx = todayIdx - 1;
+        if (yesterdayIdx >= 0 && sortedContributions[yesterdayIdx].count > 0) {
+          startIdx = yesterdayIdx;
+        } else {
+          startIdx = -1;
+        }
+      }
+
+      if (startIdx !== -1) {
+        for (let i = startIdx; i >= 0; i--) {
+          if (sortedContributions[i].count > 0) {
+            current++;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
+    return { longest, current };
   };
 
   useEffect(() => {
     const fetchGitHubData = async () => {
       try {
+        const CACHE_KEY = "github_stats_data_v2";
+        const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+        // Check local cache
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          try {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_DURATION && data && data.weeks) {
+              setStats(data);
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error("Error reading github stats cache", e);
+          }
+        }
+
         const [profileRes, contribRes] = await Promise.allSettled([
           fetch("https://api.github.com/users/adityakumarsingh2"),
-          fetch("https://github-contributions-api.deno.dev/adityakumarsingh2.json")
+          fetch("https://github-contributions-api.jogruber.de/v4/adityakumarsingh2")
         ]);
 
         let repos = 35;
@@ -133,54 +249,104 @@ const GitHubHeatmap = () => {
         }
 
         let weeks: (DayContribution | null)[][] = [];
+        let totalContributions = 0;
+        let streaks = { longest: 0, current: 0 };
+
         if (contribRes.status === "fulfilled" && contribRes.value.ok) {
           const contribJson = await contribRes.value.json();
           if (contribJson && Array.isArray(contribJson.contributions)) {
-            weeks = contribJson.contributions.map((week: any[]) => {
-              const fullWeek: (DayContribution | null)[] = Array(7).fill(null);
-              week.forEach((day: any) => {
-                if (day && day.date) {
-                  const parts = day.date.split("-").map(Number);
-                  const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-                  const dayOfWeek = dateObj.getDay();
-                  fullWeek[dayOfWeek] = {
-                    date: day.date,
-                    contributionCount: day.contributionCount || 0,
-                  };
-                }
-              });
-              return fullWeek;
+            // Sort chronologically (oldest to newest)
+            const sortedContributions = [...contribJson.contributions].sort((a, b) =>
+              a.date.localeCompare(b.date)
+            );
+
+            // Calculate streaks
+            streaks = calculateStreaks(sortedContributions);
+
+            // Generate 53 weeks starting from currentSunday - 52 weeks
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const currentSunday = new Date(today);
+            currentSunday.setDate(today.getDate() - today.getDay());
+
+            const startDate = new Date(currentSunday);
+            startDate.setDate(currentSunday.getDate() - 52 * 7);
+
+            // Create a lookup map for contributions
+            const dataMap = new Map<string, { count: number; level: number }>();
+            sortedContributions.forEach((item) => {
+              dataMap.set(item.date, { count: item.count, level: item.level });
             });
+
+            let currentCursor = new Date(startDate);
+            for (let w = 0; w < 53; w++) {
+              const week: (DayContribution | null)[] = [];
+              for (let d = 0; d < 7; d++) {
+                if (currentCursor > today) {
+                  week.push(null);
+                } else {
+                  const dateStr = formatLocalDate(currentCursor);
+                  const data = dataMap.get(dateStr);
+                  week.push({
+                    date: dateStr,
+                    contributionCount: data ? data.count : 0,
+                    level: data ? data.level : 0,
+                  });
+                }
+                currentCursor.setDate(currentCursor.getDate() + 1);
+              }
+              weeks.push(week);
+            }
+
+            const allDays = weeks.flat().filter((d): d is DayContribution => d !== null);
+            totalContributions = allDays.reduce((sum, day) => sum + day.contributionCount, 0);
           }
         }
 
         if (weeks.length === 0) {
-          weeks = generateFallbackWeeks();
+          const fallbackWeeks = generateFallbackWeeks();
+          const allDays = fallbackWeeks.flat();
+          totalContributions = allDays.reduce((sum, d) => sum + d.contributionCount, 0);
+          const fallbackContributions = allDays.map((d) => ({
+            date: d.date,
+            count: d.contributionCount,
+            level: d.level,
+          }));
+          streaks = calculateStreaks(fallbackContributions);
+          weeks = fallbackWeeks;
         }
 
-        const allDays = weeks.flat().filter((d): d is DayContribution => d !== null);
-        const totalContributions = allDays.reduce((sum, day) => sum + day.contributionCount, 0);
-        const streaks = calculateStreaks(allDays);
-
-        setStats({
+        const statsData: GitHubStatsData = {
           totalContributions: totalContributions > 0 ? totalContributions : 524,
-          longestStreak: streaks.longest,
-          currentStreak: streaks.current,
+          longestStreak: streaks.longest > 0 ? streaks.longest : 14,
+          currentStreak: streaks.current > 0 ? streaks.current : 5,
           repos,
           followers,
           weeks,
-        });
+        };
+
+        setStats(statsData);
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data: statsData,
+          timestamp: Date.now()
+        }));
       } catch (error) {
         console.error("Error fetching GitHub activity, using fallback:", error);
         const fallbackWeeks = generateFallbackWeeks();
         const allDays = fallbackWeeks.flat();
         const total = allDays.reduce((sum, d) => sum + d.contributionCount, 0);
-        const streaks = calculateStreaks(allDays);
+        const fallbackContributions = allDays.map((d) => ({
+          date: d.date,
+          count: d.contributionCount,
+          level: d.level,
+        }));
+        const streaks = calculateStreaks(fallbackContributions);
 
         setStats({
           totalContributions: total > 0 ? total : 524,
-          longestStreak: streaks.longest,
-          currentStreak: streaks.current,
+          longestStreak: streaks.longest > 0 ? streaks.longest : 14,
+          currentStreak: streaks.current > 0 ? streaks.current : 5,
           repos: 35,
           followers: 48,
           weeks: fallbackWeeks,
@@ -194,7 +360,6 @@ const GitHubHeatmap = () => {
   }, []);
 
   // Automatically scroll the calendar container all the way to the right
-  // so the most recent data on the right side is immediately displayed
   useEffect(() => {
     if (!loading && scrollContainerRef.current) {
       const timer = setTimeout(() => {
@@ -206,35 +371,14 @@ const GitHubHeatmap = () => {
     }
   }, [loading, stats]);
 
-  const getColorClass = (count: number) => {
-    if (count === 0) return "bg-muted/40 border border-foreground/[0.03]";
-    if (count <= 2) return "bg-green-950 border border-green-900/60";
-    if (count <= 5) return "bg-green-800 border border-green-700/60";
-    if (count <= 8) return "bg-green-600 border border-green-500/60";
+  const getColorClass = (level: number) => {
+    if (level === 0) return "bg-muted/40 border border-foreground/[0.03]";
+    if (level === 1) return "bg-green-950 border border-green-900/60";
+    if (level === 2) return "bg-green-800 border border-green-700/60";
+    if (level === 3) return "bg-green-600 border border-green-500/60";
     return "bg-green-400 border border-green-300";
   };
 
-  // Calculate month labels position
-  const getMonthLabels = () => {
-    if (!stats || !stats.weeks) return [];
-    const labels: { name: string; colIndex: number }[] = [];
-    let lastMonth = -1;
-
-    stats.weeks.forEach((week, idx) => {
-      const firstValidDay = week.find((d): d is DayContribution => d !== null);
-      if (firstValidDay) {
-        const month = new Date(firstValidDay.date).getMonth();
-        if (month !== lastMonth && idx % 3 === 0) {
-          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          labels.push({ name: monthNames[month], colIndex: idx });
-          lastMonth = month;
-        }
-      }
-    });
-    return labels;
-  };
-
-  const monthLabels = getMonthLabels();
 
   return (
     <motion.div
@@ -328,7 +472,7 @@ const GitHubHeatmap = () => {
               <div className="bg-muted/20 rounded-xl p-4 border border-foreground/[0.05] relative overflow-hidden">
                 <div className="flex gap-2 items-start">
                   {/* Day of week sidebar */}
-                  <div className="flex flex-col gap-[3px] text-[9px] font-mono text-muted-foreground/60 pt-3 pr-1 select-none flex-shrink-0">
+                  <div className="flex flex-col gap-[3px] text-[9px] font-mono text-muted-foreground/60 pt-4 pr-1 select-none flex-shrink-0">
                     <div className="h-2.5 sm:h-3" /> {/* Sun */}
                     <div className="h-2.5 sm:h-3 flex items-center">Mon</div>
                     <div className="h-2.5 sm:h-3" /> {/* Tue */}
@@ -343,43 +487,48 @@ const GitHubHeatmap = () => {
                     ref={scrollContainerRef}
                     className="overflow-x-auto scrollbar-none flex-1 pb-1"
                   >
-                    <div className="min-w-[580px] flex flex-col gap-1.5">
-                      {/* Month labels */}
-                      <div className="flex text-[10px] font-mono text-muted-foreground/70 h-3 relative pl-0.5 mb-0.5">
-                        {monthLabels.map((m, idx) => (
-                          <span
-                            key={idx}
-                            className="absolute select-none font-medium"
-                            style={{ left: `${(m.colIndex / (stats?.weeks.length || 52)) * 100}%` }}
-                          >
-                            {m.name}
-                          </span>
-                        ))}
+                    <div className="min-w-max flex flex-col gap-1.5">
+                      {/* Month labels aligned with week columns */}
+                      <div className="flex gap-[3px] text-[10px] font-mono text-muted-foreground/70 h-4 select-none relative mb-0.5">
+                        {stats?.weeks.map((week, idx) => {
+                          const labelObj = monthLabels.find((l) => l.colIndex === idx);
+                          return (
+                            <div key={idx} className="w-2.5 sm:w-3 relative flex-shrink-0">
+                              {labelObj && (
+                                <span className="absolute left-0 top-0 whitespace-nowrap font-medium">
+                                  {labelObj.name}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Heatmap Squares */}
                       <div className="flex gap-[3px] items-start">
-                        {stats?.weeks.map((week, wIdx) => (
-                          <div key={wIdx} className="flex flex-col gap-[3px]">
-                            {week.map((day, dIdx) =>
-                              day ? (
-                                <motion.div
-                                  key={day.date}
-                                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
-                                    day.contributionCount
-                                  )}`}
-                                  onMouseEnter={() => setHoveredDay(day)}
-                                  whileHover={{ scale: 1.3, zIndex: 10 }}
-                                />
-                              ) : (
-                                <div
-                                  key={`empty-${wIdx}-${dIdx}`}
-                                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] opacity-0 pointer-events-none"
-                                />
-                              )
-                            )}
-                          </div>
-                        ))}
+                        {stats?.weeks.map((week, wIdx) => {
+                          return (
+                            <div key={wIdx} className="flex flex-col gap-[3px] flex-shrink-0">
+                              {week.map((day, dIdx) =>
+                                day ? (
+                                  <motion.div
+                                    key={day.date}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
+                                      day.level
+                                    )}`}
+                                    onMouseEnter={() => setHoveredDay(day)}
+                                    whileHover={{ scale: 1.3, zIndex: 10 }}
+                                  />
+                                ) : (
+                                  <div
+                                    key={`empty-${wIdx}-${dIdx}`}
+                                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] opacity-0 pointer-events-none"
+                                  />
+                                )
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -392,7 +541,7 @@ const GitHubHeatmap = () => {
                     {hoveredDay ? (
                       <span className="truncate">
                         <span className="font-semibold text-foreground">{hoveredDay.contributionCount} contributions</span>
-                        <span> on {new Date(hoveredDay.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                        <span> on {parseDateString(hoveredDay.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                       </span>
                     ) : (
                       <span className="truncate">Hover over any square to view activity</span>
@@ -433,3 +582,4 @@ const GitHubHeatmap = () => {
 };
 
 export default GitHubHeatmap;
+

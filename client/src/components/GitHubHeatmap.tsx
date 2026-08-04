@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Github, ExternalLink, GitCommit, Flame, BookOpen, Users, Calendar } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DayContribution {
@@ -31,6 +31,44 @@ const parseDateString = (dateStr: string): Date => {
   const [year, month, day] = dateStr.split("-").map(Number);
   return new Date(year, month - 1, day);
 };
+
+// Calculate month labels with minimum separation to prevent overlap
+const getMonthLabels = (weeks: (DayContribution | null)[][]) => {
+  const labels: { name: string; colIndex: number }[] = [];
+  let lastLabelCol = -10;
+
+  weeks.forEach((week, idx) => {
+    const firstDay = week.find((d): d is DayContribution => d !== null);
+    if (!firstDay) return;
+
+    const currentDate = parseDateString(firstDay.date);
+    const currentMonth = currentDate.getMonth();
+
+    let isNewMonth = false;
+    if (idx === 0) {
+      isNewMonth = true;
+    } else {
+      const prevWeek = weeks[idx - 1];
+      const prevFirstDay = prevWeek.find((d): d is DayContribution => d !== null);
+      if (prevFirstDay) {
+        const prevDate = parseDateString(prevFirstDay.date);
+        isNewMonth = currentMonth !== prevDate.getMonth();
+      }
+    }
+
+    if (isNewMonth) {
+      // Ensure at least 3 columns gap to prevent labels from overlapping
+      if (idx - lastLabelCol >= 3) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        labels.push({ name: monthNames[currentMonth], colIndex: idx });
+        lastLabelCol = idx;
+      }
+    }
+  });
+
+  return labels;
+};
+
 
 const GitHubHeatmapSkeleton = () => (
   <div className="space-y-6">
@@ -74,6 +112,12 @@ const GitHubHeatmap = () => {
   const [loading, setLoading] = useState(true);
   const [hoveredDay, setHoveredDay] = useState<DayContribution | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const monthLabels = useMemo(() => {
+    if (!stats?.weeks) return [];
+    return getMonthLabels(stats.weeks);
+  }, [stats?.weeks]);
+
 
   // Generate fallback weeks if API is unavailable or offline
   const generateFallbackWeeks = (): DayContribution[][] => {
@@ -335,35 +379,6 @@ const GitHubHeatmap = () => {
     return "bg-green-400 border border-green-300";
   };
 
-  // Determine month label at the start of a month
-  const getMonthStartLabel = (
-    week: (DayContribution | null)[],
-    idx: number,
-    weeks: (DayContribution | null)[][]
-  ) => {
-    const firstDay = week.find((d): d is DayContribution => d !== null);
-    if (!firstDay) return "";
-
-    const currentDate = parseDateString(firstDay.date);
-    const currentMonth = currentDate.getMonth();
-
-    if (idx === 0) {
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return monthNames[currentMonth];
-    }
-
-    const prevWeek = weeks[idx - 1];
-    const prevFirstDay = prevWeek.find((d): d is DayContribution => d !== null);
-    if (prevFirstDay) {
-      const prevDate = parseDateString(prevFirstDay.date);
-      if (currentMonth !== prevDate.getMonth()) {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return monthNames[currentMonth];
-      }
-    }
-
-    return "";
-  };
 
   return (
     <motion.div
@@ -476,12 +491,12 @@ const GitHubHeatmap = () => {
                       {/* Month labels aligned with week columns */}
                       <div className="flex gap-[3px] text-[10px] font-mono text-muted-foreground/70 h-4 select-none relative mb-0.5">
                         {stats?.weeks.map((week, idx) => {
-                          const label = getMonthStartLabel(week, idx, stats!.weeks);
+                          const labelObj = monthLabels.find((l) => l.colIndex === idx);
                           return (
                             <div key={idx} className="w-2.5 sm:w-3 relative flex-shrink-0">
-                              {label && (
+                              {labelObj && (
                                 <span className="absolute left-0 top-0 whitespace-nowrap font-medium">
-                                  {label}
+                                  {labelObj.name}
                                 </span>
                               )}
                             </div>
@@ -491,27 +506,29 @@ const GitHubHeatmap = () => {
 
                       {/* Heatmap Squares */}
                       <div className="flex gap-[3px] items-start">
-                        {stats?.weeks.map((week, wIdx) => (
-                          <div key={wIdx} className="flex flex-col gap-[3px] flex-shrink-0">
-                            {week.map((day, dIdx) =>
-                              day ? (
-                                <motion.div
-                                  key={day.date}
-                                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
-                                    day.level
-                                  )}`}
-                                  onMouseEnter={() => setHoveredDay(day)}
-                                  whileHover={{ scale: 1.3, zIndex: 10 }}
-                                />
-                              ) : (
-                                <div
-                                  key={`empty-${wIdx}-${dIdx}`}
-                                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] opacity-0 pointer-events-none"
-                                />
-                              )
-                            )}
-                          </div>
-                        ))}
+                        {stats?.weeks.map((week, wIdx) => {
+                          return (
+                            <div key={wIdx} className="flex flex-col gap-[3px] flex-shrink-0">
+                              {week.map((day, dIdx) =>
+                                day ? (
+                                  <motion.div
+                                    key={day.date}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] cursor-pointer transition-transform ${getColorClass(
+                                      day.level
+                                    )}`}
+                                    onMouseEnter={() => setHoveredDay(day)}
+                                    whileHover={{ scale: 1.3, zIndex: 10 }}
+                                  />
+                                ) : (
+                                  <div
+                                    key={`empty-${wIdx}-${dIdx}`}
+                                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-[2px] opacity-0 pointer-events-none"
+                                  />
+                                )
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

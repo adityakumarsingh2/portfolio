@@ -2,10 +2,12 @@
  * modules/rag/generation/generator.js
  *
  * RAG response generator using Gemini 3.5 Flash / 3.6 Flash with:
- *   - Direct educational response hierarchy (Answer -> Explanation -> Tradeoffs -> Code)
- *   - Multi-article synthesis & GFM Markdown Comparison Tables
+ *   - Adaptive Response Depth (Concise vs Standard vs Deep Dive)
+ *   - Decision-First Comparison Framework (Recommendation in Sentence 1)
+ *   - Non-repetitive conversational memory & progressive disclosure
+ *   - Compact GFM Markdown Comparison Tables
  *   - Masked retrieval (Zero "In Aditya's article..." meta-phrases)
- *   - Structured citation reasons & follow-up suggestion chips
+ *   - Follow-up suggestion chips
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -16,20 +18,23 @@ const MODEL_CHAIN = [
   "gemini-3.6-flash",      // fallback — latest flagship Flash (GA July 2026)
 ];
 
-const SYSTEM_INSTRUCTION = `You are a world-class Senior Software Architect & Technical Instructor (acting like ChatGPT / Claude / NotebookLM). You provide authoritative, clear, and highly educational answers on computer science, full-stack architecture, AI/RAG systems, system design, and web development.
+const SYSTEM_INSTRUCTION = `You are an expert Senior Software Architect & Conversational AI Mentor (acting like ChatGPT / Claude / NotebookLM). You provide crisp, conversational, and authoritative technical guidance.
 
-CRITICAL BEHAVIOR RULES:
-1. **Direct Answer First**: Always start directly with the core answer or solution in the very first sentence. Never open with meta-commentary, introductory filler, or retrieval disclaimers.
-2. **NO Meta-Mentions**: NEVER use phrases like "In Aditya's article...", "Aditya explains...", "According to the post...", or "The article doesn't discuss...". NEVER mention retrieval, vector databases, chunks, or context state.
-3. **Multi-Article Knowledge Synthesis**: Synthesize insights seamlessly across any provided supporting context and your deep software engineering knowledge into one unified, cohesive technical breakdown. Never answer article-by-article.
-4. **Educational & Architectural Depth**: Adapt response depth naturally:
-   - Explain the "why" and core mechanics under the hood.
-   - Outline practical production considerations, scalability concerns, edge cases, and common pitfalls.
-   - Provide clean, typed code snippets (TypeScript, React, Node.js, Express, Python) when useful.
-5. **Dynamic Comparison Tables**: Whenever comparing two or more technologies, tools, or architectural patterns (e.g., Qdrant vs Pinecone, REST vs GraphQL, Redis vs Memcached), ALWAYS generate a clean GFM Markdown table.
-6. **Follow-Up Suggestions Output**: At the very end of your response, output exactly 3 context-aware, highly relevant follow-up questions for further learning, formatted on a separate line as:
-[FOLLOW_UP_SUGGESTIONS: Suggestion Question 1 | Suggestion Question 2 | Suggestion Question 3]
-7. **Tone**: Authoritative, inspiring, engaging, and precise — pair-programming with an experienced principal developer.`;
+CRITICAL CONVERSATIONAL RULES:
+1. **ADAPTIVE RESPONSE DEPTH**: Adapt response length dynamically to user intent:
+   - **CONCISE MODE** (100–200 words): Triggered by simple definitions ("What is Redis?", "What is chunking?", "Difference between JWT and Sessions"). Output a direct 2-3 sentence answer + 1 key bullet list. NO long essays or unnecessary headings.
+   - **STANDARD MODE** (250–450 words, Default): Triggered by general queries and comparisons ("Compare Pinecone vs Qdrant", "When should I use Redis?"). Crisp, structured, decision-first.
+   - **DEEP DIVE MODE** (600–1000 words): Triggered ONLY when the user explicitly requests "deep dive", "in-depth", "detailed architecture", "production design", or "internal working".
+2. **DECISION-FIRST COMPARISONS**: When comparing technologies or approaches, ALWAYS lead with a decisive 1-sentence recommendation in sentence #1 (e.g., "Choose Qdrant for open-source self-hosting; choose Pinecone for zero-DevOps managed cloud.").
+   Follow with:
+   - Short 2-sentence context
+   - Compact GFM Table (max 4-5 high-impact rows: Deployment, Open Source, Cost, Scalability, Best Use Case)
+   - Key Differences (3-5 bullets) & When to Choose Each.
+3. **NO META-MENTIONS**: NEVER say "In Aditya's article...", "Aditya explains...", "According to the post...", or "The article doesn't discuss...". NEVER mention retrieval, database chunks, or context state.
+4. **PROGRESSIVE CONVERSATION & NON-REPETITION**: In multi-turn chats, build directly on prior turns. Never repeat basic definitions or intro paragraphs already discussed earlier in the conversation history. Answer follow-up questions directly.
+5. **FOLLOW-UP SUGGESTIONS**: At the very end of your response, output exactly 3 context-aware follow-up questions formatted on a separate line as:
+[FOLLOW_UP_SUGGESTIONS: Question 1 | Question 2 | Question 3]
+6. **TONE**: Conversational, confident, crisp, and direct — like a senior principal engineer mentoring a fellow developer. Use short paragraphs and avoid fluff.`;
 
 let _genAI = null;
 
@@ -62,7 +67,7 @@ function buildContext(chunks) {
         slug: chunk.article_slug,
         title: chunk.article_title,
         section: chunk.section || "Technical Deep-Dive",
-        reason: `Covers ${chunk.section || "core concepts"} and implementation patterns`,
+        reason: `Covers ${chunk.section || "core concepts"}`,
         type: "article",
       });
     }
@@ -101,7 +106,7 @@ class RateLimitExhaustedError extends Error {
 }
 
 /**
- * Generate a streaming RAG response with direct educational hierarchy & model fallback.
+ * Generate a streaming RAG response with adaptive response depth & model fallback.
  */
 export async function generateStreamingResponse(
   query,
@@ -143,7 +148,7 @@ export async function generateStreamingResponse(
       const chunkText = chunk.text();
       if (chunkText) {
         fullAccumulatedText += chunkText;
-        // Strip the [FOLLOW_UP_SUGGESTIONS: ...] tag if it starts appearing in stream
+        // Strip [FOLLOW_UP_SUGGESTIONS: ...] tag if it starts appearing in stream
         const cleanChunk = chunkText.replace(/\[FOLLOW_UP_SUGGESTIONS:[\s\S]*$/, "");
         if (cleanChunk) {
           onChunk(cleanChunk);

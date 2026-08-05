@@ -59,47 +59,37 @@ function TypingDots() {
   );
 }
 
-// ── Elegant Related Reading Cards ──────────────────────────────────────────
+// ── Compact Single-Line Related Reading Pill ─────────────────────────────
 function RelatedArticleSources({ sources }: { sources: Source[] }) {
   if (!sources || sources.length === 0) return null;
   const articleSources = sources.filter((s) => s.type === "article") as Extract<Source, { type: "article" }>[];
   if (articleSources.length === 0) return null;
 
   return (
-    <div className="mt-2.5 pt-2 border-t border-white/10 w-full">
-      <p className="text-[0.64rem] font-semibold uppercase tracking-wider text-muted-foreground/75 mb-1.5 flex items-center gap-1">
+    <div className="mt-2 pt-1.5 border-t border-white/10 w-full flex items-center gap-1.5 flex-wrap">
+      <span className="text-[0.64rem] font-semibold uppercase tracking-wider text-muted-foreground/75 flex items-center gap-1">
         <FileText className="w-2.5 h-2.5 text-violet-400" />
-        Related Reading
-      </p>
-      <div className="space-y-1.5">
-        {articleSources.map((source, i) => (
-          <a
-            key={i}
-            href={`/articles/${source.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col gap-0.5 p-2 rounded-xl bg-white/[0.03] border border-white/10
-              hover:bg-violet-500/10 hover:border-violet-500/30 transition-all group block text-left"
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[0.74rem] font-semibold text-violet-300 truncate max-w-[210px] group-hover:text-violet-200">
-                {source.title}
-              </span>
-              <ExternalLink className="w-2.5 h-2.5 text-muted-foreground flex-shrink-0 group-hover:text-violet-300 transition-colors" />
-            </div>
-            {source.reason && (
-              <p className="text-[0.68rem] text-muted-foreground/80 line-clamp-1 leading-normal">
-                {source.reason}
-              </p>
-            )}
-            {source.section && (
-              <span className="text-[0.62rem] text-violet-400/80 font-mono">
-                Section: {source.section}
-              </span>
-            )}
-          </a>
-        ))}
-      </div>
+        Related Reading:
+      </span>
+      {articleSources.map((source, i) => (
+        <a
+          key={i}
+          href={`/articles/${source.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-[0.7rem] px-2 py-0.5 rounded-md
+            bg-violet-500/10 border border-violet-500/25 text-violet-300
+            hover:bg-violet-500/20 hover:border-violet-500/40 transition-all group"
+        >
+          <span className="font-medium truncate max-w-[170px]">{source.title}</span>
+          {source.section && (
+            <span className="text-[0.62rem] text-violet-400/70 truncate max-w-[90px]">
+              • {source.section}
+            </span>
+          )}
+          <ExternalLink className="w-2 h-2 opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+        </a>
+      ))}
     </div>
   );
 }

@@ -314,7 +314,7 @@ const articlesRateLimiter = (req, res, next) => {
  * Body: { query: string, sessionId: string }
  */
 app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
-  const { query, sessionId } = req.body;
+  const { query, sessionId, articleSlug } = req.body;
 
   if (!query || typeof query !== "string" || !query.trim()) {
     return res.status(400).json({ error: "query is required" });
@@ -343,6 +343,7 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
     await runRAGPipeline({
       query,
       history,
+      articleSlug: typeof articleSlug === "string" && articleSlug.trim() ? articleSlug.trim() : null,
       onChunk: (text) => {
         assistantResponse += text;
         res.write(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`);

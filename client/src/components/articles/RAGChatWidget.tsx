@@ -284,12 +284,12 @@ function WelcomeScreen({ onSuggest }: { onSuggest: (q: string) => void }) {
 }
 
 // ── Main widget ─────────────────────────────────────────────────────────────
-export function RAGChatWidget() {
+export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { messages, isLoading, sendMessage, clearConversation, hasMessages, cooldownSecondsLeft } = useRAGChat();
+  const { messages, isLoading, sendMessage, clearConversation, hasMessages, cooldownSecondsLeft } = useRAGChat({ articleSlug });
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -354,7 +354,7 @@ export function RAGChatWidget() {
                 </div>
                 <div>
                   <p className="text-[0.8rem] font-semibold text-foreground leading-tight">Articles AI</p>
-                  <p className="text-[0.65rem] text-muted-foreground">RAG · Gemini · Search</p>
+                  <p className="text-[0.65rem] text-muted-foreground">{articleSlug ? "This Article · AI" : "RAG · Gemini"}</p>
                 </div>
               </div>
 

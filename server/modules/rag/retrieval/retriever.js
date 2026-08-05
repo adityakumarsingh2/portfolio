@@ -108,19 +108,34 @@ function rfFusion(semanticResults, keywordResults) {
  * @param {number} topK - number of chunks to return (default: FINAL_TOP_K)
  * @returns {Promise<Array<{ article_slug, article_title, section, text, score }>>}
  */
-export async function retrieve(query, queryMeta = { categories: [], tags: [] }, topK = FINAL_TOP_K) {
+export async function retrieve(query, queryMeta = { categories: [], tags: [] }, topK = FINAL_TOP_K, articleSlug = null) {
   const client = getClient();
 
   // 1. Embed the query
   const queryVector = await embedQuery(query);
 
-  // 2. Dense vector search
-  const searchResults = await client.search(COLLECTION_NAME, {
+  // 2. Dense vector search — filtered to a single article if articleSlug provided
+  const searchParams = {
     vector: queryVector,
     limit: SEARCH_TOP_K,
     with_payload: true,
-    score_threshold: 0.3, // filter out very low similarity results
-  });
+    score_threshold: 0.3,
+  };
+
+  if (articleSlug) {
+    // Qdrant filter: only return chunks belonging to this specific article
+    searchParams.filter = {
+      must: [
+        {
+          key: "article_slug",
+          match: { value: articleSlug },
+        },
+      ],
+    };
+    console.log(`[retriever] Scoped to article: "${articleSlug}"`);
+  }
+
+  const searchResults = await client.search(COLLECTION_NAME, searchParams);
 
   if (searchResults.length === 0) {
     console.log("[retriever] No results found in vector search");
@@ -139,9 +154,8 @@ export async function retrieve(query, queryMeta = { categories: [], tags: [] }, 
   // 6. Take top-K and format output
   const topResults = fused.slice(0, topK);
 
-  console.log(
-    `[retriever] Retrieved ${topResults.length} chunks from ${new Set(topResults.map((r) => r.payload?.article_slug)).size} articles`
-  );
+  const articleCount = new Set(topResults.map((r) => r.payload?.article_slug)).size;
+  console.log(`[retriever] Retrieved ${topResults.length} chunks from ${articleCount} article(s)${articleSlug ? ` (scoped)` : ""}`);
 
   return topResults.map((result) => ({
     chunk_id: result.payload?.chunk_id,

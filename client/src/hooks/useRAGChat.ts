@@ -57,7 +57,7 @@ function isRateLimitError(msg: string) {
   return msg.toLowerCase().includes("temporarily busy") || msg.toLowerCase().includes("rate limit");
 }
 
-export function useRAGChat() {
+export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
   const [messages, setMessages] = useState<RAGMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +66,21 @@ export function useRAGChat() {
   const sessionIdRef = useRef<string>(getOrCreateSessionId());
   const abortControllerRef = useRef<AbortController | null>(null);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Track last articleSlug to reset session when article changes
+  const lastArticleSlugRef = useRef<string | undefined>(articleSlug);
+
+  // Reset conversation when article changes
+  useEffect(() => {
+    if (lastArticleSlugRef.current !== articleSlug) {
+      lastArticleSlugRef.current = articleSlug;
+      // Generate a fresh session so history from the previous article doesn't bleed in
+      const newId = generateSessionId();
+      sessionStorage.setItem("rag_session_id", newId);
+      sessionIdRef.current = newId;
+      setMessages([]);
+      setError(null);
+    }
+  }, [articleSlug]);
 
   // Countdown ticker
   useEffect(() => {
@@ -125,6 +140,7 @@ export function useRAGChat() {
         body: JSON.stringify({
           query: query.trim(),
           sessionId: sessionIdRef.current,
+          ...(articleSlug ? { articleSlug } : {}), // scope retrieval to current article
         }),
         signal: abortControllerRef.current.signal,
       });

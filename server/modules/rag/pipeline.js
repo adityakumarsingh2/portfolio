@@ -53,12 +53,11 @@ setInterval(() => {
  * @param {function} params.onDone - SSE done callback ({ sources, webSources })
  * @param {function} params.onError - SSE error callback (error)
  */
-export async function runRAGPipeline({ query, history, onChunk, onDone, onError }) {
+export async function runRAGPipeline({ query, history, articleSlug = null, onChunk, onDone, onError }) {
   try {
-    console.log(`[pipeline] Query: "${query.slice(0, 80)}..."`);
+    console.log(`[pipeline] Query: "${query.slice(0, 80)}..."${articleSlug ? ` [scoped to: ${articleSlug}]` : ""}`);
 
     // Query rewriting disabled to minimize API calls (RPM).
-    // Re-enable for large article sets: rewriteStandaloneQuery(query, history)
     const standaloneQuery = query;
 
     // Step 2: Extract metadata hints for boosting (no API call needed)
@@ -67,8 +66,8 @@ export async function runRAGPipeline({ query, history, onChunk, onDone, onError 
       console.log(`[pipeline] Metadata hints: categories=${queryMeta.categories}, tags=${queryMeta.tags}`);
     }
 
-    // Step 3: Retrieve relevant chunks from Qdrant
-    const chunks = await retrieve(standaloneQuery, queryMeta);
+    // Step 3: Retrieve relevant chunks — scoped to articleSlug if provided
+    const chunks = await retrieve(standaloneQuery, queryMeta, undefined, articleSlug);
     console.log(`[pipeline] Retrieved ${chunks.length} chunks`);
 
     // Step 4: Check response cache before calling Gemini

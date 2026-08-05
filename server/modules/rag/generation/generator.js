@@ -8,9 +8,14 @@
  *   - Structured context injection with citation markers
  */
 
-import { GoogleGenerativeAI, DynamicRetrievalMode } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GENERATION_MODEL = "gemini-3.5-flash-lite";
+// Model rotation chain — on 429, instantly switches to the next model
+// (each model has its own separate RPM quota pool)
+const MODEL_CHAIN = [
+  "gemini-3.5-flash-lite", // primary — cost-efficient, low-latency, high-volume (GA July 2026)
+  "gemini-3.6-flash",      // fallback — latest flagship Flash (GA July 2026)
+];
 
 const SYSTEM_INSTRUCTION = `You are a knowledgeable technical assistant for Aditya Kumar Singh's engineering blog. You help readers understand the topics covered in his articles and related technical concepts.
 
@@ -71,11 +76,21 @@ function buildContext(chunks) {
   return { contextString, sources };
 }
 
-const MAX_GENERATION_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 62000; // 62s — RPM windows are 60s, must wait full window
+const MODEL_SWITCH_DELAY_MS = 2000;  // 2s pause between model switches (burst protection)
+const MAX_CYCLES = 0;               // no retry cycles — fail fast after one full sweep
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+// Friendly error thrown when all models + all retry cycles are exhausted
+class RateLimitExhaustedError extends Error {
+  constructor() {
+    super("The AI service is temporarily busy. Please wait a moment and try again.");
+    this.name = "RateLimitExhaustedError";
+    this.isRateLimit = true;
+  }
 }
 
 /**
@@ -93,7 +108,8 @@ export async function generateStreamingResponse(
   history = [],
   onChunk,
   onDone,
-  _attempt = 0
+  _modelIndex = 0,
+  _cycleCount = 0
 ) {
   const { contextString, sources } = buildContext(retrievedChunks);
 
@@ -108,23 +124,22 @@ export async function generateStreamingResponse(
     parts: [{ text: msg.text }],
   }));
 
+  const currentModel = MODEL_CHAIN[_modelIndex];
+  console.log(`[generator] Using model: ${currentModel}${_modelIndex > 0 ? ` (fallback #${_modelIndex})` : ""}`);
+
   try {
-    // Try with Google Search Grounding first
+    // Plain generation — no Google Search Grounding tool.
+    // Grounding requires a paid Gemini API tier; using it on the free tier
+    // causes 429 for ALL requests regardless of API key or RPM quota.
     const model = getGenAI().getGenerativeModel({
-      model: GENERATION_MODEL,
+      model: currentModel,
       systemInstruction: SYSTEM_INSTRUCTION,
-      tools: [
-        {
-          googleSearch: {},
-        },
-      ],
     });
 
     const chat = model.startChat({ history: formattedHistory });
     const result = await chat.sendMessageStream(userMessage);
 
     let fullText = "";
-    const webSources = [];
 
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();
@@ -134,63 +149,40 @@ export async function generateStreamingResponse(
       }
     }
 
-    // Extract grounding metadata (web sources) if available
-    const finalResponse = await result.response;
-    if (finalResponse.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-      const groundingChunks = finalResponse.candidates[0].groundingMetadata.groundingChunks;
-      for (const gc of groundingChunks) {
-        if (gc.web?.uri && gc.web?.title) {
-          webSources.push({
-            title: gc.web.title,
-            url: gc.web.uri,
-            type: "web",
-          });
-        }
-      }
-    }
-
-    onDone({ sources, webSources: webSources.slice(0, 3) }); // cap web sources at 3
+    onDone({ sources, webSources: [] }); // webSources empty on free tier (no grounding)
   } catch (error) {
-    // 429 rate limit → wait and retry with exponential backoff
-    if (error.status === 429 && _attempt < MAX_GENERATION_RETRIES) {
-      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, _attempt);
-      console.warn(`[generator] Rate limited (429), retrying in ${delay / 1000}s (attempt ${_attempt + 1}/${MAX_GENERATION_RETRIES})`);
-      await sleep(delay);
-      return generateStreamingResponse(query, retrievedChunks, history, onChunk, onDone, _attempt + 1);
-    }
-    // Fallback: try without Search Grounding (some API tiers don't support it)
-    if (error.message?.includes("PERMISSION_DENIED") || error.message?.includes("not supported")) {
-      console.warn("[generator] Search Grounding not available, falling back to standard generation");
-      await generateWithoutGrounding(query, userMessage, formattedHistory, sources, onChunk, onDone);
+    if (error.status === 429) {
+      const nextModelIndex = _modelIndex + 1;
+
+      if (nextModelIndex < MODEL_CHAIN.length) {
+        // Switch to next model — brief pause to avoid burst rate limiting
+        console.warn(
+          `[generator] Rate limited (429) on "${currentModel}", switching to "${MODEL_CHAIN[nextModelIndex]}" in ${MODEL_SWITCH_DELAY_MS / 1000}s...`
+        );
+        await sleep(MODEL_SWITCH_DELAY_MS);
+        return generateStreamingResponse(
+          query, retrievedChunks, history, onChunk, onDone,
+          nextModelIndex, _cycleCount
+        );
+      } else if (_cycleCount < MAX_CYCLES) {
+        // All models tried — wait one full RPM window, then do one more sweep
+        console.warn(
+          `[generator] All models rate limited (cycle ${_cycleCount + 1}/${MAX_CYCLES}). Waiting ${RETRY_BASE_DELAY_MS / 1000}s before retrying from primary...`
+        );
+        await sleep(RETRY_BASE_DELAY_MS);
+        return generateStreamingResponse(
+          query, retrievedChunks, history, onChunk, onDone,
+          0, _cycleCount + 1
+        );
+      } else {
+        // All models exhausted across all cycles — fail fast with a friendly error
+        console.error(
+          `[generator] Rate limit exhausted across all models and ${MAX_CYCLES + 1} cycle(s). Giving up.`
+        );
+        throw new RateLimitExhaustedError();
+      }
     } else {
       throw error;
     }
   }
-}
-
-/**
- * Fallback generator without Google Search Grounding.
- */
-async function generateWithoutGrounding(
-  _query,
-  userMessage,
-  formattedHistory,
-  sources,
-  onChunk,
-  onDone
-) {
-  const model = getGenAI().getGenerativeModel({
-    model: GENERATION_MODEL,
-    systemInstruction: SYSTEM_INSTRUCTION,
-  });
-
-  const chat = model.startChat({ history: formattedHistory });
-  const result = await chat.sendMessageStream(userMessage);
-
-  for await (const chunk of result.stream) {
-    const chunkText = chunk.text();
-    if (chunkText) onChunk(chunkText);
-  }
-
-  onDone({ sources, webSources: [] });
 }

@@ -197,7 +197,7 @@ EDUCATION:
    - Percentage: 86%
    - Duration: Apr 2020 - Mar 2021`;
 
-const modelName = "gemini-3.1-flash-lite";
+const modelName = "gemini-3.5-flash-lite";
 
 // Helper to call generative AI
 async function generateGeminiResponse(message, history) {

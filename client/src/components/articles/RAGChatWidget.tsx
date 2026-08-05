@@ -23,12 +23,12 @@ import {
   Sparkles,
   RotateCcw,
   ExternalLink,
-  Globe,
   FileText,
   ChevronRight,
   Loader2,
 } from "lucide-react";
 import { useRAGChat, type RAGMessage, type Source } from "@/hooks/useRAGChat";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 // ── Starter suggestions ────────────────────────────────────────────────────
 const SUGGESTIONS = [
@@ -59,118 +59,53 @@ function TypingDots() {
   );
 }
 
-// ── Minimal markdown renderer ───────────────────────────────────────────────
-function renderMarkdown(text: string): React.ReactNode[] {
-  const lines = text.split("\n");
-  const nodes: React.ReactNode[] = [];
-  let listItems: string[] = [];
-  let key = 0;
-
-  const flushList = () => {
-    if (listItems.length > 0) {
-      nodes.push(
-        <ul key={`ul-${key++}`} className="my-1.5 space-y-0.5 pl-3">
-          {listItems.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 text-[0.82rem] leading-5.5">
-              <span className="mt-1.5 w-1 h-1 rounded-full bg-violet-400/80 flex-shrink-0" />
-              <span dangerouslySetInnerHTML={{ __html: inlineFormat(item) }} />
-            </li>
-          ))}
-        </ul>
-      );
-      listItems = [];
-    }
-  };
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      flushList();
-      continue;
-    }
-
-    // Bullet list
-    if (/^[-*•]\s/.test(trimmed)) {
-      listItems.push(trimmed.slice(2).trim());
-      continue;
-    }
-
-    flushList();
-
-    // Bold heading lines (** wrapped)
-    if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
-      nodes.push(
-        <p key={key++} className="font-semibold text-[0.84rem] text-foreground mt-2 mb-0.5"
-          dangerouslySetInnerHTML={{ __html: inlineFormat(trimmed) }}
-        />
-      );
-    } else if (trimmed.startsWith("```")) {
-      // skip fence markers
-    } else {
-      nodes.push(
-        <p key={key++} className="text-[0.82rem] leading-5.5 text-foreground/85"
-          dangerouslySetInnerHTML={{ __html: inlineFormat(trimmed) }}
-        />
-      );
-    }
-  }
-
-  flushList();
-  return nodes;
-}
-
-function inlineFormat(text: string): string {
-  return text
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="font-mono text-[0.78rem] px-1 py-0.5 rounded bg-violet-500/15 border border-violet-500/25 text-violet-300">$1</code>')
-    // Italic
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-}
-
-// ── Source pills ────────────────────────────────────────────────────────────
-function SourcePills({ sources }: { sources: Source[] }) {
+// ── Elegant Related Reading Cards ──────────────────────────────────────────
+function RelatedArticleSources({ sources }: { sources: Source[] }) {
   if (!sources || sources.length === 0) return null;
+  const articleSources = sources.filter((s) => s.type === "article") as Extract<Source, { type: "article" }>[];
+  if (articleSources.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-white/10">
-      {sources.map((source, i) =>
-        source.type === "article" ? (
+    <div className="mt-2.5 pt-2 border-t border-white/10 w-full">
+      <p className="text-[0.64rem] font-semibold uppercase tracking-wider text-muted-foreground/75 mb-1.5 flex items-center gap-1">
+        <FileText className="w-2.5 h-2.5 text-violet-400" />
+        Related Reading
+      </p>
+      <div className="space-y-1.5">
+        {articleSources.map((source, i) => (
           <a
             key={i}
             href={`/articles/${source.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[0.7rem] px-2 py-0.5 rounded-full
-              bg-violet-500/15 border border-violet-500/30 text-violet-300
-              hover:bg-violet-500/25 transition-colors"
+            className="flex flex-col gap-0.5 p-2 rounded-xl bg-white/[0.03] border border-white/10
+              hover:bg-violet-500/10 hover:border-violet-500/30 transition-all group block text-left"
           >
-            <FileText className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="truncate max-w-[120px]">{source.title}</span>
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[0.74rem] font-semibold text-violet-300 truncate max-w-[210px] group-hover:text-violet-200">
+                {source.title}
+              </span>
+              <ExternalLink className="w-2.5 h-2.5 text-muted-foreground flex-shrink-0 group-hover:text-violet-300 transition-colors" />
+            </div>
+            {source.reason && (
+              <p className="text-[0.68rem] text-muted-foreground/80 line-clamp-1 leading-normal">
+                {source.reason}
+              </p>
+            )}
+            {source.section && (
+              <span className="text-[0.62rem] text-violet-400/80 font-mono">
+                Section: {source.section}
+              </span>
+            )}
           </a>
-        ) : (
-          <a
-            key={i}
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[0.7rem] px-2 py-0.5 rounded-full
-              bg-sky-500/15 border border-sky-500/30 text-sky-300
-              hover:bg-sky-500/25 transition-colors"
-          >
-            <Globe className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="truncate max-w-[120px]">{source.title}</span>
-            <ExternalLink className="w-2 h-2 flex-shrink-0 opacity-60" />
-          </a>
-        )
-      )}
+        ))}
+      </div>
     </div>
   );
 }
 
 // ── Single message bubble ───────────────────────────────────────────────────
-function MessageBubble({ message }: { message: RAGMessage }) {
+function MessageBubble({ message, onSuggest }: { message: RAGMessage; onSuggest?: (q: string) => void }) {
   const isUser = message.role === "user";
 
   return (
@@ -200,8 +135,8 @@ function MessageBubble({ message }: { message: RAGMessage }) {
           ) : message.isStreaming && !message.text ? (
             <TypingDots />
           ) : (
-            <div className="space-y-0.5">
-              {renderMarkdown(message.text)}
+            <div className="space-y-0.5 min-w-0 overflow-hidden">
+              <MarkdownRenderer content={message.text} />
               {message.isStreaming && (
                 <span className="inline-block w-0.5 h-3.5 bg-violet-400 animate-pulse ml-0.5 align-middle" />
               )}
@@ -210,8 +145,32 @@ function MessageBubble({ message }: { message: RAGMessage }) {
         </div>
 
         {!isUser && !message.isStreaming && message.sources && (
-          <div className="px-1 w-full">
-            <SourcePills sources={message.sources} />
+          <div className="px-0.5 w-full">
+            <RelatedArticleSources sources={message.sources} />
+          </div>
+        )}
+
+        {!isUser && !message.isStreaming && message.followUpSuggestions && message.followUpSuggestions.length > 0 && onSuggest && (
+          <div className="mt-2 pt-1.5 border-t border-white/10 w-full">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-wider text-violet-400 mb-1 flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" />
+              You might also explore
+            </p>
+            <div className="flex flex-col gap-1">
+              {message.followUpSuggestions.map((suggestion, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => onSuggest(suggestion)}
+                  className="flex items-center gap-1.5 text-left text-[0.72rem] px-2.5 py-1 rounded-lg
+                    bg-violet-500/10 border border-violet-500/20 text-violet-300
+                    hover:bg-violet-500/20 hover:border-violet-500/35 hover:text-white
+                    transition-all group"
+                >
+                  <ChevronRight className="w-2.5 h-2.5 text-violet-400 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  <span className="line-clamp-1">{suggestion}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -387,7 +346,7 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
               ) : (
                 <>
                   {messages.map((msg) => (
-                    <MessageBubble key={msg.id} message={msg} />
+                    <MessageBubble key={msg.id} message={msg} onSuggest={handleSuggest} />
                   ))}
                   <div ref={messagesEndRef} />
                 </>

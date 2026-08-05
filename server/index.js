@@ -5,6 +5,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
+// RAG pipeline imports (Articles chatbot)
+import { runRAGPipeline } from "./modules/rag/pipeline.js";
+import {
+  getHistory,
+  appendToSession,
+  clearSession,
+  getSessionCount,
+} from "./modules/rag/session-store.js";
+import { reindex, getIndexingStatus, reindexState } from "./scripts/reindex.js";
+
 const app = express();
 
 // Secure CORS Configurations
@@ -264,6 +274,169 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// ============================================================
+// ARTICLES RAG CHATBOT ROUTES
+// ============================================================
+
+// Rate limiter for articles chat (shared window, separate counter)
+const articlesRateLimiter = (req, res, next) => {
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const maxRequests = 20; // slightly lower limit for RAG (more expensive)
+
+  if (!ipRequests.has("rag_" + ip)) {
+    ipRequests.set("rag_" + ip, { count: 1, resetTime: now + windowMs });
+    return next();
+  }
+
+  const rateData = ipRequests.get("rag_" + ip);
+  if (now > rateData.resetTime) {
+    rateData.count = 1;
+    rateData.resetTime = now + windowMs;
+    return next();
+  }
+
+  rateData.count++;
+  if (rateData.count > maxRequests) {
+    const remaining = Math.ceil((rateData.resetTime - now) / 1000 / 60);
+    return res.status(429).json({
+      error: `Too many requests. Please try again after ${remaining} minute(s).`,
+    });
+  }
+  next();
+};
+
+/**
+ * POST /api/articles/chat
+ * Main RAG chat endpoint — streams SSE response.
+ *
+ * Body: { query: string, sessionId: string }
+ */
+app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
+  const { query, sessionId } = req.body;
+
+  if (!query || typeof query !== "string" || !query.trim()) {
+    return res.status(400).json({ error: "query is required" });
+  }
+  if (!sessionId || typeof sessionId !== "string") {
+    return res.status(400).json({ error: "sessionId is required" });
+  }
+  if (query.length > 800) {
+    return res.status(400).json({ error: "Query exceeds 800 character limit" });
+  }
+
+  // Set SSE headers
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // disable nginx buffering on Render
+
+  const history = getHistory(sessionId);
+
+  // Append user message to session
+  appendToSession(sessionId, { role: "user", text: query });
+
+  let assistantResponse = "";
+
+  try {
+    await runRAGPipeline({
+      query,
+      history,
+      onChunk: (text) => {
+        assistantResponse += text;
+        res.write(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`);
+      },
+      onDone: ({ sources, webSources }) => {
+        // Append assistant response to session history
+        if (assistantResponse) {
+          appendToSession(sessionId, { role: "assistant", text: assistantResponse });
+        }
+        res.write(
+          `data: ${JSON.stringify({ type: "done", sources, webSources })}\n\n`
+        );
+        res.end();
+      },
+      onError: (error) => {
+        res.write(
+          `data: ${JSON.stringify({ type: "error", error: error.message })}\n\n`
+        );
+        res.end();
+      },
+    });
+  } catch (error) {
+    console.error("[/api/articles/chat] Unhandled error:", error);
+    res.write(
+      `data: ${JSON.stringify({ type: "error", error: "Internal server error" })}\n\n`
+    );
+    res.end();
+  }
+});
+
+/**
+ * DELETE /api/articles/session/:sessionId
+ * Clear a conversation session (user clicks "New conversation").
+ */
+app.delete("/api/articles/session/:sessionId", (req, res) => {
+  clearSession(req.params.sessionId);
+  res.json({ ok: true });
+});
+
+/**
+ * POST /api/articles/reindex
+ * Trigger a full re-index of articles. Protected by REINDEX_ADMIN_KEY.
+ */
+app.post("/api/articles/reindex", async (req, res) => {
+  const adminKey = process.env.REINDEX_ADMIN_KEY;
+  const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+
+  if (adminKey && providedKey !== adminKey) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (reindexState.isRunning) {
+    return res.status(409).json({ error: "Reindex already in progress" });
+  }
+
+  // Run async, respond immediately
+  reindex().catch((err) => console.error("[reindex] Failed:", err));
+  res.json({ message: "Reindex started", status: "running" });
+});
+
+/**
+ * GET /api/articles/status
+ * Returns indexing status and collection stats.
+ */
+app.get("/api/articles/status", async (req, res) => {
+  try {
+    const status = await getIndexingStatus();
+    res.json({
+      ...status,
+      activeSessions: getSessionCount(),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// SERVER START
+// ============================================================
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+  // Trigger non-blocking reindex on startup
+  // Hash-based diffing ensures unchanged articles are skipped instantly
+  if (process.env.QDRANT_URL) {
+    reindex()
+      .then((result) => {
+        console.log(`[startup] Reindex complete: ${JSON.stringify(result)}`);
+      })
+      .catch((err) => {
+        console.error("[startup] Reindex failed (non-fatal):", err.message);
+      });
+  } else {
+    console.warn("[startup] QDRANT_URL not set — skipping article indexing");
+  }
 });

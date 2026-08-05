@@ -20,6 +20,8 @@ const RATE_LIMIT_COOLDOWN_MS = 65_000; // 65s — Gemini RPM window is 60s
 export interface ArticleSource {
   slug: string;
   title: string;
+  section?: string;
+  reason?: string;
   type: "article";
 }
 
@@ -36,6 +38,7 @@ export interface RAGMessage {
   role: "user" | "assistant";
   text: string;
   sources?: Source[];
+  followUpSuggestions?: string[];
   isStreaming?: boolean;
 }
 
@@ -170,7 +173,14 @@ export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
           if (!jsonStr) continue;
 
           // Only catch JSON parse errors — let server error events propagate to the outer catch
-          let event: { type: string; text?: string; sources?: Source[]; webSources?: Source[]; error?: string };
+          let event: {
+            type: string;
+            text?: string;
+            sources?: Source[];
+            webSources?: Source[];
+            followUpSuggestions?: string[];
+            error?: string;
+          };
           try {
             event = JSON.parse(jsonStr);
           } catch {
@@ -190,10 +200,17 @@ export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
               ...(event.sources || []),
               ...(event.webSources || []),
             ];
+            const suggestions = event.followUpSuggestions || [];
+
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantMsgId
-                  ? { ...m, isStreaming: false, sources: allSources }
+                  ? {
+                      ...m,
+                      isStreaming: false,
+                      sources: allSources,
+                      followUpSuggestions: suggestions,
+                    }
                   : m
               )
             );

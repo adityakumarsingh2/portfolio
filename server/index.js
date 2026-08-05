@@ -348,13 +348,13 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
         assistantResponse += text;
         res.write(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`);
       },
-      onDone: ({ sources, webSources }) => {
+      onDone: ({ sources, webSources, followUpSuggestions }) => {
         // Append assistant response to session history
         if (assistantResponse) {
           appendToSession(sessionId, { role: "assistant", text: assistantResponse });
         }
         res.write(
-          `data: ${JSON.stringify({ type: "done", sources, webSources })}\n\n`
+          `data: ${JSON.stringify({ type: "done", sources, webSources, followUpSuggestions })}\n\n`
         );
         res.end();
       },

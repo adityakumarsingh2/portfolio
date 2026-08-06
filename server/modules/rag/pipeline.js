@@ -57,8 +57,8 @@ export async function runRAGPipeline({ query, history, articleSlug = null, onChu
   try {
     console.log(`[pipeline] Query: "${query.slice(0, 80)}..."${articleSlug ? ` [scoped to: ${articleSlug}]` : ""}`);
 
-    // Query rewriting disabled to minimize API calls (RPM).
-    const standaloneQuery = query;
+    // Step 1: Standalone query resolution for follow-up questions
+    const standaloneQuery = await rewriteStandaloneQuery(query, history);
 
     // Step 2: Extract metadata hints for boosting (no API call needed)
     const queryMeta = extractQueryMetadata(standaloneQuery);

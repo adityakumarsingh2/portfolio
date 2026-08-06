@@ -114,12 +114,12 @@ export async function retrieve(query, queryMeta = { categories: [], tags: [] }, 
   // 1. Embed the query
   const queryVector = await embedQuery(query);
 
-  // 2. Dense vector search — filtered to a single article if articleSlug provided
+  // 2. Dense vector search with base threshold
   const searchParams = {
     vector: queryVector,
     limit: SEARCH_TOP_K,
     with_payload: true,
-    score_threshold: 0.3,
+    score_threshold: 0.35, // base candidates threshold
   };
 
   if (articleSlug) {
@@ -137,25 +137,52 @@ export async function retrieve(query, queryMeta = { categories: [], tags: [] }, 
 
   const searchResults = await client.search(COLLECTION_NAME, searchParams);
 
-  if (searchResults.length === 0) {
-    console.log("[retriever] No results found in vector search");
+  if (!searchResults || searchResults.length === 0) {
+    console.log("[retriever] Low Confidence (0 vector matches) -> Returning 0 chunks");
     return [];
   }
 
-  // 3. Apply metadata keyword boosting
-  const boostedResults = applyMetadataBoost(searchResults, queryMeta);
+  // 3. Dynamic Confidence Analysis
+  const topScore = searchResults[0].score;
+  let confidenceTier = "Low";
+  let targetLimit = 0;
+  let minScoreCutoff = 0.40;
 
-  // 4. Create keyword-sorted list
-  const keywordSortedResults = [...boostedResults].sort((a, b) => b.score - a.score);
+  if (topScore >= 0.52) {
+    confidenceTier = "High";
+    targetLimit = Math.min(topK, 4);
+    minScoreCutoff = 0.45;
+  } else if (topScore >= 0.38) {
+    confidenceTier = "Medium";
+    targetLimit = 2;
+    minScoreCutoff = 0.38;
+  } else {
+    console.log(`[retriever] Low Confidence (top score ${topScore.toFixed(3)} < 0.38) -> Returning 0 chunks`);
+    return [];
+  }
+
+  // Filter chunks meeting the confidence cutoff
+  const qualityResults = searchResults.filter((r) => r.score >= minScoreCutoff);
+
+  if (qualityResults.length === 0) {
+    console.log(`[retriever] No chunks met cutoff ${minScoreCutoff} -> Returning 0 chunks`);
+    return [];
+  }
+
+  // 4. Apply metadata keyword boosting
+  const boostedResults = applyMetadataBoost(qualityResults, queryMeta);
 
   // 5. RRF fusion
-  const fused = rfFusion(searchResults, keywordSortedResults);
+  const keywordSortedResults = [...boostedResults].sort((a, b) => b.score - a.score);
+  const fused = rfFusion(qualityResults, keywordSortedResults);
 
-  // 6. Take top-K and format output
-  const topResults = fused.slice(0, topK);
+  // 6. Select top-K based on confidence tier limit
+  const topResults = fused.slice(0, targetLimit);
 
   const articleCount = new Set(topResults.map((r) => r.payload?.article_slug)).size;
-  console.log(`[retriever] Retrieved ${topResults.length} chunks from ${articleCount} article(s)${articleSlug ? ` (scoped)` : ""}`);
+  console.log(
+    `[retriever] Confidence: ${confidenceTier} (top score: ${topScore.toFixed(3)}) -> Selected ${topResults.length} chunks from ${articleCount} article(s)`
+  );
 
   return topResults.map((result) => ({
     chunk_id: result.payload?.chunk_id,
@@ -165,6 +192,7 @@ export async function retrieve(query, queryMeta = { categories: [], tags: [] }, 
     text: result.payload?.text,
     category: result.payload?.category,
     tags: result.payload?.tags,
+    confidenceTier,
     score: Math.round((result.fusedScore || result.score) * 1000) / 1000,
   }));
 }

@@ -1,31 +1,36 @@
 /**
  * modules/rag/generation/generator.js
  *
- * RAG response generator using Gemini 2.5 Flash with:
- *   - Google Search Grounding (web augmentation beyond articles)
- *   - Streaming SSE output
- *   - Source attribution tracking (article chunks + web sources)
- *   - Structured context injection with citation markers
+ * RAG response generator using Gemini 3.5 Flash / 3.6 Flash with:
+ *   - Adaptive Response Depth (Concise vs Standard vs Deep Dive)
+ *   - Decision-First Comparison Framework (Recommendation in Sentence 1)
+ *   - Non-repetitive conversational memory & progressive disclosure
+ *   - Clean UI attribution (No inline text citation tags)
+ *   - Follow-up suggestion chips
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Model rotation chain — on 429, instantly switches to the next model
-// (each model has its own separate RPM quota pool)
 const MODEL_CHAIN = [
   "gemini-3.5-flash-lite", // primary — cost-efficient, low-latency, high-volume (GA July 2026)
   "gemini-3.6-flash",      // fallback — latest flagship Flash (GA July 2026)
 ];
 
-const SYSTEM_INSTRUCTION = `You are a knowledgeable technical assistant for Aditya Kumar Singh's engineering blog. You help readers understand the topics covered in his articles and related technical concepts.
+const SYSTEM_INSTRUCTION = `You are an expert Senior Software Architect & Conversational AI Mentor for Aditya Kumar Singh's engineering blog (acting like ChatGPT / Claude / NotebookLM). You provide crisp, conversational, and authoritative technical guidance.
 
-Your behavior:
-1. **Article-first**: Always prioritize information from the provided article context.
-2. **Technical accuracy**: This is a technical engineering blog — be precise, clear, and well-structured. Include code examples when helpful.
-3. **Concise but complete**: 2-5 sentences for simple questions, up to 300 words for complex ones. Use bullet points and inline code formatting for clarity.
-4. **NO INLINE CITATIONS OR TEXT CITATION TAGS**: DO NOT write inline citation tags like [SOURCE: ...], [Section: ...], or text lines like "📄 Source: ...". The user interface automatically displays interactive source pill buttons for cited articles beneath your message.
-5. **Stay on topic**: Only answer questions related to software engineering, AI, system design, and web development. For off-topic questions, politely redirect.
-6. **Tone**: Engaging, friendly, and expert — like a senior engineer pair-programming with the reader.
+CRITICAL CONVERSATIONAL RULES:
+1. **ARTICLE-FIRST & TECHNICAL ACCURACY**: Always prioritize information from the provided article context. Be precise, clear, and well-structured. Include code examples when helpful.
+2. **ADAPTIVE RESPONSE DEPTH**: Adapt response length dynamically to user intent:
+   - **CONCISE MODE** (100–200 words): Triggered by simple definitions ("What is Redis?", "What is chunking?", "Difference between JWT and Sessions"). Output a direct 2-3 sentence answer + 1 key bullet list. NO long essays or unnecessary headings.
+   - **STANDARD MODE** (250–450 words, Default): Triggered by general queries and comparisons ("Compare Pinecone vs Qdrant", "When should I use Redis?"). Crisp, structured, decision-first.
+   - **DEEP DIVE MODE** (600–1000 words): Triggered ONLY when the user explicitly requests "deep dive", "in-depth", "detailed architecture", "production design", or "internal working".
+3. **DECISION-FIRST COMPARISONS**: When comparing technologies or approaches, ALWAYS lead with a decisive 1-sentence recommendation in sentence #1 (e.g., "Choose Qdrant for open-source self-hosting; choose Pinecone for zero-DevOps managed cloud."). Follow with context, comparison table, key differences & when to choose each.
+4. **NO INLINE CITATIONS OR TEXT CITATION TAGS**: DO NOT write inline citation tags like [SOURCE: ...], [Section: ...], or text lines like "📄 Source: ...". DO NOT say "In Aditya's article...", "Aditya explains...", or "According to the post...". The user interface automatically displays interactive source pill buttons for cited articles beneath your message.
+5. **PROGRESSIVE CONVERSATION & NON-REPETITION**: In multi-turn chats, build directly on prior turns. Never repeat basic definitions or intro paragraphs already discussed earlier in the conversation history. Answer follow-up questions directly.
+6. **FOLLOW-UP SUGGESTIONS**: At the very end of your response, output exactly 3 context-aware follow-up questions formatted on a separate line as:
+[FOLLOW_UP_SUGGESTIONS: Question 1 | Question 2 | Question 3]
+7. **TONE**: Conversational, confident, crisp, and direct — like a senior principal engineer mentoring a fellow developer.
 
 Never say you are an AI made by Google. You are Aditya's blog assistant.`;
 
@@ -42,48 +47,47 @@ function getGenAI() {
 
 /**
  * Build the context string from retrieved chunks.
- * Context is formatted clearly without bracketed source tags that LLMs tend to repeat.
  *
  * @param {Array<{ article_slug, article_title, section, text }>} chunks
- * @returns {{ contextString, sources }}
+ * @returns {{ contextString: string, sources: Array }}
  */
 function buildContext(chunks) {
-  if (chunks.length === 0) {
+  if (!chunks || chunks.length === 0) {
     return { contextString: "", sources: [] };
   }
 
-  const usedArticles = new Map(); // slug → title
+  const usedArticles = new Map(); // slug -> source object
   const contextParts = [];
 
   for (const chunk of chunks) {
     if (!usedArticles.has(chunk.article_slug)) {
-      usedArticles.set(chunk.article_slug, chunk.article_title);
+      usedArticles.set(chunk.article_slug, {
+        slug: chunk.article_slug,
+        title: chunk.article_title,
+        section: chunk.section || "General",
+        type: "article",
+      });
     }
 
     contextParts.push(
-      `Article: "${chunk.article_title}" (Section: ${chunk.section})\n${chunk.text}`
+      `Article: "${chunk.article_title}" (Section: ${chunk.section || "General"})\n${chunk.text}`
     );
   }
 
   const contextString = contextParts.join("\n\n---\n\n");
-  const sources = Array.from(usedArticles.entries()).map(([slug, title]) => ({
-    slug,
-    title,
-    type: "article",
-  }));
+  const sources = Array.from(usedArticles.values());
 
   return { contextString, sources };
 }
 
-const RETRY_BASE_DELAY_MS = 62000; // 62s — RPM windows are 60s, must wait full window
-const MODEL_SWITCH_DELAY_MS = 2000;  // 2s pause between model switches (burst protection)
-const MAX_CYCLES = 0;               // no retry cycles — fail fast after one full sweep
+const RETRY_BASE_DELAY_MS = 62000;
+const MODEL_SWITCH_DELAY_MS = 2000;
+const MAX_CYCLES = 0;
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// Friendly error thrown when all models + all retry cycles are exhausted
 class RateLimitExhaustedError extends Error {
   constructor() {
     super("The AI service is temporarily busy. Please wait a moment and try again.");
@@ -93,13 +97,7 @@ class RateLimitExhaustedError extends Error {
 }
 
 /**
- * Generate a streaming RAG response with automatic 429 retry.
- *
- * @param {string} query - standalone user query
- * @param {Array} retrievedChunks - chunks from retriever
- * @param {Array<{ role: string, text: string }>} history - conversation history
- * @param {function} onChunk - SSE chunk callback (text)
- * @param {function} onDone - callback called with final metadata { sources, webSources }
+ * Generate a streaming RAG response with adaptive response depth & model fallback.
  */
 export async function generateStreamingResponse(
   query,
@@ -127,9 +125,6 @@ export async function generateStreamingResponse(
   console.log(`[generator] Using model: ${currentModel}${_modelIndex > 0 ? ` (fallback #${_modelIndex})` : ""}`);
 
   try {
-    // Plain generation — no Google Search Grounding tool.
-    // Grounding requires a paid Gemini API tier; using it on the free tier
-    // causes 429 for ALL requests regardless of API key or RPM quota.
     const model = getGenAI().getGenerativeModel({
       model: currentModel,
       systemInstruction: SYSTEM_INSTRUCTION,
@@ -138,43 +133,65 @@ export async function generateStreamingResponse(
     const chat = model.startChat({ history: formattedHistory });
     const result = await chat.sendMessageStream(userMessage);
 
-    let fullText = "";
+    let fullAccumulatedText = "";
 
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();
       if (chunkText) {
-        fullText += chunkText;
-        onChunk(chunkText);
+        fullAccumulatedText += chunkText;
+        // Strip [FOLLOW_UP_SUGGESTIONS: ...] tag if it starts appearing in stream
+        const cleanChunk = chunkText.replace(/\[FOLLOW_UP_SUGGESTIONS:[\s\S]*$/, "");
+        if (cleanChunk) {
+          onChunk(cleanChunk);
+        }
       }
     }
 
-    onDone({ sources, webSources: [] }); // webSources empty on free tier (no grounding)
+    // Extract follow-up suggestions from accumulated text
+    let followUpSuggestions = [];
+    const followUpMatch = fullAccumulatedText.match(/\[FOLLOW_UP_SUGGESTIONS:\s*([^\]]+)\]/);
+    if (followUpMatch && followUpMatch[1]) {
+      followUpSuggestions = followUpMatch[1]
+        .split("|")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+        .slice(0, 3);
+    }
+
+    onDone({ sources, webSources: [], followUpSuggestions });
   } catch (error) {
     if (error.status === 429) {
       const nextModelIndex = _modelIndex + 1;
 
       if (nextModelIndex < MODEL_CHAIN.length) {
-        // Switch to next model — brief pause to avoid burst rate limiting
         console.warn(
           `[generator] Rate limited (429) on "${currentModel}", switching to "${MODEL_CHAIN[nextModelIndex]}" in ${MODEL_SWITCH_DELAY_MS / 1000}s...`
         );
         await sleep(MODEL_SWITCH_DELAY_MS);
         return generateStreamingResponse(
-          query, retrievedChunks, history, onChunk, onDone,
-          nextModelIndex, _cycleCount
+          query,
+          retrievedChunks,
+          history,
+          onChunk,
+          onDone,
+          nextModelIndex,
+          _cycleCount
         );
       } else if (_cycleCount < MAX_CYCLES) {
-        // All models tried — wait one full RPM window, then do one more sweep
         console.warn(
-          `[generator] All models rate limited (cycle ${_cycleCount + 1}/${MAX_CYCLES}). Waiting ${RETRY_BASE_DELAY_MS / 1000}s before retrying from primary...`
+          `[generator] All models rate limited (cycle ${_cycleCount + 1}/${MAX_CYCLES}). Waiting ${RETRY_BASE_DELAY_MS / 1000}s before retrying...`
         );
         await sleep(RETRY_BASE_DELAY_MS);
         return generateStreamingResponse(
-          query, retrievedChunks, history, onChunk, onDone,
-          0, _cycleCount + 1
+          query,
+          retrievedChunks,
+          history,
+          onChunk,
+          onDone,
+          0,
+          _cycleCount + 1
         );
       } else {
-        // All models exhausted across all cycles — fail fast with a friendly error
         console.error(
           `[generator] Rate limit exhausted across all models and ${MAX_CYCLES + 1} cycle(s). Giving up.`
         );

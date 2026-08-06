@@ -21,6 +21,7 @@ import {
   Globe,
   FileText,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
 import { useRAGChat, type Source } from "@/hooks/useRAGChat";
 
@@ -433,6 +434,27 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
 
                         {!isUser && !msg.isStreaming && msg.sources && (
                           <SourcePills sources={msg.sources} />
+                        )}
+
+                        {!isUser && !msg.isStreaming && msg.followUpSuggestions && msg.followUpSuggestions.length > 0 && (
+                          <div className="mt-2 pt-1.5 border-t border-dashed border-border/30 w-full">
+                            <p className="text-[10px] font-mono font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5 text-yellow-500" />
+                              Follow-up questions
+                            </p>
+                            <div className="flex flex-col gap-1">
+                              {msg.followUpSuggestions.map((suggestion, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleSendText(suggestion)}
+                                  className="flex items-center gap-1.5 text-left text-xs font-mono px-2.5 py-1.5 rounded-lg border border-foreground/40 bg-card hover:bg-secondary hover:border-foreground transition-all group text-foreground"
+                                >
+                                  <ChevronRight className="w-3 h-3 text-blue-400 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                  <span className="line-clamp-1">{suggestion}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>

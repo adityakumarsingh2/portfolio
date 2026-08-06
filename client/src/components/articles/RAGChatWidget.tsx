@@ -179,6 +179,8 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
     cooldownSecondsLeft,
   } = useRAGChat({ articleSlug });
 
+  const hasScrolledForResponseRef = useRef(false);
+
   const scrollToBottom = () => {
     if (bodyRef.current) {
       bodyRef.current.scrollTo({
@@ -188,25 +190,40 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
     }
   };
 
-  // Scroll on message updates
-  useEffect(() => {
-    if (hasMessages && (isOpen || bodyRef.current)) {
-      scrollToBottom();
+  const scrollToLatestMessage = () => {
+    if (latestModelMsgRef.current && bodyRef.current) {
+      const container = bodyRef.current;
+      const el = latestModelMsgRef.current;
+      const targetTop = el.offsetTop - 12; // 12px breathing room above the bot bubble
+      container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
-  }, [messages, hasMessages, isOpen]);
+  };
+
+  // Scroll to start of bot response ONCE when response starts (ChatGPT style)
+  useEffect(() => {
+    if (!hasMessages) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === "assistant" && !hasScrolledForResponseRef.current) {
+      hasScrolledForResponseRef.current = true;
+      setTimeout(() => scrollToLatestMessage(), 50);
+    }
+  }, [messages, hasMessages]);
 
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      scrollToBottom();
+      if (hasMessages) {
+        setTimeout(() => scrollToLatestMessage(), 50);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, hasMessages]);
 
   const handleSendText = useCallback(
     async (textToSend: string) => {
       const q = textToSend.trim();
       if (!q || isLoading || cooldownSecondsLeft > 0) return;
+      hasScrolledForResponseRef.current = false;
       setInputValue("");
       await sendMessage(q);
     },

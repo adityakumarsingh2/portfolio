@@ -22,12 +22,17 @@ function ArticlesLayout() {
   const seriesMatch = useMatch("/articles/series/:slug");
 
   const isArticlesRoute = location.pathname.startsWith("/articles");
-  const articleSlug = (articleMatch && !categoryMatch && !seriesMatch) ? articleMatch.params.slug : undefined;
+  const isArticleDetailPage = Boolean(articleMatch && !categoryMatch && !seriesMatch);
+  const articleSlug = isArticleDetailPage ? articleMatch?.params.slug : undefined;
 
   return (
     <>
       <Outlet />
-      {isArticlesRoute && <RAGChatWidget articleSlug={articleSlug} key={articleSlug || "global-articles"} />}
+      {/* Render global floating RAGChatWidget ONLY on general articles listing/category/series pages.
+          Individual article detail pages (/articles/:slug) manage their own embedded 3-column split-view studio. */}
+      {isArticlesRoute && !isArticleDetailPage && (
+        <RAGChatWidget articleSlug={articleSlug} key={articleSlug || "global-articles"} />
+      )}
     </>
   );
 }

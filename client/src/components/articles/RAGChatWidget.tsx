@@ -172,13 +172,30 @@ function SourcePills({ sources }: { sources: Source[] }) {
   );
 }
 
+interface RAGChatWidgetProps {
+  articleSlug?: string;
+  isEmbedded?: boolean;
+  isOpen?: boolean;
+  setIsOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose?: () => void;
+}
+
 // ── Main widget ─────────────────────────────────────────────────────────────
-export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
-  const [isOpen, setIsOpen] = useState(false);
+export function RAGChatWidget({
+  articleSlug,
+  isEmbedded = false,
+  isOpen: propIsOpen,
+  setIsOpen: propSetIsOpen,
+  onClose,
+}: RAGChatWidgetProps) {
+  const [localIsOpen, localSetIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
   const latestModelMsgRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const isOpen = propIsOpen !== undefined ? propIsOpen : localIsOpen;
+  const setIsOpen = propSetIsOpen !== undefined ? propSetIsOpen : localSetIsOpen;
 
   const {
     messages,
@@ -333,6 +350,182 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
     const lastMsg = messages[messages.length - 1];
     return lastMsg.role === "assistant" && lastMsg.text === "";
   };
+
+  if (isEmbedded) {
+    return (
+      <div className="w-full h-full bg-card border-2 border-foreground rounded-2xl shadow-md flex flex-col overflow-hidden relative font-sans">
+        {/* Header: Neo-Brutalist Code Bar with Live Status */}
+        <div className="p-3 bg-secondary border-b-2 border-foreground flex items-center justify-between font-mono text-xs flex-shrink-0">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 border border-foreground/30" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 border border-foreground/30" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 border border-foreground/30" />
+              </div>
+              <div className="ml-1 flex items-center gap-1 text-foreground font-semibold">
+                <span className="text-blue-500">const</span>
+                <span>articles</span>
+                <span className="text-foreground/70">=</span>
+                <span className="text-gradient-warm font-bold font-sans">AI;</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground pl-0.5 mt-0.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span>Activity: {articleSlug ? "Analyzing Article" : "RAG · Articles Q&A"}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {hasMessages && (
+              <button
+                onClick={clearConversation}
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-card border border-transparent hover:border-foreground/30 transition-all text-foreground/80 hover:text-foreground"
+                title="New Conversation"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-card border border-transparent hover:border-foreground/30 transition-all text-foreground/80 hover:text-foreground"
+                title="Close Panel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Chat Body */}
+        <div ref={bodyRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-card">
+          {!hasMessages && !isLoading ? (
+            <WelcomeSequence articleSlug={articleSlug} onSend={handleSendText} />
+          ) : (
+            messages.map((msg, index) => {
+              if (msg.role === "assistant" && msg.text === "" && msg.isStreaming) return null;
+              const isUser = msg.role === "user";
+
+              return (
+                <div
+                  key={msg.id || index}
+                  ref={!isUser && index === messages.length - 1 ? latestModelMsgRef : undefined}
+                  className={`flex items-start gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 border border-foreground shadow-2xs ${
+                      isUser
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-foreground"
+                    }`}
+                  >
+                    {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+                  </div>
+
+                  <div className="flex flex-col max-w-[80%]">
+                    <div
+                      className={`px-3.5 py-2.5 border rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                        isUser
+                          ? "bg-foreground text-background border-foreground rounded-tr-none shadow-2xs"
+                          : "bg-secondary text-foreground border-border/80 rounded-tl-none font-sans font-normal"
+                      }`}
+                    >
+                      {formatMessageText(msg.text)}
+                      {msg.isStreaming && (
+                        <span className="inline-block w-1.5 h-3.5 bg-foreground animate-pulse ml-1 align-middle" />
+                      )}
+                    </div>
+
+                    {!isUser && !msg.isStreaming && msg.sources && (
+                      <SourcePills sources={msg.sources} />
+                    )}
+
+                    {!isUser && !msg.isStreaming && msg.followUpSuggestions && msg.followUpSuggestions.length > 0 && (
+                      <div className="mt-2 pt-1.5 border-t border-dashed border-border/30 w-full">
+                        <p className="text-[10px] font-mono font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
+                          <Sparkles className="w-2.5 h-2.5 text-yellow-500" />
+                          Follow-up questions
+                        </p>
+                        <div className="flex flex-col gap-1">
+                          {msg.followUpSuggestions.map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleSendText(suggestion)}
+                              className="flex items-center gap-1.5 text-left text-xs font-mono px-2.5 py-1.5 rounded-lg border border-foreground/40 bg-card hover:bg-secondary hover:border-foreground transition-all group text-foreground"
+                            >
+                              <ChevronRight className="w-3 h-3 text-blue-400 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                              <span className="line-clamp-1">{suggestion}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {shouldShowTyping() && (
+            <div className="flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-secondary border border-foreground text-foreground flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+                <Bot className="w-3.5 h-3.5" />
+              </div>
+              <div className="bg-secondary border border-border/80 px-4 py-3 rounded-xl rounded-tl-none max-w-[75%] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          )}
+
+          {cooldownSecondsLeft > 0 && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border-2 border-amber-500 text-amber-600 dark:text-amber-400 font-mono text-xs shadow-2xs">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Rate limited — ready in {cooldownSecondsLeft}s…</span>
+            </div>
+          )}
+        </div>
+
+        {/* Chat Input */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendText(inputValue);
+          }}
+          className="p-3 border-t-2 border-foreground bg-secondary/40 flex items-center gap-2 relative mt-auto flex-shrink-0"
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={
+              cooldownSecondsLeft > 0
+                ? `Rate limited — ready in ${cooldownSecondsLeft}s…`
+                : "Ask about any article topic..."
+            }
+            className="flex-1 min-w-0 bg-card border-2 border-foreground rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-0 font-mono text-foreground"
+            disabled={isLoading || cooldownSecondsLeft > 0}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoading || !inputValue.trim() || cooldownSecondsLeft > 0}
+            className="p-2.5 rounded-xl bg-foreground text-background border-2 border-foreground disabled:opacity-40 hover:bg-secondary hover:text-foreground hover:translate-y-[-1px] shadow-2xs active:translate-y-[1px] active:shadow-none transition-all duration-150 flex-shrink-0"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">

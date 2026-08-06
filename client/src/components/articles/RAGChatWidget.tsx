@@ -24,11 +24,18 @@ import {
 } from "lucide-react";
 import { useRAGChat, type Source } from "@/hooks/useRAGChat";
 
-const SUGGESTIONS = [
-  "What chunking strategies work best for RAG?",
+const GLOBAL_SUGGESTIONS = [
+  "Summarize Aditya's top articles",
+  "List key takeaways from full-stack articles",
+  "What articles cover RAG & AI?",
   "Compare Qdrant vs Pinecone",
-  "How does cursor pagination work?",
-  "What is TanStack Query and why use it?",
+];
+
+const ARTICLE_SPECIFIC_SUGGESTIONS = [
+  "Summarize this article",
+  "List key learnings & takeaways",
+  "What core problem does this solve?",
+  "Explain the technical architecture",
 ];
 
 const GREETING_DELAY = 300;
@@ -48,10 +55,12 @@ const WelcomeSequence = ({
   const [showLabel, setShowLabel] = useState(false);
   const [visibleChips, setVisibleChips] = useState(0);
 
+  const suggestions = articleSlug ? ARTICLE_SPECIFIC_SUGGESTIONS : GLOBAL_SUGGESTIONS;
+
   useEffect(() => {
     const t1 = setTimeout(() => setShowGreeting(true), GREETING_DELAY);
     const t2 = setTimeout(() => setShowLabel(true), LABEL_DELAY);
-    const chipTimers = SUGGESTIONS.map((_, i) =>
+    const chipTimers = suggestions.map((_, i) =>
       setTimeout(() => setVisibleChips(i + 1), FIRST_CHIP_DELAY + i * CHIP_STAGGER)
     );
     return () => {
@@ -59,7 +68,7 @@ const WelcomeSequence = ({
       clearTimeout(t2);
       chipTimers.forEach(clearTimeout);
     };
-  }, []);
+  }, [suggestions]);
 
   return (
     <div className="space-y-3">
@@ -77,7 +86,7 @@ const WelcomeSequence = ({
             </div>
             <div className="px-3.5 py-2.5 border bg-secondary text-foreground border-border/80 rounded-xl rounded-tl-none text-sm leading-relaxed max-w-[75%] font-sans font-normal">
               {articleSlug
-                ? "Hi! I'm Articles AI. Ask me anything about this article or technical topics covered here! 📚"
+                ? "Hi! I'm Articles AI. Ask me anything about this article or use a quick prompt below to analyze it! 📚"
                 : "Hi! I'm Articles AI. Ask me anything about Aditya's articles, system architecture, RAG, or web development! 📚"}
             </div>
           </motion.div>
@@ -101,7 +110,7 @@ const WelcomeSequence = ({
 
       {/* Suggestion chips — one-by-one */}
       <div className="flex flex-col gap-2">
-        {SUGGESTIONS.map((sug, i) => (
+        {suggestions.map((sug, i) => (
           <AnimatePresence key={sug}>
             {visibleChips > i && (
               <motion.button
@@ -229,6 +238,20 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
     },
     [isLoading, cooldownSecondsLeft, sendMessage]
   );
+
+  // Listen for custom trigger event from article pages / footer prompt bar
+  useEffect(() => {
+    const handleCustomOpen = (e: Event) => {
+      const customEvent = e as CustomEvent<{ query?: string }>;
+      setIsOpen(true);
+      if (customEvent.detail?.query) {
+        handleSendText(customEvent.detail.query);
+      }
+    };
+
+    window.addEventListener("open-rag-chat", handleCustomOpen);
+    return () => window.removeEventListener("open-rag-chat", handleCustomOpen);
+  }, [handleSendText]);
 
   const sanitizeText = (rawText: string) => {
     if (!rawText) return "";

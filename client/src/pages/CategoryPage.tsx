@@ -153,7 +153,7 @@ export default function CategoryPage() {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-3 mb-8"
             >
-              <span className="font-mono text-xs text-primary/60">// articles</span>
+              <span className="font-mono text-xs text-primary/60">// latest</span>
               <div className="flex-1 h-px bg-border/40" />
               <span className="font-mono text-xs text-muted-foreground">
                 {categoryArticles.length} result{categoryArticles.length !== 1 ? "s" : ""}

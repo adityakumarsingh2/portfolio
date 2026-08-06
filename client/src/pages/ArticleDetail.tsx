@@ -191,29 +191,32 @@ export default function ArticleDetail() {
           <div className="max-w-[1720px] mx-auto">
             <div className="flex gap-6 lg:gap-8 items-start justify-center">
 
-              {/* ── SUBTOPICS / TABLE OF CONTENTS ── */}
-              {/* Uses layoutId and flex order to continuously glide from right side to left side smoothly */}
-              <motion.div
-                layout
-                layoutId="article-subtopics-toc"
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className={`hidden xl:block sticky top-24 shrink-0 w-64 ${
-                  isChatOpen ? "order-1" : "order-3"
-                }`}
-              >
-                <TableOfContents
-                  items={tocItems}
-                  activeId={activeId}
-                  readingTime={article.readingTime}
-                  className="w-64 sticky top-24 self-start"
-                />
-              </motion.div>
+              {/* ── LEFT SIDEBAR: Table of Contents (Subtopics when Chatbot is OPEN) ── */}
+              <AnimatePresence initial={false}>
+                {isChatOpen && (
+                  <motion.div
+                    key="toc-left-panel"
+                    initial={{ opacity: 0, x: -30, width: 0 }}
+                    animate={{ opacity: 1, x: 0, width: 256 }}
+                    exit={{ opacity: 0, x: -30, width: 0 }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="hidden xl:block sticky top-24 shrink-0 overflow-hidden"
+                  >
+                    <TableOfContents
+                      items={tocItems}
+                      activeId={activeId}
+                      readingTime={article.readingTime}
+                      className="w-64 sticky top-24 self-start"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* ── CENTER COLUMN: Main Article Content (Full reading width prioritized) ── */}
+              {/* ── CENTER COLUMN: Main Article Content (Spacious, Uncompromised) ── */}
               <motion.div
-                layout
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="order-2 min-w-0 flex-1 max-w-3xl lg:max-w-4xl"
+                layout="position"
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="min-w-0 flex-1 max-w-3xl lg:max-w-4xl"
               >
                 <ArticleContent content={article.content} />
                 <ArticleShare title={article.title} />
@@ -222,26 +225,44 @@ export default function ArticleDetail() {
                 <ArticleFooter />
               </motion.div>
 
-              {/* ── RIGHT SIDEBAR: Integrated Articles AI Chat Panel (When OPEN) ── */}
-              <AnimatePresence>
-                {isChatOpen && (
-                  <motion.div
-                    key="chatbot-panel"
-                    initial={{ opacity: 0, x: 50, scale: 0.96 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 50, scale: 0.96 }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="hidden lg:block order-3 sticky top-24 shrink-0 w-[360px] xl:w-[400px] h-[calc(100vh-7rem)]"
-                  >
-                    <RAGChatWidget
-                      articleSlug={slug}
-                      isEmbedded={true}
-                      isOpen={true}
-                      onClose={() => setIsChatOpen(false)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* ── RIGHT SIDEBAR: Table of Contents (CLOSED) OR Chatbot Panel (OPEN) ── */}
+              <div className="sticky top-24 shrink-0 self-start">
+                <AnimatePresence mode="wait">
+                  {!isChatOpen ? (
+                    <motion.div
+                      key="toc-right"
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="hidden xl:block w-64"
+                    >
+                      <TableOfContents
+                        items={tocItems}
+                        activeId={activeId}
+                        readingTime={article.readingTime}
+                        className="w-64 self-start"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="chatbot-panel"
+                      initial={{ opacity: 0, x: 30, scale: 0.97 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 30, scale: 0.97 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="hidden lg:block w-[360px] xl:w-[400px] h-[calc(100vh-7rem)]"
+                    >
+                      <RAGChatWidget
+                        articleSlug={slug}
+                        isEmbedded={true}
+                        isOpen={true}
+                        onClose={() => setIsChatOpen(false)}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
             </div>
           </div>
@@ -251,7 +272,7 @@ export default function ArticleDetail() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       </main>
 
-      {/* Floating Toggle Button (Handles mobile overlay + desktop toggle) */}
+      {/* Floating Toggle Button (Handles mobile overlay + desktop toggle when closed) */}
       <div className="fixed bottom-6 right-6 z-50 font-sans">
         {/* Mobile floating widget overlay when open */}
         <div className="lg:hidden">
@@ -262,22 +283,25 @@ export default function ArticleDetail() {
           />
         </div>
 
-        {/* Desktop Toggle Button */}
-        <motion.button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="hidden lg:flex w-14 h-14 rounded-2xl bg-card border-2 border-foreground items-center justify-center text-foreground shadow-sm hover:shadow-md cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
-          aria-label="Toggle Articles AI chatbot"
-          title={isChatOpen ? "Close AI Assistant" : "Open AI Assistant (Split Studio View)"}
-        >
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-          {isChatOpen ? (
-            <X className="w-6 h-6 relative z-10" />
-          ) : (
-            <MessageSquare className="w-6 h-6 relative z-10" />
+        {/* Desktop Toggle Button — ONLY SHOWN WHEN CHAT IS CLOSED */}
+        <AnimatePresence>
+          {!isChatOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => setIsChatOpen(true)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="hidden lg:flex w-14 h-14 rounded-2xl bg-card border-2 border-foreground items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
+              aria-label="Open Articles AI chatbot"
+              title="Open AI Assistant (Split Studio View)"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+              <MessageSquare className="w-6 h-6 relative z-10" />
+            </motion.button>
           )}
-        </motion.button>
+        </AnimatePresence>
       </div>
 
       <Footer />

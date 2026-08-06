@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation, useMatch } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Articles from "./pages/Articles";
@@ -17,13 +17,17 @@ const queryClient = new QueryClient();
 /** Layout wrapper that adds the RAG chat widget to all /articles/* routes */
 function ArticlesLayout() {
   const location = useLocation();
-  // Show the widget on /articles, /articles/:slug, /articles/category/:slug, /articles/series/:slug
+  const articleMatch = useMatch("/articles/:slug");
+  const categoryMatch = useMatch("/articles/category/:slug");
+  const seriesMatch = useMatch("/articles/series/:slug");
+
   const isArticlesRoute = location.pathname.startsWith("/articles");
+  const articleSlug = (articleMatch && !categoryMatch && !seriesMatch) ? articleMatch.params.slug : undefined;
 
   return (
     <>
       <Outlet />
-      {isArticlesRoute && <RAGChatWidget />}
+      {isArticlesRoute && <RAGChatWidget articleSlug={articleSlug} key={articleSlug || "global-articles"} />}
     </>
   );
 }

@@ -12,7 +12,6 @@ import { ArticleShare } from "@/components/articles/ArticleShare";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { PrevNextNav } from "@/components/articles/PrevNextNav";
 import { ArticleFooter } from "@/components/articles/ArticleFooter";
-import { RAGChatWidget } from "@/components/articles/RAGChatWidget";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
 import { ArrowLeft } from "lucide-react";
@@ -212,9 +211,6 @@ export default function ArticleDetail() {
       </main>
 
       <Footer />
-
-      {/* Article-scoped RAG chat — only retrieves from this article */}
-      <RAGChatWidget articleSlug={slug} />
     </div>
   );
 }

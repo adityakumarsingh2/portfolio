@@ -127,7 +127,10 @@ function SourcePills({ sources }: { sources: Source[] }) {
   if (!sources || sources.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1.5 pt-1.5 border-t border-dashed border-border/30">
+    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-dashed border-border/30">
+      <div className="w-full text-[9px] font-mono font-bold text-muted-foreground tracking-wider uppercase">
+        Referenced Articles
+      </div>
       {sources.map((source, i) =>
         source.type === "article" ? (
           <a
@@ -135,10 +138,11 @@ function SourcePills({ sources }: { sources: Source[] }) {
             href={`/articles/${source.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold bg-secondary border border-foreground/30 rounded-lg px-2 py-1 shadow-2xs hover:bg-card text-foreground transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold bg-secondary border border-foreground/30 rounded-lg px-2 py-1 shadow-2xs hover:bg-card hover:border-foreground text-foreground transition-all hover:-translate-y-[0.5px] active:translate-y-0"
           >
             <FileText className="w-3 h-3 text-blue-500 flex-shrink-0" />
-            <span className="truncate max-w-[130px]">{source.title}</span>
+            <span className="truncate max-w-[160px]">{source.title}</span>
+            <ExternalLink className="w-2.5 h-2.5 opacity-60 flex-shrink-0" />
           </a>
         ) : (
           <a
@@ -146,10 +150,10 @@ function SourcePills({ sources }: { sources: Source[] }) {
             href={source.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold bg-secondary border border-foreground/30 rounded-lg px-2 py-1 shadow-2xs hover:bg-card text-foreground transition-all hover:-translate-y-[0.5px] active:translate-y-0"
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold bg-secondary border border-foreground/30 rounded-lg px-2 py-1 shadow-2xs hover:bg-card hover:border-foreground text-foreground transition-all hover:-translate-y-[0.5px] active:translate-y-0"
           >
             <Globe className="w-3 h-3 text-sky-500 flex-shrink-0" />
-            <span className="truncate max-w-[130px]">{source.title}</span>
+            <span className="truncate max-w-[160px]">{source.title}</span>
             <ExternalLink className="w-2.5 h-2.5 opacity-60 flex-shrink-0" />
           </a>
         )
@@ -209,9 +213,19 @@ export function RAGChatWidget({ articleSlug }: { articleSlug?: string }) {
     [isLoading, cooldownSecondsLeft, sendMessage]
   );
 
+  const sanitizeText = (rawText: string) => {
+    if (!rawText) return "";
+    return rawText
+      .replace(/\[SOURCE:\s*[^\]]+\]/gi, "")
+      .replace(/(?:📄\s*)?Source:\s*[^\n]+/gi, "")
+      .replace(/ {2,}/g, " ")
+      .trim();
+  };
+
   const formatMessageText = (text: string) => {
-    if (!text) return null;
-    const lines = text.split("\n");
+    const cleaned = sanitizeText(text);
+    if (!cleaned) return null;
+    const lines = cleaned.split("\n");
 
     return lines.map((line, lineIdx) => {
       const isBullet = line.trim().startsWith("- ") || line.trim().startsWith("* ");

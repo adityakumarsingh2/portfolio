@@ -24,6 +24,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRAGChat, type Source } from "@/hooks/useRAGChat";
+import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 
 const GLOBAL_SUGGESTIONS = [
   "Summarize Aditya's top articles",
@@ -528,7 +529,14 @@ export function RAGChatWidget({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end">
+      {/* Pop up bubble above chat button icon */}
+      <AnimatePresence>
+        {!isOpen && (
+          <MayIHelpYouPopup onOpenChat={() => setIsOpen(true)} />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div

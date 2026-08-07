@@ -13,6 +13,7 @@ import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { PrevNextNav } from "@/components/articles/PrevNextNav";
 import { ArticleFooter } from "@/components/articles/ArticleFooter";
 import { RAGChatWidget } from "@/components/articles/RAGChatWidget";
+import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
 import { MessageSquare, X } from "lucide-react";
@@ -311,7 +312,7 @@ export default function ArticleDetail() {
       </main>
 
       {/* Floating Toggle Button (Handles mobile overlay + desktop toggle when closed) */}
-      <div className="fixed bottom-6 right-6 z-50 font-sans">
+      <div className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end">
         {/* Mobile floating widget overlay when open */}
         <div className="lg:hidden">
           <RAGChatWidget
@@ -324,20 +325,25 @@ export default function ArticleDetail() {
         {/* Desktop Toggle Button — ONLY SHOWN WHEN CHAT IS CLOSED */}
         <AnimatePresence>
           {!isChatOpen && (
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => setIsChatOpen(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden lg:flex w-14 h-14 rounded-2xl bg-card border-2 border-foreground items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
-              aria-label="Open Articles AI chatbot"
-              title="Open AI Assistant (Split Studio View)"
+              className="hidden lg:flex flex-col items-end"
             >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-              <MessageSquare className="w-6 h-6 relative z-10" />
-            </motion.button>
+              <MayIHelpYouPopup onOpenChat={() => setIsChatOpen(true)} />
+              <motion.button
+                onClick={() => setIsChatOpen(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-14 h-14 rounded-2xl bg-card border-2 border-foreground flex items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
+                aria-label="Open Articles AI chatbot"
+                title="Open AI Assistant (Split Studio View)"
+              >
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                <MessageSquare className="w-6 h-6 relative z-10" />
+              </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

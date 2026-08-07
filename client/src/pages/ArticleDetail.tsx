@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -22,6 +22,7 @@ export default function ArticleDetail() {
   const article = slug ? getArticleBySlug(slug) : undefined;
 
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const titleRef = useRef<HTMLDivElement>(null);
 
   // ⚠️ All hooks must run unconditionally — call them before any early return
   const { items: tocItems, activeId } = useTableOfContents(article?.content ?? "");
@@ -32,6 +33,45 @@ export default function ArticleDetail() {
     window.addEventListener("open-rag-chat", handleCustomOpen);
     return () => window.removeEventListener("open-rag-chat", handleCustomOpen);
   }, []);
+
+  // Auto-scroll effect: Show full cover image hero for 1s, then smoothly scroll down to title with cinematic rAF easing
+  useEffect(() => {
+    if (!article) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
+    const timer = setTimeout(() => {
+      if (titleRef.current && window.scrollY < 80) {
+        const rect = titleRef.current.getBoundingClientRect();
+        const targetTop = Math.max(0, rect.top + window.scrollY - 90);
+
+        // Premium rAF smooth scroll animation (easeOutQuart - 950ms)
+        const startY = window.scrollY;
+        const distance = targetTop - startY;
+        if (Math.abs(distance) < 2) return;
+
+        const startTime = performance.now();
+        const duration = 950;
+
+        const step = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease-out quartic curve for luxurious deceleration
+          const easedProgress = 1 - Math.pow(1 - progress, 4);
+
+          window.scrollTo(0, startY + distance * easedProgress);
+
+          if (progress < 1) {
+            requestAnimationFrame(step);
+          }
+        };
+
+        requestAnimationFrame(step);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [article?.slug]);
 
   // SEO effect — runs whenever the article changes
   useEffect(() => {
@@ -90,8 +130,6 @@ export default function ArticleDetail() {
     }
     script.textContent = JSON.stringify(schema);
 
-    window.scrollTo({ top: 0 });
-
     return () => {
       document.title = "Aditya Kumar Singh — Full-Stack Engineer & AI Builder";
       ogTags.forEach(({ property }) => {
@@ -132,7 +170,7 @@ export default function ArticleDetail() {
 
           {/* Hero content overlay */}
           <div className="container mx-auto px-6">
-            <div className="max-w-4xl mx-auto -mt-20 relative z-10 pb-8">
+            <div ref={titleRef} className="max-w-4xl mx-auto -mt-20 relative z-10 pb-8">
               {/* Breadcrumb */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,19 @@ import NotFound from "./pages/NotFound";
 import { RAGChatWidget } from "./components/articles/RAGChatWidget";
 
 const queryClient = new QueryClient();
+
+/** Automatically resets window scroll position to top (0,0) on every route transition */
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [pathname, hash]);
+
+  return null;
+}
 
 /** Layout wrapper that adds the RAG chat widget to all /articles/* routes */
 function ArticlesLayout() {
@@ -44,6 +58,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             {/* Articles routes with RAG chat widget */}
@@ -64,5 +79,3 @@ const App = () => (
 );
 
 export default App;
-
-

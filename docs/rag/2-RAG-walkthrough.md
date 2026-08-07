@@ -1,4 +1,4 @@
-# Articles RAG Chatbot — Complete Technical Architecture & Viva Master Guide
+# Articles RAG Chatbot — Technical Architecture 
 
 > **Project Reference Document**  
 > **System Scope**: Articles AI RAG (Retrieval-Augmented Generation) Chatbot System  

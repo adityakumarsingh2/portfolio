@@ -139,17 +139,13 @@ export default function Articles() {
                       >
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="w-9 h-9 rounded-xl flex items-center justify-center border font-mono text-sm font-bold"
-                                style={{
-                                  background: `${cat.color}15`,
-                                  borderColor: `${cat.color}40`,
-                                  color: cat.color,
-                                }}
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="font-mono text-base font-bold flex-shrink-0"
+                                style={{ color: cat.color }}
                               >
-                                {cat.label[0]}
-                              </div>
+                                {">"}
+                              </span>
                               <h3 className="font-display font-bold text-base text-foreground group-hover:text-purple-400 transition-colors">
                                 {cat.label}
                               </h3>

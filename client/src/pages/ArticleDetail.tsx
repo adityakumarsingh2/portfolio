@@ -16,6 +16,7 @@ import { RAGChatWidget } from "@/components/articles/RAGChatWidget";
 import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
+import { scrollToNearestUpperHeading } from "@/lib/utils";
 import { MessageSquare, X } from "lucide-react";
 
 export default function ArticleDetail() {
@@ -28,9 +29,14 @@ export default function ArticleDetail() {
   // ⚠️ All hooks must run unconditionally — call them before any early return
   const { items: tocItems, activeId } = useTableOfContents(article?.content ?? "");
 
+  const handleOpenChat = () => {
+    setIsChatOpen(true);
+    scrollToNearestUpperHeading();
+  };
+
   // Listen for open-rag-chat custom events from footer / prompt chips
   useEffect(() => {
-    const handleCustomOpen = () => setIsChatOpen(true);
+    const handleCustomOpen = () => handleOpenChat();
     window.addEventListener("open-rag-chat", handleCustomOpen);
     return () => window.removeEventListener("open-rag-chat", handleCustomOpen);
   }, []);
@@ -331,9 +337,9 @@ export default function ArticleDetail() {
               exit={{ opacity: 0, scale: 0.8 }}
               className="hidden lg:flex flex-col items-end"
             >
-              <MayIHelpYouPopup onOpenChat={() => setIsChatOpen(true)} />
+              <MayIHelpYouPopup onOpenChat={handleOpenChat} />
               <motion.button
-                onClick={() => setIsChatOpen(true)}
+                onClick={handleOpenChat}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-14 h-14 rounded-2xl bg-card border-2 border-foreground flex items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"

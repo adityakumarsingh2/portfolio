@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useRAGChat, type Source } from "@/hooks/useRAGChat";
 import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
+import { scrollToNearestUpperHeading } from "@/lib/utils";
 
 const GLOBAL_SUGGESTIONS = [
   "Summarize Aditya's top articles",
@@ -237,10 +238,25 @@ export function RAGChatWidget({
     }
   }, [messages, hasMessages]);
 
-  // Focus input when opened
+  const handleOpenChat = useCallback(() => {
+    setIsOpen(true);
+    scrollToNearestUpperHeading();
+  }, [setIsOpen]);
+
+  const handleToggleChat = useCallback(() => {
+    setIsOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        scrollToNearestUpperHeading();
+      }
+      return next;
+    });
+  }, [setIsOpen]);
+
+  // Focus input when opened (with preventScroll to avoid window displacement)
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
       if (hasMessages) {
         setTimeout(() => scrollToLatestMessage(), 50);
       }
@@ -262,7 +278,7 @@ export function RAGChatWidget({
   useEffect(() => {
     const handleCustomOpen = (e: Event) => {
       const customEvent = e as CustomEvent<{ query?: string }>;
-      setIsOpen(true);
+      handleOpenChat();
       if (customEvent.detail?.query) {
         handleSendText(customEvent.detail.query);
       }
@@ -270,7 +286,7 @@ export function RAGChatWidget({
 
     window.addEventListener("open-rag-chat", handleCustomOpen);
     return () => window.removeEventListener("open-rag-chat", handleCustomOpen);
-  }, [handleSendText]);
+  }, [handleOpenChat, handleSendText]);
 
   const sanitizeText = (rawText: string) => {
     if (!rawText) return "";
@@ -533,7 +549,7 @@ export function RAGChatWidget({
       {/* Pop up bubble above chat button icon */}
       <AnimatePresence>
         {!isOpen && (
-          <MayIHelpYouPopup onOpenChat={() => setIsOpen(true)} />
+          <MayIHelpYouPopup onOpenChat={handleOpenChat} />
         )}
       </AnimatePresence>
 
@@ -720,7 +736,7 @@ export function RAGChatWidget({
 
       {/* Floating Toggle Button: Neo-Brutalist Code Toggle */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleChat}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="w-14 h-14 rounded-2xl bg-card border-2 border-foreground flex items-center justify-center text-foreground shadow-sm hover:shadow-md cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"

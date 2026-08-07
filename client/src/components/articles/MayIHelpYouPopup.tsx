@@ -17,7 +17,7 @@ export function MayIHelpYouPopup({
   className = "",
   autoHideDuration = 6000,
   entranceDelay = 4500,
-  repeatInterval = 20000,
+  repeatInterval = 35000,
   text = "May I help you?",
   title = "Click to ask AI Assistant",
 }: MayIHelpYouPopupProps) {

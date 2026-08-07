@@ -7,7 +7,9 @@ interface MayIHelpYouPopupProps {
   className?: string;
   autoHideDuration?: number; // ms visible (default: 6000ms)
   entranceDelay?: number;    // initial ms delay after load (default: 4500ms)
-  repeatInterval?: number;   // ms pause between auto-hiding and re-appearing (default: 25000ms)
+  repeatInterval?: number;   // ms pause between auto-hiding and re-appearing (default: 20000ms)
+  text?: string;             // Custom popup text
+  title?: string;            // Tooltip title attribute
 }
 
 export function MayIHelpYouPopup({
@@ -16,6 +18,8 @@ export function MayIHelpYouPopup({
   autoHideDuration = 6000,
   entranceDelay = 4500,
   repeatInterval = 20000,
+  text = "May I help you?",
+  title = "Click to ask AI Assistant",
 }: MayIHelpYouPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -86,7 +90,7 @@ export function MayIHelpYouPopup({
             transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
             onClick={onOpenChat}
             className="bg-card text-foreground border-2 border-foreground rounded-2xl px-3.5 py-2 shadow-md flex items-center gap-2 cursor-pointer hover:bg-secondary transition-all group font-sans text-xs font-semibold relative overflow-hidden"
-            title="Click to ask Articles AI"
+            title={title}
           >
             {/* Subtle glow accent on hover */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-xs opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" />
@@ -98,7 +102,7 @@ export function MayIHelpYouPopup({
 
             {/* Text */}
             <span className="whitespace-nowrap font-medium text-foreground">
-              May I help you?
+              {text}
             </span>
 
             {/* Live indicator dot */}

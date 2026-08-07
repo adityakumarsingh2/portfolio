@@ -7,30 +7,7 @@ import { ArticleGrid } from "@/components/articles/ArticleGrid";
 import { ArticleBreadcrumb } from "@/components/articles/ArticleBreadcrumb";
 import { getCategoryMeta } from "@/lib/content/categories";
 import { getCategoryArticlesBySlug } from "@/content/articles";
-import { ArrowLeft, FileText, BookOpen } from "lucide-react";
-
-const categoryIconMap: Record<string, React.ElementType> = {
-  brain: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.07-3 2.5 2.5 0 0 1 .91-4.01A2.5 2.5 0 0 1 9.5 2Z"/>
-      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.07-3 2.5 2.5 0 0 0-.91-4.01A2.5 2.5 0 0 0 14.5 2Z"/>
-    </svg>
-  ),
-  code: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-    </svg>
-  ),
-  layers: BookOpen,
-  rocket: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-    </svg>
-  ),
-  user: FileText,
-};
+import { ArrowLeft } from "lucide-react";
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -41,6 +18,7 @@ export default function CategoryPage() {
   );
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (!meta) return;
     document.title = `${meta.label} Articles | Aditya Kumar Singh`;
     const desc = document.querySelector('meta[name="description"]');
@@ -51,8 +29,6 @@ export default function CategoryPage() {
   }, [meta]);
 
   if (!meta) return <Navigate to="/articles" replace />;
-
-  const IconComponent = categoryIconMap[meta.icon] ?? FileText;
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,30 +65,22 @@ export default function CategoryPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55 }}
-                className="flex items-start gap-6"
               >
-                <div
-                  className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border"
-                  style={{
-                    background: `${meta.color}18`,
-                    borderColor: `${meta.color}40`,
-                    color: meta.color,
-                  }}
-                >
-                  <IconComponent />
+                <div className="flex items-center gap-2 mb-3 font-mono text-xs text-muted-foreground uppercase tracking-widest">
+                  <span className="text-purple-400 font-bold">{">"}</span>
+                  <span className="text-foreground/80 font-bold">CATEGORY TRACK</span>
+                  <span className="text-border">·</span>
+                  <span className="font-bold" style={{ color: meta.color }}>
+                    {meta.label}
+                  </span>
                 </div>
 
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-mono text-xs text-primary/50">// category</span>
-                  </div>
-                  <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
-                    {meta.label}
-                  </h1>
-                  <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                    {meta.description}
-                  </p>
-                </div>
+                <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
+                  {meta.label}
+                </h1>
+                <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
+                  {meta.description}
+                </p>
               </motion.div>
 
               {/* Stats */}

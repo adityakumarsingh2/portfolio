@@ -22,6 +22,7 @@ export default function SeriesPage() {
   );
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (!seriesMeta) return;
     document.title = `${seriesMeta.label} — Article Series | Aditya Kumar Singh`;
     const desc = document.querySelector('meta[name="description"]');

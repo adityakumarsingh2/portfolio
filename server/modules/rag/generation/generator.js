@@ -80,9 +80,8 @@ function buildContext(chunks) {
   return { contextString, sources };
 }
 
-const RETRY_BASE_DELAY_MS = 62000;
+const RETRY_BASE_DELAY_MS = 62000;  // kept for reference; not currently used
 const MODEL_SWITCH_DELAY_MS = 2000;
-const MAX_CYCLES = 0;
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -105,8 +104,7 @@ export async function generateStreamingResponse(
   history = [],
   onChunk,
   onDone,
-  _modelIndex = 0,
-  _cycleCount = 0
+  _modelIndex = 0
 ) {
   const { contextString, sources } = buildContext(retrievedChunks);
 
@@ -164,6 +162,7 @@ export async function generateStreamingResponse(
       const nextModelIndex = _modelIndex + 1;
 
       if (nextModelIndex < MODEL_CHAIN.length) {
+        // Switch to the next model in the chain immediately.
         console.warn(
           `[generator] Rate limited (429) on "${currentModel}", switching to "${MODEL_CHAIN[nextModelIndex]}" in ${MODEL_SWITCH_DELAY_MS / 1000}s...`
         );
@@ -174,27 +173,11 @@ export async function generateStreamingResponse(
           history,
           onChunk,
           onDone,
-          nextModelIndex,
-          _cycleCount
-        );
-      } else if (_cycleCount < MAX_CYCLES) {
-        console.warn(
-          `[generator] All models rate limited (cycle ${_cycleCount + 1}/${MAX_CYCLES}). Waiting ${RETRY_BASE_DELAY_MS / 1000}s before retrying...`
-        );
-        await sleep(RETRY_BASE_DELAY_MS);
-        return generateStreamingResponse(
-          query,
-          retrievedChunks,
-          history,
-          onChunk,
-          onDone,
-          0,
-          _cycleCount + 1
+          nextModelIndex
         );
       } else {
-        console.error(
-          `[generator] Rate limit exhausted across all models and ${MAX_CYCLES + 1} cycle(s). Giving up.`
-        );
+        // All models in the chain are rate-limited — give up gracefully.
+        console.error(`[generator] Rate limit exhausted across all models. Giving up.`);
         throw new RateLimitExhaustedError();
       }
     } else {

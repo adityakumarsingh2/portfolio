@@ -19,14 +19,34 @@ import { validateAndSanitizePrompt } from "./modules/guardrails.js";
 
 const app = express();
 
-// Secure CORS Configurations
-// Using '*' is safe here because we have an IP-based rate limiter protecting the API
-// and no sensitive user credentials or cookies are being passed.
-app.use(cors({
-  origin: "*"
-}));
+// ─── CORS ─────────────────────────────────────────────────────────────────
+// Origins are read from ALLOWED_ORIGINS env var (comma-separated) so they
+// can be tightened in production without code changes.
+// Falls back to localhost in development.
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [
+      "http://localhost:5173", // Vite default
+      "http://localhost:4173", // Vite preview
+      "http://localhost:3000", // CRA / Next.js dev
+      "http://localhost:8080", // Alternate dev port
+    ];
 
-app.use(express.json());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin "${origin}" not allowed`));
+    },
+    methods: ["GET", "POST", "DELETE"],
+    allowedHeaders: ["Content-Type", "x-admin-key"],
+  })
+);
+
+// Limit body size to prevent DoS via oversized payloads.
+app.use(express.json({ limit: "16kb" }));
 
 const PORT = process.env.PORT || 5000;
 const apiKey = process.env.GEMINI_API_KEY;
@@ -193,18 +213,7 @@ const chatModel = genAI.getGenerativeModel({
   systemInstruction: systemInstruction,
 });
 
-// Non-streaming helper (kept for potential future use / admin scripts)
-async function generateGeminiResponse(message, history) {
-  const formattedHistory = (history || []).map((msg) => ({
-    role: msg.role === "user" ? "user" : "model",
-    parts: [{ text: msg.text }],
-  }));
 
-  const chat = chatModel.startChat({ history: formattedHistory });
-  const result = await chat.sendMessage(message);
-  const response = await result.response;
-  return response.text();
-}
 
 app.post("/api/chat", chatRateLimiter, async (req, res) => {
   const { message, history } = req.body;
@@ -347,8 +356,15 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
  * DELETE /api/articles/session/:sessionId
  * Clear a conversation session (user clicks "New conversation").
  */
+// UUID v4 pattern — prevents arbitrary strings from being used as session keys.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 app.delete("/api/articles/session/:sessionId", (req, res) => {
-  clearSession(req.params.sessionId);
+  const { sessionId } = req.params;
+  if (!UUID_RE.test(sessionId)) {
+    return res.status(400).json({ error: "Invalid session ID format" });
+  }
+  clearSession(sessionId);
   res.json({ ok: true });
 });
 
@@ -356,13 +372,30 @@ app.delete("/api/articles/session/:sessionId", (req, res) => {
  * POST /api/articles/reindex
  * Trigger a full re-index of articles. Protected by REINDEX_ADMIN_KEY.
  */
-app.post("/api/articles/reindex", async (req, res) => {
+/**
+ * Shared admin-key guard used by protected endpoints.
+ * Always requires the key — if REINDEX_ADMIN_KEY is not set the server
+ * refuses the request rather than silently allowing it through.
+ */
+function requireAdminKey(req, res) {
   const adminKey = process.env.REINDEX_ADMIN_KEY;
-  const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+  const providedKey = req.headers["x-admin-key"];
 
-  if (adminKey && providedKey !== adminKey) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!adminKey) {
+    // Env var missing — refuse all requests so a misconfigured deploy
+    // never accidentally exposes a key-less admin endpoint.
+    res.status(503).json({ error: "Admin key not configured on server" });
+    return false;
   }
+  if (providedKey !== adminKey) {
+    res.status(401).json({ error: "Unauthorized" });
+    return false;
+  }
+  return true;
+}
+
+app.post("/api/articles/reindex", async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
 
   if (reindexState.isRunning) {
     return res.status(409).json({ error: "Reindex already in progress" });
@@ -376,8 +409,11 @@ app.post("/api/articles/reindex", async (req, res) => {
 /**
  * GET /api/articles/status
  * Returns indexing status and collection stats.
+ * Protected — same admin key as reindex endpoint.
  */
 app.get("/api/articles/status", async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
+
   try {
     const status = await getIndexingStatus();
     res.json({

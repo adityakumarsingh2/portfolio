@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -37,52 +38,35 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Custom In-Memory Rate Limiting Middleware
-const ipRequests = new Map();
+// ─── Rate Limiters (express-rate-limit) ────────────────────────────────────
+// express-rate-limit maintains an internal LRU store that automatically
+// evicts expired windows — no memory leak risk unlike a bare Map + setInterval.
 
-// Clean up stale IP records every 10 minutes to prevent memory growth
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, data] of ipRequests.entries()) {
-    if (now - data.resetTime > 15 * 60 * 1000) {
-      ipRequests.delete(ip);
-    }
-  }
-}, 10 * 60 * 1000);
+/** 30 requests / 15 min — Portfolio chatbot (/api/chat) */
+const chatRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,   // Return RateLimit-* headers
+  legacyHeaders: false,
+  message: (req, res) => {
+    const reset = res.getHeader("RateLimit-Reset");
+    const remaining = reset ? Math.ceil((Number(reset) * 1000 - Date.now()) / 60000) : 15;
+    return { error: `Too many requests from this IP. Please try again after ${remaining} minute(s).` };
+  },
+});
 
-const chatRateLimiter = (req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes window
-  const maxRequests = 30; // Max 30 requests per window
-
-  if (!ipRequests.has(ip)) {
-    ipRequests.set(ip, {
-      count: 1,
-      resetTime: now + windowMs
-    });
-    return next();
-  }
-
-  const rateData = ipRequests.get(ip);
-
-  if (now > rateData.resetTime) {
-    // Reset window
-    rateData.count = 1;
-    rateData.resetTime = now + windowMs;
-    return next();
-  }
-
-  rateData.count++;
-  if (rateData.count > maxRequests) {
-    const remainingTime = Math.ceil((rateData.resetTime - now) / 1000 / 60);
-    return res.status(429).json({
-      error: `Too many requests from this IP. Please try again after ${remainingTime} minute(s).`
-    });
-  }
-
-  next();
-};
+/** 20 requests / 15 min — Articles RAG chatbot (/api/articles/chat) */
+const articlesRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: (req, res) => {
+    const reset = res.getHeader("RateLimit-Reset");
+    const remaining = reset ? Math.ceil((Number(reset) * 1000 - Date.now()) / 60000) : 15;
+    return { error: `Too many requests. Please try again after ${remaining} minute(s).` };
+  },
+});
 
 const systemInstruction = `
 You are the AI assistant representing Aditya Kumar Singh on his personal portfolio website. 
@@ -200,22 +184,23 @@ EDUCATION:
 
 const modelName = "gemini-3.5-flash-lite";
 
-// Helper to call generative AI
-async function generateGeminiResponse(message, history) {
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    systemInstruction: systemInstruction,
-  });
+// ─── Singleton Gemini model ────────────────────────────────────────────────
+// Instantiated once at startup. getGenerativeModel() is a lightweight SDK
+// call but creating it per-request adds unnecessary object allocation and
+// redundant configuration parsing on every chat round-trip.
+const chatModel = genAI.getGenerativeModel({
+  model: modelName,
+  systemInstruction: systemInstruction,
+});
 
+// Non-streaming helper (kept for potential future use / admin scripts)
+async function generateGeminiResponse(message, history) {
   const formattedHistory = (history || []).map((msg) => ({
     role: msg.role === "user" ? "user" : "model",
     parts: [{ text: msg.text }],
   }));
 
-  const chat = model.startChat({
-    history: formattedHistory,
-  });
-
+  const chat = chatModel.startChat({ history: formattedHistory });
   const result = await chat.sendMessage(message);
   const response = await result.response;
   return response.text();
@@ -249,17 +234,13 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   try {
     console.log(`Generating streaming chat response using ${modelName}...`);
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: systemInstruction,
-    });
-
+    // Re-use the module-level singleton — no new model instance per request.
     const formattedHistory = (history || []).map((msg) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.text }],
     }));
 
-    const chat = model.startChat({
+    const chat = chatModel.startChat({
       history: formattedHistory,
     });
 
@@ -286,35 +267,6 @@ app.get("/health", (req, res) => {
 // ============================================================
 // ARTICLES RAG CHATBOT ROUTES
 // ============================================================
-
-// Rate limiter for articles chat (shared window, separate counter)
-const articlesRateLimiter = (req, res, next) => {
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000;
-  const maxRequests = 20; // slightly lower limit for RAG (more expensive)
-
-  if (!ipRequests.has("rag_" + ip)) {
-    ipRequests.set("rag_" + ip, { count: 1, resetTime: now + windowMs });
-    return next();
-  }
-
-  const rateData = ipRequests.get("rag_" + ip);
-  if (now > rateData.resetTime) {
-    rateData.count = 1;
-    rateData.resetTime = now + windowMs;
-    return next();
-  }
-
-  rateData.count++;
-  if (rateData.count > maxRequests) {
-    const remaining = Math.ceil((rateData.resetTime - now) / 1000 / 60);
-    return res.status(429).json({
-      error: `Too many requests. Please try again after ${remaining} minute(s).`,
-    });
-  }
-  next();
-};
 
 /**
  * POST /api/articles/chat

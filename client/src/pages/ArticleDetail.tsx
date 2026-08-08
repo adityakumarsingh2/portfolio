@@ -17,7 +17,7 @@ import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
 import { scrollToNearestUpperHeading } from "@/lib/utils";
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -157,7 +157,7 @@ export default function ArticleDetail() {
   const { prev, next } = getAdjacentArticles(article.slug);
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
       <ReadingProgress />
       <Navbar />
 
@@ -232,9 +232,9 @@ export default function ArticleDetail() {
         </div>
 
         {/* ── DYNAMIC 3-COLUMN SPLIT STUDIO LAYOUT ───────────────────────── */}
-        <div className="w-full px-4 md:px-6 lg:px-8 pb-24 transition-all duration-500 ease-out">
+        <div className="w-full px-4 md:px-6 lg:px-8 pb-24 transition-all duration-500 ease-out overflow-x-hidden">
           <div className="max-w-[1720px] mx-auto">
-            <div className="flex gap-6 lg:gap-8 items-start justify-center">
+            <div className="flex gap-6 lg:gap-8 items-start justify-center overflow-x-hidden">
 
               {/* ── LEFT SIDEBAR: Table of Contents (Subtopics when Chatbot is OPEN) ── */}
               <AnimatePresence initial={false}>
@@ -271,7 +271,8 @@ export default function ArticleDetail() {
               </motion.div>
 
               {/* ── RIGHT SIDEBAR: Table of Contents (CLOSED) OR Chatbot Panel (OPEN) ── */}
-              <div className="sticky top-24 shrink-0 self-start">
+              {/* hidden on mobile/tablet — only renders on lg+ to avoid pushing layout wider */}
+              <div className="hidden lg:block sticky top-24 shrink-0 self-start">
                 <AnimatePresence mode="wait">
                   {!isChatOpen ? (
                     <motion.div
@@ -317,8 +318,8 @@ export default function ArticleDetail() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       </main>
 
-      {/* Floating Toggle Button (Handles mobile overlay + desktop toggle when closed) */}
-      <div className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end">
+      {/* Floating Toggle Button — handles mobile overlay + desktop popup */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans flex flex-col items-end">
         {/* Mobile floating widget overlay when open */}
         <div className="lg:hidden">
           <RAGChatWidget
@@ -328,7 +329,7 @@ export default function ArticleDetail() {
           />
         </div>
 
-        {/* Desktop Toggle Button — ONLY SHOWN WHEN CHAT IS CLOSED */}
+        {/* Desktop: MayIHelpYouPopup + Toggle Button — ONLY WHEN CHAT IS CLOSED */}
         <AnimatePresence>
           {!isChatOpen && (
             <motion.div

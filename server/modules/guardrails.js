@@ -4,7 +4,10 @@
  * Security Guardrails Module:
  *   1. Adversarial Prompt Injection & Jailbreak Detection
  *   2. Delimiter Spoofing & Context Injection Prevention
- *   3. System Leakage & Secret Key Output Protection
+ *
+ * NOTE: Output leak checking (isOutputSafe) was removed because it was never
+ * wired into any streaming code path and gave a false sense of security.
+ * If needed in the future, wire it into the chunk loop in generator.js.
  */
 
 // Known adversarial prompt injection, jailbreak, & extraction regex patterns
@@ -19,13 +22,6 @@ const ADVERSARIAL_PATTERNS = [
   /bypass (your|all|system) (safety|content|rules|filters|guardrails)/i,
   /act as (an? )?(unfiltered|unrestricted|evil|rogue) (ai|assistant|model|bot)/i,
   /override (your|all) (safety|rules|instructions)/i,
-];
-
-// Sensitive keys / signatures that should never appear in model responses
-const SENSITIVE_OUTPUT_PATTERNS = [
-  /GEMINI_API_KEY/i,
-  /AIzaSy[a-zA-Z0-9_-]{33}/, // Google Gemini API Key pattern
-  /sk-[a-zA-Z0-9]{20,}/,     // Standard secret key format
 ];
 
 /**
@@ -44,7 +40,7 @@ export function validateAndSanitizePrompt(input) {
   // 1. Jailbreak & Prompt Injection Attack Pattern Check
   for (const pattern of ADVERSARIAL_PATTERNS) {
     if (pattern.test(trimmed)) {
-      console.warn(`[guardrails] Blocked prompt injection attempt matching pattern: ${pattern}`);
+      console.warn(`[guardrails] Blocked prompt injection attempt`);
       return {
         isValid: false,
         sanitized: "",
@@ -53,31 +49,14 @@ export function validateAndSanitizePrompt(input) {
     }
   }
 
-  // 2. Delimiter Sanitization to prevent system context spoofing
+  // 2. Delimiter Sanitization — prevents system context spoofing by stripping
+  // known delimiters that could confuse the LLM into treating user content as
+  // system instructions or article context markers.
   const sanitized = trimmed
     .replace(/ARTICLE CONTEXT:/gi, "[context]")
     .replace(/USER QUESTION:/gi, "[question]")
     .replace(/SYSTEM INSTRUCTION:/gi, "[instruction]")
-    .replace(/---/g, "—");
+    .replace(/---/g, "\u2014");
 
   return { isValid: true, sanitized };
-}
-
-/**
- * Verifies that the LLM response does not leak sensitive keys or system prompts.
- *
- * @param {string} text - Generated output text chunk
- * @returns {boolean} true if safe, false if potential leak detected
- */
-export function isOutputSafe(text) {
-  if (!text || typeof text !== "string") return true;
-
-  for (const pattern of SENSITIVE_OUTPUT_PATTERNS) {
-    if (pattern.test(text)) {
-      console.error(`[guardrails] Blocked sensitive key/data leak matching: ${pattern}`);
-      return false;
-    }
-  }
-
-  return true;
 }

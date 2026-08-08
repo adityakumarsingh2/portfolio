@@ -145,3 +145,5 @@ export function MayIHelpYouPopup({
     </AnimatePresence>
   );
 }
+
+export default MayIHelpYouPopup;

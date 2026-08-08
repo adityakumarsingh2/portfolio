@@ -10,6 +10,7 @@
 import { rewriteStandaloneQuery, extractQueryMetadata } from "./retrieval/query-processor.js";
 import { retrieve } from "./retrieval/retriever.js";
 import { generateStreamingResponse } from "./generation/generator.js";
+import { validateAndSanitizePrompt } from "../guardrails.js";
 
 // ── Response cache ─────────────────────────────────────────────────────────
 // Caches completed responses so identical queries never re-hit the Gemini API.
@@ -55,10 +56,17 @@ setInterval(() => {
  */
 export async function runRAGPipeline({ query, history, articleSlug = null, onChunk, onDone, onError }) {
   try {
-    console.log(`[pipeline] Query: "${query.slice(0, 80)}..."${articleSlug ? ` [scoped to: ${articleSlug}]` : ""}`);
+    const promptGuard = validateAndSanitizePrompt(query);
+    if (!promptGuard.isValid) {
+      onError(new Error(promptGuard.error));
+      return;
+    }
+    const cleanQuery = promptGuard.sanitized;
+
+    console.log(`[pipeline] Query: "${cleanQuery.slice(0, 80)}..."${articleSlug ? ` [scoped to: ${articleSlug}]` : ""}`);
 
     // Step 1: Standalone query resolution for follow-up questions
-    const standaloneQuery = await rewriteStandaloneQuery(query, history);
+    const standaloneQuery = await rewriteStandaloneQuery(cleanQuery, history);
 
     // Step 2: Extract metadata hints for boosting (no API call needed)
     const queryMeta = extractQueryMetadata(standaloneQuery);

@@ -14,6 +14,7 @@ import {
   getSessionCount,
 } from "./modules/rag/session-store.js";
 import { reindex, getIndexingStatus, reindexState } from "./scripts/reindex.js";
+import { validateAndSanitizePrompt } from "./modules/guardrails.js";
 
 const app = express();
 
@@ -232,6 +233,14 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "Message is too long. Maximum limit is 600 characters." });
   }
 
+  // Guardrail check against prompt injection & jailbreak attacks
+  const promptGuard = validateAndSanitizePrompt(message);
+  if (!promptGuard.isValid) {
+    return res.status(400).json({ error: promptGuard.error });
+  }
+
+  const cleanMessage = promptGuard.sanitized;
+
   // Set headers for SSE streaming
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -254,7 +263,7 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
       history: formattedHistory,
     });
 
-    const result = await chat.sendMessageStream(message);
+    const result = await chat.sendMessageStream(cleanMessage);
 
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();
@@ -326,6 +335,14 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "Query exceeds 800 character limit" });
   }
 
+  // Guardrail check against prompt injection & jailbreak attacks
+  const promptGuard = validateAndSanitizePrompt(query);
+  if (!promptGuard.isValid) {
+    return res.status(400).json({ error: promptGuard.error });
+  }
+
+  const cleanQuery = promptGuard.sanitized;
+
   // Set SSE headers
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -335,13 +352,13 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
   const history = getHistory(sessionId);
 
   // Append user message to session
-  appendToSession(sessionId, { role: "user", text: query });
+  appendToSession(sessionId, { role: "user", text: cleanQuery });
 
   let assistantResponse = "";
 
   try {
     await runRAGPipeline({
-      query,
+      query: cleanQuery,
       history,
       articleSlug: typeof articleSlug === "string" && articleSlug.trim() ? articleSlug.trim() : null,
       onChunk: (text) => {

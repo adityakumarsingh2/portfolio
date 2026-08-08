@@ -528,7 +528,7 @@ export function RAGChatWidget({
   }
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -711,8 +711,13 @@ export function RAGChatWidget({
       </AnimatePresence>
 
       {/* Floating Toggle Button: Neo-Brutalist Code Toggle */}
+      <AnimatePresence>
+        {!isOpen && (
+          <MayIHelpYouPopup onOpenChat={handleOpenChat} />
+        )}
+      </AnimatePresence>
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleChat}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="w-14 h-14 rounded-2xl bg-card border-2 border-foreground flex items-center justify-center text-foreground shadow-sm hover:shadow-md cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"

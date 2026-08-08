@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -14,17 +15,38 @@ import {
   getSessionCount,
 } from "./modules/rag/session-store.js";
 import { reindex, getIndexingStatus, reindexState } from "./scripts/reindex.js";
+import { validateAndSanitizePrompt } from "./modules/guardrails.js";
 
 const app = express();
 
-// Secure CORS Configurations
-// Using '*' is safe here because we have an IP-based rate limiter protecting the API
-// and no sensitive user credentials or cookies are being passed.
-app.use(cors({
-  origin: "*"
-}));
+// ─── CORS ─────────────────────────────────────────────────────────────────
+// Origins are read from ALLOWED_ORIGINS env var (comma-separated) so they
+// can be tightened in production without code changes.
+// Falls back to localhost in development.
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [
+      "http://localhost:5173", // Vite default
+      "http://localhost:4173", // Vite preview
+      "http://localhost:3000", // CRA / Next.js dev
+      "http://localhost:8080", // Alternate dev port
+    ];
 
-app.use(express.json());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin "${origin}" not allowed`));
+    },
+    methods: ["GET", "POST", "DELETE"],
+    allowedHeaders: ["Content-Type", "x-admin-key"],
+  })
+);
+
+// Limit body size to prevent DoS via oversized payloads.
+app.use(express.json({ limit: "16kb" }));
 
 const PORT = process.env.PORT || 5000;
 const apiKey = process.env.GEMINI_API_KEY;
@@ -36,52 +58,35 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Custom In-Memory Rate Limiting Middleware
-const ipRequests = new Map();
+// ─── Rate Limiters (express-rate-limit) ────────────────────────────────────
+// express-rate-limit maintains an internal LRU store that automatically
+// evicts expired windows — no memory leak risk unlike a bare Map + setInterval.
 
-// Clean up stale IP records every 10 minutes to prevent memory growth
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, data] of ipRequests.entries()) {
-    if (now - data.resetTime > 15 * 60 * 1000) {
-      ipRequests.delete(ip);
-    }
-  }
-}, 10 * 60 * 1000);
+/** 30 requests / 15 min — Portfolio chatbot (/api/chat) */
+const chatRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,   // Return RateLimit-* headers
+  legacyHeaders: false,
+  message: (req, res) => {
+    const reset = res.getHeader("RateLimit-Reset");
+    const remaining = reset ? Math.ceil((Number(reset) * 1000 - Date.now()) / 60000) : 15;
+    return { error: `Too many requests from this IP. Please try again after ${remaining} minute(s).` };
+  },
+});
 
-const chatRateLimiter = (req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes window
-  const maxRequests = 30; // Max 30 requests per window
-
-  if (!ipRequests.has(ip)) {
-    ipRequests.set(ip, {
-      count: 1,
-      resetTime: now + windowMs
-    });
-    return next();
-  }
-
-  const rateData = ipRequests.get(ip);
-
-  if (now > rateData.resetTime) {
-    // Reset window
-    rateData.count = 1;
-    rateData.resetTime = now + windowMs;
-    return next();
-  }
-
-  rateData.count++;
-  if (rateData.count > maxRequests) {
-    const remainingTime = Math.ceil((rateData.resetTime - now) / 1000 / 60);
-    return res.status(429).json({
-      error: `Too many requests from this IP. Please try again after ${remainingTime} minute(s).`
-    });
-  }
-
-  next();
-};
+/** 20 requests / 15 min — Articles RAG chatbot (/api/articles/chat) */
+const articlesRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: (req, res) => {
+    const reset = res.getHeader("RateLimit-Reset");
+    const remaining = reset ? Math.ceil((Number(reset) * 1000 - Date.now()) / 60000) : 15;
+    return { error: `Too many requests. Please try again after ${remaining} minute(s).` };
+  },
+});
 
 const systemInstruction = `
 You are the AI assistant representing Aditya Kumar Singh on his personal portfolio website. 
@@ -199,26 +204,16 @@ EDUCATION:
 
 const modelName = "gemini-3.5-flash-lite";
 
-// Helper to call generative AI
-async function generateGeminiResponse(message, history) {
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    systemInstruction: systemInstruction,
-  });
+// ─── Singleton Gemini model ────────────────────────────────────────────────
+// Instantiated once at startup. getGenerativeModel() is a lightweight SDK
+// call but creating it per-request adds unnecessary object allocation and
+// redundant configuration parsing on every chat round-trip.
+const chatModel = genAI.getGenerativeModel({
+  model: modelName,
+  systemInstruction: systemInstruction,
+});
 
-  const formattedHistory = (history || []).map((msg) => ({
-    role: msg.role === "user" ? "user" : "model",
-    parts: [{ text: msg.text }],
-  }));
 
-  const chat = model.startChat({
-    history: formattedHistory,
-  });
-
-  const result = await chat.sendMessage(message);
-  const response = await result.response;
-  return response.text();
-}
 
 app.post("/api/chat", chatRateLimiter, async (req, res) => {
   const { message, history } = req.body;
@@ -232,6 +227,14 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "Message is too long. Maximum limit is 600 characters." });
   }
 
+  // Guardrail check against prompt injection & jailbreak attacks
+  const promptGuard = validateAndSanitizePrompt(message);
+  if (!promptGuard.isValid) {
+    return res.status(400).json({ error: promptGuard.error });
+  }
+
+  const cleanMessage = promptGuard.sanitized;
+
   // Set headers for SSE streaming
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -240,21 +243,17 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   try {
     console.log(`Generating streaming chat response using ${modelName}...`);
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: systemInstruction,
-    });
-
+    // Re-use the module-level singleton — no new model instance per request.
     const formattedHistory = (history || []).map((msg) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.text }],
     }));
 
-    const chat = model.startChat({
+    const chat = chatModel.startChat({
       history: formattedHistory,
     });
 
-    const result = await chat.sendMessageStream(message);
+    const result = await chat.sendMessageStream(cleanMessage);
 
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();
@@ -278,35 +277,6 @@ app.get("/health", (req, res) => {
 // ARTICLES RAG CHATBOT ROUTES
 // ============================================================
 
-// Rate limiter for articles chat (shared window, separate counter)
-const articlesRateLimiter = (req, res, next) => {
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000;
-  const maxRequests = 20; // slightly lower limit for RAG (more expensive)
-
-  if (!ipRequests.has("rag_" + ip)) {
-    ipRequests.set("rag_" + ip, { count: 1, resetTime: now + windowMs });
-    return next();
-  }
-
-  const rateData = ipRequests.get("rag_" + ip);
-  if (now > rateData.resetTime) {
-    rateData.count = 1;
-    rateData.resetTime = now + windowMs;
-    return next();
-  }
-
-  rateData.count++;
-  if (rateData.count > maxRequests) {
-    const remaining = Math.ceil((rateData.resetTime - now) / 1000 / 60);
-    return res.status(429).json({
-      error: `Too many requests. Please try again after ${remaining} minute(s).`,
-    });
-  }
-  next();
-};
-
 /**
  * POST /api/articles/chat
  * Main RAG chat endpoint — streams SSE response.
@@ -326,6 +296,14 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "Query exceeds 800 character limit" });
   }
 
+  // Guardrail check against prompt injection & jailbreak attacks
+  const promptGuard = validateAndSanitizePrompt(query);
+  if (!promptGuard.isValid) {
+    return res.status(400).json({ error: promptGuard.error });
+  }
+
+  const cleanQuery = promptGuard.sanitized;
+
   // Set SSE headers
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -335,13 +313,13 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
   const history = getHistory(sessionId);
 
   // Append user message to session
-  appendToSession(sessionId, { role: "user", text: query });
+  appendToSession(sessionId, { role: "user", text: cleanQuery });
 
   let assistantResponse = "";
 
   try {
     await runRAGPipeline({
-      query,
+      query: cleanQuery,
       history,
       articleSlug: typeof articleSlug === "string" && articleSlug.trim() ? articleSlug.trim() : null,
       onChunk: (text) => {
@@ -378,8 +356,15 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
  * DELETE /api/articles/session/:sessionId
  * Clear a conversation session (user clicks "New conversation").
  */
+// UUID v4 pattern — prevents arbitrary strings from being used as session keys.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 app.delete("/api/articles/session/:sessionId", (req, res) => {
-  clearSession(req.params.sessionId);
+  const { sessionId } = req.params;
+  if (!UUID_RE.test(sessionId)) {
+    return res.status(400).json({ error: "Invalid session ID format" });
+  }
+  clearSession(sessionId);
   res.json({ ok: true });
 });
 
@@ -387,13 +372,30 @@ app.delete("/api/articles/session/:sessionId", (req, res) => {
  * POST /api/articles/reindex
  * Trigger a full re-index of articles. Protected by REINDEX_ADMIN_KEY.
  */
-app.post("/api/articles/reindex", async (req, res) => {
+/**
+ * Shared admin-key guard used by protected endpoints.
+ * Always requires the key — if REINDEX_ADMIN_KEY is not set the server
+ * refuses the request rather than silently allowing it through.
+ */
+function requireAdminKey(req, res) {
   const adminKey = process.env.REINDEX_ADMIN_KEY;
-  const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+  const providedKey = req.headers["x-admin-key"];
 
-  if (adminKey && providedKey !== adminKey) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!adminKey) {
+    // Env var missing — refuse all requests so a misconfigured deploy
+    // never accidentally exposes a key-less admin endpoint.
+    res.status(503).json({ error: "Admin key not configured on server" });
+    return false;
   }
+  if (providedKey !== adminKey) {
+    res.status(401).json({ error: "Unauthorized" });
+    return false;
+  }
+  return true;
+}
+
+app.post("/api/articles/reindex", async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
 
   if (reindexState.isRunning) {
     return res.status(409).json({ error: "Reindex already in progress" });
@@ -407,8 +409,11 @@ app.post("/api/articles/reindex", async (req, res) => {
 /**
  * GET /api/articles/status
  * Returns indexing status and collection stats.
+ * Protected — same admin key as reindex endpoint.
  */
 app.get("/api/articles/status", async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
+
   try {
     const status = await getIndexingStatus();
     res.json({

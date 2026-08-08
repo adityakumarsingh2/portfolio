@@ -13,9 +13,11 @@ import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { PrevNextNav } from "@/components/articles/PrevNextNav";
 import { ArticleFooter } from "@/components/articles/ArticleFooter";
 import { RAGChatWidget } from "@/components/articles/RAGChatWidget";
+import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
-import { MessageSquare, X } from "lucide-react";
+import { scrollToNearestUpperHeading } from "@/lib/utils";
+import { MessageSquare } from "lucide-react";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -27,9 +29,14 @@ export default function ArticleDetail() {
   // ⚠️ All hooks must run unconditionally — call them before any early return
   const { items: tocItems, activeId } = useTableOfContents(article?.content ?? "");
 
+  const handleOpenChat = () => {
+    setIsChatOpen(true);
+    scrollToNearestUpperHeading();
+  };
+
   // Listen for open-rag-chat custom events from footer / prompt chips
   useEffect(() => {
-    const handleCustomOpen = () => setIsChatOpen(true);
+    const handleCustomOpen = () => handleOpenChat();
     window.addEventListener("open-rag-chat", handleCustomOpen);
     return () => window.removeEventListener("open-rag-chat", handleCustomOpen);
   }, []);
@@ -311,8 +318,8 @@ export default function ArticleDetail() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       </main>
 
-      {/* Floating Toggle Button — handles mobile overlay; always visible on mobile */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans">
+      {/* Floating Toggle Button — handles mobile overlay + desktop popup */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans flex flex-col items-end">
         {/* Mobile floating widget overlay when open */}
         <div className="lg:hidden">
           <RAGChatWidget
@@ -322,23 +329,28 @@ export default function ArticleDetail() {
           />
         </div>
 
-        {/* Desktop Toggle Button — ONLY SHOWN WHEN CHAT IS CLOSED */}
+        {/* Desktop: MayIHelpYouPopup + Toggle Button — ONLY WHEN CHAT IS CLOSED */}
         <AnimatePresence>
           {!isChatOpen && (
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => setIsChatOpen(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden lg:flex w-14 h-14 rounded-2xl bg-card border-2 border-foreground items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
-              aria-label="Open Articles AI chatbot"
-              title="Open AI Assistant (Split Studio View)"
+              className="hidden lg:flex flex-col items-end"
             >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-              <MessageSquare className="w-6 h-6 relative z-10" />
-            </motion.button>
+              <MayIHelpYouPopup onOpenChat={handleOpenChat} />
+              <motion.button
+                onClick={handleOpenChat}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-14 h-14 rounded-2xl bg-card border-2 border-foreground flex items-center justify-center text-foreground shadow-md hover:shadow-lg cursor-pointer hover:bg-secondary transition-all duration-300 relative group overflow-hidden"
+                aria-label="Open Articles AI chatbot"
+                title="Open AI Assistant (Split Studio View)"
+              >
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                <MessageSquare className="w-6 h-6 relative z-10" />
+              </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

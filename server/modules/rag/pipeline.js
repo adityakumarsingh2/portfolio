@@ -55,6 +55,8 @@ setInterval(() => {
  */
 export async function runRAGPipeline({ query, history, articleSlug = null, onChunk, onDone, onError }) {
   try {
+    // query has already been validated + sanitized by the route handler in index.js.
+    // No second guardrail pass is needed here.
     console.log(`[pipeline] Query: "${query.slice(0, 80)}..."${articleSlug ? ` [scoped to: ${articleSlug}]` : ""}`);
 
     // Step 1: Standalone query resolution for follow-up questions

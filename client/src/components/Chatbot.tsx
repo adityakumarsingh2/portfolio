@@ -4,6 +4,7 @@ import {
   MessageSquare, X, Send, Bot, User, Sparkles, AlertCircle,
   Github, ExternalLink, Mic, MicOff, Download, Command, ChevronRight
 } from "lucide-react";
+import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 
 interface Message {
   role: "user" | "model";
@@ -966,7 +967,14 @@ const Chatbot = ({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end">
+      {/* Pop up bubble above chat button icon */}
+      <AnimatePresence>
+        {!isOpen && (
+          <MayIHelpYouPopup onOpenChat={() => setIsOpen(true)} />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div

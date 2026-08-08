@@ -528,7 +528,7 @@ export function RAGChatWidget({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-4 sm:right-6 z-50 font-sans">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -536,7 +536,7 @@ export function RAGChatWidget({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-4 w-[380px] h-[550px] max-w-[calc(100vw-2rem)] bg-card border-2 border-foreground rounded-2xl shadow-md flex flex-col overflow-hidden relative"
+            className="mb-4 w-[92vw] sm:w-[380px] h-[70vh] sm:h-[550px] max-w-[420px] bg-card border-2 border-foreground rounded-2xl shadow-md flex flex-col overflow-hidden relative"
           >
             {/* Header: Neo-Brutalist Code Bar with Live Status */}
             <div className="p-3 bg-secondary border-b-2 border-foreground flex items-center justify-between font-mono text-xs">

@@ -20,30 +20,63 @@ import { validateAndSanitizePrompt } from "./modules/guardrails.js";
 const app = express();
 
 // ─── CORS ─────────────────────────────────────────────────────────────────
-// Origins are read from ALLOWED_ORIGINS env var (comma-separated) so they
-// can be tightened in production without code changes.
-// Falls back to localhost in development.
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : [
-      "http://localhost:5173", // Vite default
-      "http://localhost:4173", // Vite preview
-      "http://localhost:3000", // CRA / Next.js dev
-      "http://localhost:8080", // Alternate dev port
-    ];
+// Default allowed origins include production domains and common local dev ports.
+// Can be extended via ALLOWED_ORIGINS env var (comma-separated).
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://adityakumarsingh.tech",
+  "https://www.adityakumarsingh.tech",
+  "https://adityakumaronline.netlify.app",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+  "http://localhost:5000",
+];
+
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim().replace(/\/$/, ""))
+  : [];
+
+const ALLOWED_ORIGINS = new Set([
+  ...DEFAULT_ALLOWED_ORIGINS.map((o) => o.replace(/\/$/, "")),
+  ...envOrigins,
+]);
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (curl, Postman, server-to-server)
       if (!origin) return callback(null, true);
-      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS: origin "${origin}" not allowed`));
+
+      // Clean origin string (remove trailing slash)
+      const cleanOrigin = origin.replace(/\/$/, "");
+
+      if (ALLOWED_ORIGINS.has(cleanOrigin)) {
+        return callback(null, true);
+      }
+
+      // Allow any subdomain of adityakumarsingh.tech, netlify.app, vercel.app, or localhost
+      if (
+        /^https:\/\/(.*\.)?adityakumarsingh\.tech$/i.test(cleanOrigin) ||
+        /^https:\/\/(.*\.)?netlify\.app$/i.test(cleanOrigin) ||
+        /^https:\/\/(.*\.)?vercel\.app$/i.test(cleanOrigin) ||
+        /^http:\/\/localhost:\d+$/i.test(cleanOrigin)
+      ) {
+        return callback(null, true);
+      }
+
+      console.warn(`[CORS] Blocked request from disallowed origin: ${origin}`);
+      return callback(null, false);
     },
-    methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type", "x-admin-key"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-admin-key"],
+    credentials: true,
+    optionsSuccessStatus: 200,
   })
 );
+
+// Explicit pre-flight handler for all routes
+app.options("*", cors());
 
 // Limit body size to prevent DoS via oversized payloads.
 app.use(express.json({ limit: "16kb" }));

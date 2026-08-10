@@ -5,6 +5,7 @@ import fitkartPreview from "@/assets/fitkart-preview.png";
 import shantiBrickfieldPreview from "@/assets/shanti-brickfield-preview.png";
 import smartmatchPreview from "@/assets/smartmatch-preview.png";
 import confessitPreview from "@/assets/confessit-preview.png";
+import articlesPreview from "@/assets/articles-preview.svg";
 import articleCoverAi from "@/assets/article-cover-ai.svg";
 
 interface Project {
@@ -24,21 +25,21 @@ interface Project {
 const projects: Project[] = [
   {
     number: "01",
-    title: "Production RAG & Vector Search Engine",
-    subtitle: "LLM Knowledge Base & Hybrid Retrieval Pipeline",
+    title: "LLM RAG Knowledge Base & Articles Platform",
+    subtitle: "AI-Powered Engineering Knowledge Hub & RAG Pipeline",
     description:
-      "An end-to-end production Retrieval-Augmented Generation (RAG) pipeline combining semantic vector search, BM25 hybrid retrieval, Cohere cross-encoder re-ranking, and context-engineered LLM prompts for zero-hallucination factual responses.",
+      "An interactive full-stack engineering Knowledge Base and RAG platform featuring semantic vector search, MDX technical content pipeline, integrated AI assistant, and production LLM search engine.",
     highlights: [
       "Multi-stage hybrid retrieval pipeline combining Qdrant vector search and BM25 ranking",
       "Semantic document chunking & embedding generation with OpenAI and local Ollama models",
       "Cohere cross-encoder re-ranking layer delivering 40%+ precision improvement",
-      "Integrated interactive studio AI assistant & deep-dive technical article",
+      "Full interactive studio AI assistant & MDX technical article publishing engine",
     ],
-    technologies: ["Python", "RAG", "Qdrant", "OpenAI", "LangChain", "React"],
+    technologies: ["React", "TypeScript", "RAG", "Qdrant", "OpenAI", "MDX"],
     period: "Jul 2026",
     github: "https://github.com/adityakumarsingh2",
-    articleUrl: "/articles/building-rag-from-scratch",
-    image: articleCoverAi,
+    articleUrl: "/articles",
+    image: articlesPreview,
   },
   {
     number: "02",
@@ -196,7 +197,7 @@ const Projects = () => {
                         >
                           <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-purple-600 text-white font-semibold text-sm shadow-lg hover:bg-purple-500 transition-colors">
                             <BookOpen className="w-4 h-4" />
-                            Read RAG Article
+                            Explore Knowledge Base
                           </span>
                         </Link>
                       ) : project.live ? (
@@ -263,7 +264,7 @@ const Projects = () => {
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/30 px-2.5 py-1 rounded-lg"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
-                            Article
+                            Knowledge Base
                           </Link>
                         )}
                         {project.live && (

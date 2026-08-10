@@ -63,20 +63,20 @@ const Experience = () => {
       {/* Background grid (static) */}
       <div className="absolute inset-0 bg-grid opacity-20" />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-10 md:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <span className="font-mono text-primary text-sm tracking-wider">
+            <span className="font-mono text-primary text-xs sm:text-sm tracking-wider">
               <Terminal className="inline w-4 h-4 mr-2" />
-              {">"} My Journey
+              {"> My Journey"}
             </span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-4 flex flex-wrap justify-center items-baseline gap-x-2">
               <span className="font-mono text-primary/70">git log</span>
               <span className="text-gradient-warm">{" --oneline"}</span>
             </h2>
@@ -90,11 +90,11 @@ const Experience = () => {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-6 md:mb-8">
               <div className="p-2.5 rounded-xl bg-primary/10">
                 <Briefcase className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="font-display text-2xl font-semibold">
+              <h3 className="font-display text-xl sm:text-2xl font-semibold flex flex-wrap items-baseline gap-x-2">
                 <span className="font-mono text-blue-400">{"export const "}</span>
                 <span className="text-foreground">WorkExperience</span>
               </h3>

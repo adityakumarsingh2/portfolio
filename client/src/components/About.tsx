@@ -26,30 +26,30 @@ const About = () => {
       {/* Static Background decoration */}
       <div className="absolute inset-0 bg-dots opacity-10" />
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <motion.div 
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="font-mono text-primary text-sm tracking-wider">
+          <span className="font-mono text-primary text-xs sm:text-sm tracking-wider flex flex-wrap justify-center gap-x-1">
             <span className="text-blue-400">{"import "}</span>
             <span className="text-foreground">{"{ Developer }"}</span>
             <span className="text-blue-400">{" from "}</span>
             <span className="text-green-400">"@/about"</span>
           </span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">
-            <span className="font-mono text-purple-400 text-3xl">{"const "}</span>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-4 flex flex-wrap justify-center items-baseline gap-x-2">
+            <span className="font-mono text-purple-400 text-2xl sm:text-3xl">{"const "}</span>
             <span className="text-foreground">AboutMe</span>
             <span className="text-blue-400">{": "}</span>
             <span className="text-gradient-warm">React.FC</span>
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
           {/* Left Column - Background, Education, What I Do, then Achievements */}
           <div className="space-y-5">
             {/* Background */}

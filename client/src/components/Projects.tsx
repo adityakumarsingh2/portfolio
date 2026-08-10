@@ -107,22 +107,22 @@ const Projects = () => {
       <div className="absolute top-1/4 left-0 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
       <div className="absolute bottom-1/4 right-0 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-10 md:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <span className="font-mono text-primary text-sm tracking-wider">
+            <span className="font-mono text-primary text-xs sm:text-sm tracking-wider flex flex-wrap justify-center gap-x-1">
               <span className="text-blue-400">{"import "}</span>
               <span className="text-foreground">{"{ Projects }"}</span>
               <span className="text-blue-400">{" from "}</span>
               <span className="text-green-400">{"./portfolio"}</span>
             </span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-4 flex flex-wrap justify-center items-baseline gap-x-2">
               <span className="font-mono text-purple-400">{"const "}</span>
               <span className="text-foreground">FeaturedWork</span>
               <span className="text-blue-400">{": "}</span>
@@ -173,7 +173,7 @@ const Projects = () => {
 
                   {/* Content */}
                   <div className="lg:col-span-7 order-2 lg:order-2">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <span className="font-display text-3xl font-bold text-primary/30">
@@ -185,7 +185,7 @@ const Projects = () => {
                         </div>
                         <p className="text-primary font-medium text-sm">{project.subtitle}</p>
                       </div>
-                      <span className="font-mono text-xs text-muted-foreground mt-2 md:mt-0">{project.period}</span>
+                      <span className="font-mono text-xs text-muted-foreground mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">{project.period}</span>
                     </div>
 
                     <p className="text-muted-foreground text-sm mb-4 max-w-2xl">{project.description}</p>

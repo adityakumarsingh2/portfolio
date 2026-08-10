@@ -136,10 +136,10 @@ const Skills = () => {
       <div className="absolute top-1/4 right-0 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-0 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-10 md:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -149,19 +149,19 @@ const Skills = () => {
               <Code2 className="w-4 h-4 text-primary" />
               <span className="font-mono text-xs font-semibold text-primary uppercase tracking-wider">Tech Arsenal</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mt-2">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-2 flex flex-wrap justify-center items-baseline gap-x-2">
               <span className="font-mono text-blue-400">{"import "}</span>
               <span className="text-foreground">{"{ Skills }"}</span>
               <span className="font-mono text-blue-400">{" from "}</span>
               <span className="text-green-400">{"'./production'"}</span>
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-base leading-relaxed font-normal">
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-sm md:text-base leading-relaxed font-normal">
               A high-contrast overview of my technical stack, from scalable backend microservices and RAG intelligence to responsive frontend architectures.
             </p>
           </motion.div>
 
           <motion.div
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -189,7 +189,7 @@ const Skills = () => {
               </h3>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
               {certifications.map((cert, i) => (
                 <motion.div
                   key={cert.title}

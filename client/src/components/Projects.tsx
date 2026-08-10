@@ -195,7 +195,7 @@ const Projects = () => {
                           to={project.articleUrl}
                           className="absolute inset-0 flex items-center justify-center bg-background/90 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
                         >
-                          <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-purple-600 text-white font-semibold text-sm shadow-lg hover:bg-purple-500 transition-colors">
+                          <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-purple-600 text-white font-semibold text-sm hover:bg-purple-500 transition-colors">
                             <BookOpen className="w-4 h-4" />
                             Explore Knowledge Base
                           </span>
@@ -207,7 +207,7 @@ const Projects = () => {
                           rel="noopener noreferrer"
                           className="absolute inset-0 flex items-center justify-center bg-background/90 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
                         >
-                          <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-lg">
+                          <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm">
                             <ExternalLink className="w-4 h-4" />
                             View Live
                           </span>

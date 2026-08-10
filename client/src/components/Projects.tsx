@@ -300,7 +300,7 @@ const Projects = () => {
 
           {/* RAG & LLM Implementation Article Showcase Section */}
           <motion.div
-            className="mt-14 card-elegant p-6 sm:p-8 md:p-10 relative overflow-hidden border border-purple-500/30 bg-gradient-to-br from-purple-950/30 via-background to-blue-950/20 rounded-2xl shadow-2xl"
+            className="mt-14 card-elegant p-6 sm:p-8 md:p-10 relative overflow-hidden border border-purple-500/30 bg-gradient-to-br from-purple-950/30 via-background to-blue-950/20 rounded-2xl"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -343,26 +343,19 @@ const Projects = () => {
                 <div className="flex flex-wrap items-center gap-3 pt-3">
                   <Link
                     to="/articles/building-rag-from-scratch"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-sm font-semibold transition-all duration-300 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 hover:scale-[1.02]"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-sm font-semibold transition-all duration-300 hover:scale-[1.02]"
                   >
                     <BookOpen className="w-4 h-4" />
                     Read Full RAG Article
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
-                  <button
-                    onClick={() => window.dispatchEvent(new CustomEvent("open-rag-chat"))}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card border border-border/80 hover:bg-muted font-mono text-sm font-medium text-foreground transition-all duration-200"
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Ask AI Assistant
-                  </button>
                 </div>
               </div>
 
               <div className="lg:col-span-4">
                 <Link
                   to="/articles/building-rag-from-scratch"
-                  className="block group relative rounded-xl overflow-hidden border border-purple-500/30 bg-background/50 shadow-2xl transition-all duration-300 hover:border-purple-400"
+                  className="block group relative rounded-xl overflow-hidden border border-purple-500/30 bg-background/50 transition-all duration-300 hover:border-purple-400"
                 >
                   <img
                     src={articleCoverAi}

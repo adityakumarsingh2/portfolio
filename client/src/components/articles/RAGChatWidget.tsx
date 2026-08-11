@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { useRAGChat, type Source } from "@/hooks/useRAGChat";
 import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
-import { scrollToNearestUpperHeading } from "@/lib/utils";
 
 const GLOBAL_SUGGESTIONS = [
   "Summarize Aditya's top articles",
@@ -240,23 +239,16 @@ export function RAGChatWidget({
 
   const handleOpenChat = useCallback(() => {
     setIsOpen(true);
-    scrollToNearestUpperHeading();
   }, [setIsOpen]);
 
   const handleToggleChat = useCallback(() => {
-    setIsOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        scrollToNearestUpperHeading();
-      }
-      return next;
-    });
+    setIsOpen((prev) => !prev);
   }, [setIsOpen]);
 
-  // Focus input when opened
+  // Focus input when opened (preventing auto-scrolling page)
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
       if (hasMessages) {
         setTimeout(() => scrollToLatestMessage(), 50);
       }

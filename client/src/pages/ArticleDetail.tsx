@@ -16,7 +16,6 @@ import { RAGChatWidget } from "@/components/articles/RAGChatWidget";
 import { MayIHelpYouPopup } from "@/components/articles/MayIHelpYouPopup";
 import { useTableOfContents } from "@/hooks/useTableOfContents";
 import { getArticleBySlug, getRelatedArticles, getAdjacentArticles } from "@/content/articles";
-import { scrollToNearestUpperHeading } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 
 export default function ArticleDetail() {
@@ -31,7 +30,6 @@ export default function ArticleDetail() {
 
   const handleOpenChat = () => {
     setIsChatOpen(true);
-    scrollToNearestUpperHeading();
   };
 
   // Listen for open-rag-chat custom events from footer / prompt chips

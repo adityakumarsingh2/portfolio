@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .sans { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+      .serif { font-family: Georgia, Cambria, "Times New Roman", Times, serif; }
+    </style>
+
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050508;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0a0914;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#07060c;stop-opacity:1" />
+    </linearGradient>
+
+    <radialGradient id="hero-glow" cx="40%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#d97706;stop-opacity:0.15" />
+      <stop offset="60%" style="stop-color:#7c3aed;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0" />
+    </radialGradient>
+
+    <linearGradient id="active-pill" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="675" fill="url(#bg-gradient)" />
+  <rect width="1200" height="675" fill="url(#hero-glow)" />
+
+  <!-- Background Grid Dots -->
+  <g opacity="0.12" fill="#ffffff">
+    <circle cx="100" cy="100" r="1.5"/><circle cx="200" cy="100" r="1.5"/><circle cx="300" cy="100" r="1.5"/><circle cx="400" cy="100" r="1.5"/><circle cx="500" cy="100" r="1.5"/><circle cx="600" cy="100" r="1.5"/><circle cx="700" cy="100" r="1.5"/><circle cx="800" cy="100" r="1.5"/><circle cx="900" cy="100" r="1.5"/><circle cx="1000" cy="100" r="1.5"/><circle cx="1100" cy="100" r="1.5"/>
+    <circle cx="100" cy="200" r="1.5"/><circle cx="200" cy="200" r="1.5"/><circle cx="300" cy="200" r="1.5"/><circle cx="400" cy="200" r="1.5"/><circle cx="500" cy="200" r="1.5"/><circle cx="600" cy="200" r="1.5"/><circle cx="700" cy="200" r="1.5"/><circle cx="800" cy="200" r="1.5"/><circle cx="900" cy="200" r="1.5"/><circle cx="1000" cy="200" r="1.5"/><circle cx="1100" cy="200" r="1.5"/>
+    <circle cx="100" cy="300" r="1.5"/><circle cx="200" cy="300" r="1.5"/><circle cx="300" cy="300" r="1.5"/><circle cx="400" cy="300" r="1.5"/><circle cx="500" cy="300" r="1.5"/><circle cx="600" cy="300" r="1.5"/><circle cx="700" cy="300" r="1.5"/><circle cx="800" cy="300" r="1.5"/><circle cx="900" cy="300" r="1.5"/><circle cx="1000" cy="300" r="1.5"/><circle cx="1100" cy="300" r="1.5"/>
+    <circle cx="100" cy="400" r="1.5"/><circle cx="200" cy="400" r="1.5"/><circle cx="300" cy="400" r="1.5"/><circle cx="400" cy="400" r="1.5"/><circle cx="500" cy="400" r="1.5"/><circle cx="600" cy="400" r="1.5"/><circle cx="700" cy="400" r="1.5"/><circle cx="800" cy="400" r="1.5"/><circle cx="900" cy="400" r="1.5"/><circle cx="1000" cy="400" r="1.5"/><circle cx="1100" cy="400" r="1.5"/>
+    <circle cx="100" cy="500" r="1.5"/><circle cx="200" cy="500" r="1.5"/><circle cx="300" cy="500" r="1.5"/><circle cx="400" cy="500" r="1.5"/><circle cx="500" cy="500" r="1.5"/><circle cx="600" cy="500" r="1.5"/><circle cx="700" cy="500" r="1.5"/><circle cx="800" cy="500" r="1.5"/><circle cx="900" cy="500" r="1.5"/><circle cx="1000" cy="500" r="1.5"/><circle cx="1100" cy="500" r="1.5"/>
+    <circle cx="100" cy="600" r="1.5"/><circle cx="200" cy="600" r="1.5"/><circle cx="300" cy="600" r="1.5"/><circle cx="400" cy="600" r="1.5"/><circle cx="500" cy="600" r="1.5"/><circle cx="600" cy="600" r="1.5"/><circle cx="700" cy="600" r="1.5"/><circle cx="800" cy="600" r="1.5"/><circle cx="900" cy="600" r="1.5"/><circle cx="1000" cy="600" r="1.5"/><circle cx="1100" cy="600" r="1.5"/>
+  </g>
+
+  <!-- Top Navbar Header -->
+  <g transform="translate(0, 0)">
+    <!-- Logo -->
+    <text x="60" y="48" class="mono" font-size="20" font-weight="bold" fill="#c084fc">&lt;<tspan fill="#ffffff">Aditya</tspan>/&gt;</text>
+    <rect x="155" y="32" width="68" height="22" rx="5" fill="#a855f7" fill-opacity="0.15" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="163" y="47" class="mono" font-size="10" font-weight="bold" fill="#c084fc">ARTICLES</text>
+
+    <!-- Nav Items -->
+    <text x="400" y="46" class="mono" font-size="14" fill="#94a3b8">Home</text>
+
+    <text x="475" y="46" class="mono" font-size="14" font-weight="bold" fill="#ffffff">All Articles</text>
+    <rect x="475" y="54" width="82" height="2.5" rx="1.5" fill="#c084fc"/>
+
+    <g transform="translate(605, 33)">
+      <path d="M2 4h12M2 8h12M2 12h12" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <text x="625" y="46" class="mono" font-size="14" fill="#94a3b8">Categories &amp; Series</text>
+
+    <!-- Right Controls -->
+    <!-- Ask AI Button -->
+    <rect x="880" y="26" width="105" height="34" rx="17" fill="#0f0d1a" stroke="#c084fc" stroke-width="1.5"/>
+    <circle cx="896" cy="43" r="3.5" fill="#c084fc"/>
+    <text x="906" y="48" class="mono" font-size="12" font-weight="bold" fill="#f59e0b">✦ &gt; Ask AI</text>
+
+    <!-- Theme Toggle -->
+    <rect x="1000" y="26" width="34" height="34" rx="10" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+    <circle cx="1017" cy="43" r="5" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+
+    <!-- Resume Button -->
+    <rect x="1048" y="26" width="92" height="34" rx="17" fill="#ffffff"/>
+    <path d="M1064 43l3 3 3-3M1067 37v9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1075" y="47" class="mono" font-size="12" font-weight="bold" fill="#000000">Resume</text>
+  </g>
+
+  <!-- Divider line -->
+  <line x1="60" y1="76" x2="1140" y2="76" stroke="#ffffff" opacity="0.05" stroke-width="1"/>
+
+  <!-- Code Import Header Banner -->
+  <g transform="translate(180, 150)">
+    <text class="mono" font-size="15">
+      <tspan fill="#60a5fa">import </tspan>
+      <tspan fill="#a855f7">{ </tspan>
+      <tspan fill="#ffffff">Articles </tspan>
+      <tspan fill="#a855f7">}</tspan>
+      <tspan fill="#60a5fa"> from </tspan>
+      <tspan fill="#4ade80">"@aditya/knowledge-base"</tspan>
+    </text>
+  </g>
+
+  <!-- Hero Big Title -->
+  <g transform="translate(180, 230)">
+    <text class="serif">
+      <tspan class="mono" font-size="44" font-weight="bold" fill="#c084fc">const </tspan>
+      <tspan font-size="68" font-weight="bold" fill="#ffffff">Articles:</tspan>
+    </text>
+    <text x="0" y="70" class="serif" font-size="68" font-weight="bold" fill="#f59e0b">KnowledgeBase</text>
+  </g>
+
+  <!-- Hero Subtitle Description -->
+  <g transform="translate(180, 360)">
+    <text class="sans" font-size="18" fill="#94a3b8">
+      <tspan x="0" dy="0">A collection of engineering articles, AI research, startup learnings, and software</tspan>
+      <tspan x="0" dy="28">development guides. Deep dives, not hot takes.</tspan>
+    </text>
+
+    <!-- Stats meta info -->
+    <text x="0" y="85" class="mono" font-size="14" fill="#64748b">
+      <tspan fill="#94a3b8">• 4 Articles</tspan>
+      <tspan fill="#64748b">  ·  </tspan>
+      <tspan fill="#94a3b8">3 Categories</tspan>
+      <tspan fill="#64748b">  ·  </tspan>
+      <tspan fill="#94a3b8">21 Topics</tspan>
+      <tspan fill="#64748b">  ·  </tspan>
+      <tspan fill="#94a3b8">Updated Aug 2026</tspan>
+    </text>
+  </g>
+
+  <!-- Search & Filter Controls Section -->
+  <g transform="translate(180, 500)">
+    <!-- Search Box Container -->
+    <rect x="0" y="0" width="840" height="52" rx="16" fill="#09090b" stroke="#27272a" stroke-width="1.5"/>
+    <text x="36" y="32" class="sans" font-size="15" fill="#71717a">Search articles, topics, technologies...</text>
+    
+    <!-- Shortcut Badge -->
+    <rect x="796" y="14" width="24" height="24" rx="6" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+    <text x="804" y="30" class="mono" font-size="13" fill="#a1a1aa">/</text>
+
+    <!-- Filter Category Pills Row -->
+    <g transform="translate(0, 75)">
+      <!-- All Pill (Active) -->
+      <rect x="0" y="0" width="46" height="34" rx="17" fill="url(#active-pill)"/>
+      <text x="15" y="21" class="mono" font-size="13" font-weight="bold" fill="#ffffff">All</text>
+
+      <!-- AI Pill -->
+      <rect x="56" y="0" width="44" height="34" rx="17" fill="none" stroke="#3f3f46" stroke-width="1"/>
+      <text x="70" y="21" class="mono" font-size="13" fill="#d4d4d8">AI</text>
+
+      <!-- Web Development Pill -->
+      <rect x="110" y="0" width="144" height="34" rx="17" fill="none" stroke="#3f3f46" stroke-width="1"/>
+      <text x="124" y="21" class="mono" font-size="13" fill="#d4d4d8">Web Development</text>
+
+      <!-- System Design Pill -->
+      <rect x="264" y="0" width="124" height="34" rx="17" fill="none" stroke="#3f3f46" stroke-width="1"/>
+      <text x="278" y="21" class="mono" font-size="13" fill="#d4d4d8">System Design</text>
+
+      <!-- Startups Pill -->
+      <rect x="398" y="0" width="84" height="34" rx="17" fill="none" stroke="#3f3f46" stroke-width="1"/>
+      <text x="412" y="21" class="mono" font-size="13" fill="#d4d4d8">Startups</text>
+
+      <!-- Career Pill -->
+      <rect x="492" y="0" width="76" height="34" rx="17" fill="none" stroke="#3f3f46" stroke-width="1"/>
+      <text x="506" y="21" class="mono" font-size="13" fill="#d4d4d8">Career</text>
+
+      <!-- Sort Dropdown on Right -->
+      <g transform="translate(680, 0)">
+        <rect x="0" y="0" width="106" height="34" rx="10" fill="#09090b" stroke="#27272a" stroke-width="1"/>
+        <text x="14" y="21" class="mono" font-size="12" fill="#e4e4e7">Newest</text>
+        <path d="M82 14l4 4 4-4" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round"/>
+        <text x="118" y="21" class="mono" font-size="12" fill="#a1a1aa">4 articles</text>
+      </g>
+    </g>
+  </g>
+</svg>

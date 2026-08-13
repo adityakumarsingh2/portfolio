@@ -231,7 +231,7 @@
   }
 
   .section-padding {
-    @apply py-24 md:py-32;
+    @apply py-16 sm:py-20 md:py-24 lg:py-32;
   }
 
   .line-accent {

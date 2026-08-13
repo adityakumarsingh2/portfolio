@@ -1,0 +1,208 @@
+---
+title: "Advanced RAG: Agentic Workflows, Graph RAG & Production Evaluation"
+subtitle: "Mastering multi-step agentic retrieval, Knowledge Graph RAG, and automated evaluation frameworks using RAGAS, TruLens, and LLM-as-a-Judge."
+description: "Level up your RAG pipelines with autonomous agentic retrieval loops, Knowledge Graphs for complex entity relationships, and rigorous automated evaluation metrics to eliminate hallucinations."
+category: "AI"
+series: "Building Production RAG"
+seriesOrder: 2
+tags: ["RAG", "Agentic AI", "Graph RAG", "RAGAS", "LLM Evaluation", "LangChain"]
+published: "2026-03-15"
+featured: true
+featuredPriority: 9
+draft: false
+difficulty: "Advanced"
+keywords: ["Advanced RAG", "Agentic RAG", "Graph RAG", "RAGAS", "TruLens", "LLM evaluation", "Knowledge Graph"]
+seoTitle: "Advanced RAG: Agentic Workflows, Graph RAG & Production Evaluation | Aditya Kumar Singh"
+seoDescription: "An in-depth guide to building Advanced RAG systems: agentic multi-step retrieval, Knowledge Graph RAG (GraphRAG), and evaluation frameworks with RAGAS."
+coverImage: "/articles/covers/ai.svg"
+---
+
+In [Part 1 of this series](/articles/building-rag-from-scratch), we built a foundational Retrieval-Augmented Generation (RAG) pipeline—covering semantic chunking, dense embeddings with OpenAI, vector search using Qdrant, and hybrid re-ranking with Cohere.
+
+While naive RAG works well for simple question-answering over flat text, enterprise production systems face tougher demands:
+- **Complex multi-hop questions** requiring information from disconnected documents.
+- **Global entity reasoning** across entire repositories (e.g. "What are the common root causes of latency across all microservices?").
+- **Hallucinations & retrieval failures** that go undetected without automated metrics.
+
+In Part 2, we bridge the gap between basic vector search and enterprise-grade intelligence by implementing **Agentic RAG**, **Graph RAG**, and **Automated Evaluation Frameworks**.
+
+---
+
+## 1. Agentic RAG: Dynamic & Multi-Step Retrieval
+
+Naive RAG follows a rigid single-shot workflow: `User Query → Retrieve Top-K → Generate Answer`.
+
+If the initial vector lookup misses critical context or returns noise, the LLM hallucinates or fails. **Agentic RAG** introduces dynamic loops where an autonomous agent determines *what* to search, *how* to search, and *whether* the retrieved context is sufficient.
+
+```
+                  ┌──────────────────────┐
+                  │      User Query      │
+                  └──────────┬───────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │   Router / Planner   │
+                  └──────────┬───────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                ▼
+     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+     │ Vector Search│  │ Graph Database│  │  SQL Engine │
+     └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+            │                │                │
+            └────────────────┼────────────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │ Context Evaluator    │◄───┐ (Insufficient)
+                  └──────────┬───────────┘    │
+                             │ (Sufficient)   │
+                             ▼                │
+                  ┌──────────────────────┐    │
+                  │   Generate Response  ├────┘ (Self-Correction)
+                  └──────────────────────┘
+```
+
+### Core Patterns in Agentic RAG
+
+1. **Routing & Tool Selection:** Classifying the user's intent to direct queries to vector databases, SQL data warehouses, or external APIs.
+2. **Corrective RAG (CRAG):** Evaluating retrieved documents with a light grading module before passing them to the generator. If documents fail relevance thresholds, the system triggers web search or query expansion fallbacks.
+3. **Self-RAG:** Injected reflection tokens (`[Retrieval]`, `[IS-REL]`, `[IS-SUP]`) allow the generator to iteratively critique its own generated output against retrieved context.
+
+### Python Implementation: Self-Corrective RAG Agent Loop
+
+```python
+import os
+from typing import List, Dict, Any
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+
+class CorrectiveRAGAgent:
+    def __init__(self, vector_store, llm_model: str = "gpt-4o"):
+        self.vector_store = vector_store
+        self.llm = ChatOpenAI(model=llm_model, temperature=0)
+        
+    def evaluate_relevance(self, query: str, doc_text: str) -> bool:
+        """Grades document relevance to filter out noise before generation."""
+        prompt = f"""You are a strict relevance evaluator.
+Query: {query}
+Document snippet: {doc_text}
+
+Is this document relevant to answering the query? Reply ONLY with YES or NO."""
+        response = self.llm.invoke(prompt).content.strip().upper()
+        return "YES" in response
+
+    def run(self, query: str) -> Dict[str, Any]:
+        # Step 1: Initial Retrieval
+        docs = self.vector_store.similarity_search(query, k=5)
+        
+        # Step 2: Relevance Filtering (CRAG Layer)
+        relevant_docs = [doc for doc in docs if self.evaluate_relevance(query, doc.page_content)]
+        
+        # Step 3: Self-Correction Loop if context is sparse
+        if len(relevant_docs) < 2:
+            print("[Agent] Context insufficient. Triggering query rewrite...")
+            rewritten_query = self._rewrite_query(query)
+            extra_docs = self.vector_store.similarity_search(rewritten_query, k=3)
+            relevant_docs.extend([d for d in extra_docs if self.evaluate_relevance(query, d.page_content)])
+
+        # Step 4: Final Generation
+        context_str = "\n\n".join([d.page_content for d in relevant_docs])
+        answer = self._generate_answer(query, context_str)
+        return {"answer": answer, "retrieved_count": len(relevant_docs)}
+
+    def _rewrite_query(self, original_query: str) -> str:
+        prompt = f"Optimize this query for semantic vector retrieval: '{original_query}'"
+        return self.llm.invoke(prompt).content.strip()
+
+    def _generate_answer(self, query: str, context: str) -> str:
+        prompt = f"Using ONLY the following context:\n{context}\n\nAnswer: {query}"
+        return self.llm.invoke(prompt).content
+```
+
+---
+
+## 2. Graph RAG: Knowledge-Graph Augmented Retrieval
+
+Dense embeddings (vector search) excel at matching *similar concepts* (local queries). However, vector search struggles with *global summaries* or *multi-step entity relationships*.
+
+For example: *"How do Microservice A, Service B, and Database C interconnect, and what happens if Database C undergoes a schema migration?"*
+
+**Graph RAG** resolves this by constructing a Knowledge Graph (nodes = entities, edges = relationships) combined with hierarchical community summaries.
+
+```
+       (Microservice A) ─────[DEPENDS_ON]────► (API Gateway)
+              │                                      │
+        [CALLS_RPC]                            [AUTHENTICATES]
+              ▼                                      ▼
+       (Auth Service)  ─────[WRITES_TO]──────► (PostgreSQL DB)
+```
+
+### Naive RAG vs Agentic RAG vs Graph RAG
+
+| Architectural Dimension | Naive RAG | Agentic RAG | Graph RAG |
+| :--- | :--- | :--- | :--- |
+| **Search Mechanism** | Single-shot Vector KNN | Dynamic Tool Routing & Loops | Graph Traversal + Vector Hybrid |
+| **Best Used For** | Direct Fact Lookup | Multi-step / Tool Interactivity | Enterprise Knowledge & Entities |
+| **Context Scope** | Local Chunks | Iterative Multi-Source | Global & Structured Hierarchies |
+| **Implementation Complexity** | Low | Medium–High | High |
+
+---
+
+## 3. Production RAG Evaluation: RAGAS & TruLens
+
+You cannot improve what you do not measure. In production, evaluating RAG requires automated pipelines to monitor the **RAG Triad**:
+
+1. **Faithfulness:** Is the generated response derived *strictly* from the retrieved context (zero hallucination)?
+2. **Answer Relevance:** Does the response directly address the user query?
+3. **Context Precision & Recall:** Did the vector search fetch *all* necessary context without irrelevant noise?
+
+```python
+from ragas import evaluate
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_recall,
+    context_precision,
+)
+from datasets import Dataset
+
+# Prepare evaluation dataset
+eval_data = {
+    "question": ["How does CRAG improve retrieval?"],
+    "contexts": [["Corrective RAG adds a relevance evaluation layer to filter noise..."]],
+    "answer": ["CRAG uses a grading module to filter retrieved documents before generation."],
+    "ground_truth": ["CRAG filters irrelevant documents using a relevance evaluator before LLM generation."]
+}
+
+dataset = Dataset.from_dict(eval_data)
+
+# Run automated RAGAS evaluation
+results = evaluate(
+    dataset=dataset,
+    metrics=[
+        faithfulness,
+        answer_relevancy,
+        context_precision,
+        context_recall,
+    ],
+)
+
+print("RAGAS Evaluation Scores:")
+print(results)
+```
+
+---
+
+## Summary & What's Next
+
+By combining **Agentic RAG loops**, **Knowledge Graph relationships**, and **RAGAS automated benchmarks**, you transform unpredictable vector search into a deterministic, resilient enterprise AI engine.
+
+In **Part 3** of this series, we will dive deep into **Production RAG Infrastructure**:
+- Vector database cluster scaling (Qdrant & Milvus sharding)
+- Semantic caching (Redis & GPTCache for 90%+ latency drop)
+- Fine-tuning embedding models on proprietary domain corpora
+
+<Callout type="success">
+  Have questions about building Agentic or Graph RAG architectures? Use the interactive AI Assistant widget on the right to chat directly with this article's contents!
+</Callout>

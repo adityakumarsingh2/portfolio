@@ -22,6 +22,7 @@ export default function SeriesPage() {
   );
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (!seriesMeta) return;
     document.title = `${seriesMeta.label} — Article Series | Aditya Kumar Singh`;
     const desc = document.querySelector('meta[name="description"]');
@@ -124,7 +125,7 @@ export default function SeriesPage() {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-3 mb-8"
             >
-              <span className="font-mono text-xs text-primary/60">// parts</span>
+              <span className="font-mono text-xs text-primary/60">// latest</span>
               <div className="flex-1 h-px bg-border/40" />
             </motion.div>
 

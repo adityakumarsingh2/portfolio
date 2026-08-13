@@ -6,9 +6,10 @@ interface TableOfContentsProps {
   items: TocItem[];
   activeId: string;
   readingTime: number;
+  className?: string;
 }
 
-export function TableOfContents({ items, activeId, readingTime }: TableOfContentsProps) {
+export function TableOfContents({ items, activeId, readingTime, className }: TableOfContentsProps) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -32,7 +33,7 @@ export function TableOfContents({ items, activeId, readingTime }: TableOfContent
   };
 
   return (
-    <aside className="hidden xl:block sticky top-24 self-start w-64 shrink-0">
+    <aside className={className || "hidden xl:block sticky top-24 self-start w-64 shrink-0"}>
       <div className="card-elegant p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">

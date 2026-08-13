@@ -26,30 +26,30 @@ const About = () => {
       {/* Static Background decoration */}
       <div className="absolute inset-0 bg-dots opacity-10" />
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <motion.div 
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="font-mono text-primary text-sm tracking-wider">
+          <span className="font-mono text-primary text-xs sm:text-sm tracking-wider flex flex-wrap justify-center gap-x-1">
             <span className="text-blue-400">{"import "}</span>
             <span className="text-foreground">{"{ Developer }"}</span>
             <span className="text-blue-400">{" from "}</span>
             <span className="text-green-400">"@/about"</span>
           </span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">
-            <span className="font-mono text-purple-400 text-3xl">{"const "}</span>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-4 flex flex-wrap justify-center items-baseline gap-x-2">
+            <span className="font-mono text-purple-400 text-2xl sm:text-3xl">{"const "}</span>
             <span className="text-foreground">AboutMe</span>
             <span className="text-blue-400">{": "}</span>
             <span className="text-gradient-warm">React.FC</span>
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
           {/* Left Column - Background, Education, What I Do, then Achievements */}
           <div className="space-y-5">
             {/* Background */}
@@ -63,9 +63,8 @@ const About = () => {
             >
               <span className="text-green-400">{"// Background"}</span>
               <p className="text-muted-foreground mt-2 leading-relaxed">
-                I'm a <span className="text-foreground font-medium">Computer Science student</span> with 
-                hands-on experience in full-stack development and cloud technologies. Passionate about 
-                building scalable applications that solve real-world problems.
+                I'm an <span className="text-foreground font-medium">Oracle Certified Developer</span> and 
+                Computer Science student with hands-on experience in full-stack MERN architecture and artificial intelligence (LLMs & RAG).
               </p>
             </motion.div>
 
@@ -110,15 +109,15 @@ const About = () => {
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <p className="flex items-center gap-2">
                       <span className="text-blue-400 font-mono">→</span>
-                      Building e-commerce & AI-powered applications
+                      Architecting RAG pipelines & autonomous LLM workflows
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="text-green-400 font-mono">→</span>
-                      Full-stack development with React & Node.js
+                      Full-stack MERN & Next.js development
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="text-purple-400 font-mono">→</span>
-                      Cloud deployment on AWS & Oracle Cloud
+                      High-concurrency systems & database optimization
                     </p>
                   </div>
                 </div>

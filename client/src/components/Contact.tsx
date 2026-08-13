@@ -93,31 +93,31 @@ const Contact = () => {
       <div className="absolute top-1/4 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-10 md:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.35, ease: "easeOut" }}
           >
-            <span className="font-mono text-primary text-sm tracking-wider">
+            <span className="font-mono text-primary text-xs sm:text-sm tracking-wider flex flex-wrap justify-center gap-x-1">
               <span className="text-purple-400">{"function "}</span>
               <span className="text-blue-400">{"connect"}</span>
               <span className="text-foreground">{"() {"}</span>
             </span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-4 flex flex-wrap justify-center items-baseline gap-x-2">
               <span className="font-mono text-green-400">{"return "}</span>
               <span className="text-gradient-warm">{"<Contact />"}</span>
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-lg mx-auto font-mono text-sm">
+            <p className="text-muted-foreground mt-4 max-w-lg mx-auto font-mono text-xs sm:text-sm">
               <span className="text-green-400">{"// "}</span>
               Open to internships, freelance & exciting collaborations
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-5 gap-12">
+          <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
             {/* Contact Info */}
             <motion.div
               className="lg:col-span-2 space-y-4"

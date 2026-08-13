@@ -10,6 +10,7 @@ import About from "@/components/About";
 import Skills from "@/components/Skills";
 import Experience from "@/components/Experience";
 import Projects from "@/components/Projects";
+import Training from "@/components/Training";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import Chatbot, { Message } from "@/components/Chatbot";
@@ -66,6 +67,7 @@ const Index = () => {
         <Skills />
         <Experience />
         <Projects />
+        <Training />
         <Contact />
         <Footer />
         <BackToTop />

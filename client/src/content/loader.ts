@@ -169,9 +169,9 @@ export function getUniqueTopicCount(): number {
   return getAllTags().length;
 }
 
-/** All articles in a specific series, ordered by seriesOrder */
+/** All articles in a specific series (including drafts/upcoming), ordered by seriesOrder */
 export function getArticlesInSeries(seriesName: string): Article[] {
-  return articles
+  return _allArticles
     .filter((a) => a.series === seriesName)
     .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0));
 }
@@ -193,10 +193,10 @@ export function getCategories(): CategoryMeta[] {
     .filter((c): c is CategoryMeta => c !== undefined);
 }
 
-/** All unique series with metadata */
+/** All unique series with metadata (including upcoming draft parts) */
 export function getAllSeries(): SeriesMeta[] {
   const seriesMap = new Map<string, Article[]>();
-  articles.forEach((a) => {
+  _allArticles.forEach((a) => {
     if (a.series) {
       const existing = seriesMap.get(a.series) ?? [];
       seriesMap.set(a.series, [...existing, a]);

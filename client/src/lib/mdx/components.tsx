@@ -200,11 +200,17 @@ export const mdxComponents: MDXComponents = {
   ),
 
   // Inline code
-  code: ({ children }: { children?: React.ReactNode }) => (
-    <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-muted border border-border/60 text-green-400">
-      {children}
-    </code>
-  ),
+  code: ({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) => {
+    // If code is inside pre or has a language class, do not apply inline code borders
+    if (className?.includes("language-")) {
+      return <code className={className} {...props}>{children}</code>;
+    }
+    return (
+      <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-muted border border-border/40 text-green-400" {...props}>
+        {children}
+      </code>
+    );
+  },
 
   // Code block (pre > code)
   pre: Pre,

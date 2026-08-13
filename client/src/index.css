@@ -385,14 +385,26 @@
   text-decoration-color: hsl(15 85% 60%);
 }
 
-.article-prose code {
+.article-prose :not(pre) > code {
   font-family: 'Space Mono', monospace;
   font-size: 0.875em;
-  padding: 0.15em 0.4em;
-  border-radius: 4px;
-  background: hsl(var(--muted));
-  border: 1px solid hsl(var(--border) / 0.6);
-  color: hsl(142 70% 50%);
+  padding: 0.2em 0.45em;
+  border-radius: 6px;
+  background: hsl(240 10% 12%);
+  border: 1px solid hsl(240 10% 22%);
+  color: hsl(142 75% 55%);
+}
+
+/* Reset code blocks inside <pre> to eliminate unnecessary linings/borders */
+.article-prose pre code,
+.article-prose pre code span,
+.article-prose pre span {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Line clamp utilities */

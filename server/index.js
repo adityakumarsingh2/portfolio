@@ -194,7 +194,7 @@ PROJECTS:
    - github link: https://github.com/adityakumarsingh2/confessit
 
 2. Personal Portfolio (Dec 2025 - Jan 2026)
-   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, and a custom magnetic cursor.
+   - Description: A modern, responsive portfolio website to showcase full-stack skills and projects, featuring dark/light mode, smooth animations, a custom magnetic cursor, and real-time GitHub activity heatmap integration.
    - Key Responsibilities & Achievements:
      * Integrated an LLM-powered AI chatbot using the Gemini Flash API with secure rate limiting, enabling visitors to interactively learn about his skills, projects, and experience.
      * Optimized the website for SEO with structured metadata and sitemaps, achieved Google indexing, tracked 1,000+ visits via Google Analytics, and deployed it on a custom domain using Vercel and Cloudflare.

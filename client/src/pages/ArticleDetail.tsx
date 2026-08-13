@@ -7,6 +7,7 @@ import { ReadingProgress } from "@/components/articles/ReadingProgress";
 import { ArticleBreadcrumb } from "@/components/articles/ArticleBreadcrumb";
 import { ArticleMeta } from "@/components/articles/ArticleMeta";
 import { ArticleContent } from "@/components/articles/ArticleContent";
+import { SeriesBanner } from "@/components/articles/SeriesBanner";
 import { TableOfContents } from "@/components/articles/TableOfContents";
 import { ArticleShare } from "@/components/articles/ArticleShare";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
@@ -261,6 +262,12 @@ export default function ArticleDetail() {
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="min-w-0 flex-1 max-w-3xl lg:max-w-4xl"
               >
+                {article.series && (
+                  <SeriesBanner
+                    seriesName={article.series}
+                    currentSlug={article.slug}
+                  />
+                )}
                 <ArticleContent content={article.content} />
                 <ArticleShare title={article.title} />
                 <RelatedArticles articles={related} />

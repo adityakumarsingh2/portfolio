@@ -156,7 +156,7 @@ export default function ArticleDetail() {
   const { prev, next } = getAdjacentArticles(article.slug);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
+    <div className="min-h-screen bg-background relative overflow-x-clip">
       <ReadingProgress />
       <Navbar />
 
@@ -231,9 +231,9 @@ export default function ArticleDetail() {
         </div>
 
         {/* ── DYNAMIC 3-COLUMN SPLIT STUDIO LAYOUT ───────────────────────── */}
-        <div className="w-full px-4 md:px-6 lg:px-8 pb-24 transition-all duration-500 ease-out overflow-x-hidden">
+        <div className="w-full px-4 md:px-6 lg:px-8 pb-24 transition-all duration-500 ease-out">
           <div className="max-w-[1720px] mx-auto">
-            <div className="flex gap-6 lg:gap-8 items-start justify-center overflow-x-hidden">
+            <div className="flex gap-6 lg:gap-8 items-start justify-center">
 
               {/* ── LEFT SIDEBAR: Table of Contents (Subtopics when Chatbot is OPEN) ── */}
               <AnimatePresence initial={false}>
@@ -244,13 +244,13 @@ export default function ArticleDetail() {
                     animate={{ opacity: 1, x: 0, width: 256 }}
                     exit={{ opacity: 0, x: -30, width: 0 }}
                     transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="hidden xl:block sticky top-24 shrink-0 overflow-hidden"
+                    className="hidden xl:block sticky top-24 shrink-0 self-start"
                   >
                     <TableOfContents
                       items={tocItems}
                       activeId={activeId}
                       readingTime={article.readingTime}
-                      className="w-64 sticky top-24 self-start"
+                      className="w-64 self-start"
                     />
                   </motion.div>
                 )}
@@ -276,7 +276,6 @@ export default function ArticleDetail() {
               </motion.div>
 
               {/* ── RIGHT SIDEBAR: Table of Contents (CLOSED) OR Chatbot Panel (OPEN) ── */}
-              {/* hidden on mobile/tablet — only renders on lg+ to avoid pushing layout wider */}
               <div className="hidden lg:block sticky top-24 shrink-0 self-start">
                 <AnimatePresence mode="wait">
                   {!isChatOpen ? (

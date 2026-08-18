@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Aditya Kumar Singh — Engineering Knowledge Base</title>
+    <link>https://adityakumarsingh.tech</link>
+    <description>Engineering articles, AI research, system design, and full-stack development by Aditya Kumar Singh.</description>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <managingEditor>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</managingEditor>
+    <webMaster>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</webMaster>
+    <atom:link href="https://adityakumarsingh.tech/rss.xml" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://adityakumarsingh.tech/og-image.png</url>
+      <title>Aditya Kumar Singh</title>
+      <link>https://adityakumarsingh.tech</link>
+    </image>
+
+    <item>
+      <title>TanStack Query: The Data Layer React Never Had</title>
+      <link>https://adityakumarsingh.tech/articles/tanstack-query-explained</link>
+      <guid isPermaLink="true">https://adityakumarsingh.tech/articles/tanstack-query-explained</guid>
+      <description>A short, practical guide to TanStack Query — what it is, the problem it solves, and how caching, useQuery, and useMutation actually work.</description>
+      <pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate>
+      <author>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</author>
+      <category>Web Development</category>
+      <category>TanStack Query</category>
+      <category>React</category>
+      <category>State Management</category>
+      <category>Caching</category>
+      <category>JavaScript</category>
+      <enclosure url="https://adityakumarsingh.tech/articles/covers/react.svg" type="image/png" length="0"/>
+    </item>
+
+    <item>
+      <title>Building a RAG System from Scratch</title>
+      <link>https://adityakumarsingh.tech/articles/building-rag-from-scratch</link>
+      <guid isPermaLink="true">https://adityakumarsingh.tech/articles/building-rag-from-scratch</guid>
+      <description>RAG is transforming how AI applications handle knowledge. In this guide, I break down every layer of a production RAG pipeline—from chunking strategies and embedding models to vector search, re-ranking, and LLM prompt engineering.</description>
+      <pubDate>Fri, 10 Jul 2026 00:00:00 GMT</pubDate>
+      <author>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</author>
+      <category>AI</category>
+      <category>RAG</category>
+      <category>LLM</category>
+      <category>Vector DB</category>
+      <category>Python</category>
+      <category>AI Engineering</category>
+      <category>Embeddings</category>
+      <enclosure url="https://adityakumarsingh.tech/articles/covers/ai.svg" type="image/png" length="0"/>
+    </item>
+
+    <item>
+      <title>Designing Scalable APIs: Patterns I&apos;ve Learned the Hard Way</title>
+      <link>https://adityakumarsingh.tech/articles/designing-scalable-apis</link>
+      <guid isPermaLink="true">https://adityakumarsingh.tech/articles/designing-scalable-apis</guid>
+      <description>After building APIs for apps serving thousands of users, I&apos;ve learned that the difference between a good API and a great one isn&apos;t features—it&apos;s the 20% of decisions that prevent you from being paged at 3am.</description>
+      <pubDate>Wed, 01 Jul 2026 00:00:00 GMT</pubDate>
+      <author>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</author>
+      <category>System Design</category>
+      <category>API Design</category>
+      <category>REST</category>
+      <category>Node.js</category>
+      <category>Backend</category>
+      <category>System Design</category>
+      <category>Rate Limiting</category>
+      <enclosure url="https://adityakumarsingh.tech/articles/covers/system-design.svg" type="image/png" length="0"/>
+    </item>
+
+    <item>
+      <title>Full-Stack Architecture in 2026: What&apos;s Actually Worth Learning</title>
+      <link>https://adityakumarsingh.tech/articles/full-stack-architecture-2026</link>
+      <guid isPermaLink="true">https://adityakumarsingh.tech/articles/full-stack-architecture-2026</guid>
+      <description>The JavaScript ecosystem moves fast. After building four production apps this year, here&apos;s my opinionated take on what&apos;s genuinely valuable versus what&apos;s just trend-chasing.</description>
+      <pubDate>Sat, 20 Jun 2026 00:00:00 GMT</pubDate>
+      <author>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</author>
+      <category>Web Development</category>
+      <category>React</category>
+      <category>TypeScript</category>
+      <category>Full-Stack</category>
+      <category>Architecture</category>
+      <category>Node.js</category>
+      <category>TailwindCSS</category>
+      <enclosure url="https://adityakumarsingh.tech/articles/covers/webdev.svg" type="image/png" length="0"/>
+    </item>
+
+    <item>
+      <title>Advanced RAG: Agentic Workflows, Graph RAG &amp; Production Evaluation</title>
+      <link>https://adityakumarsingh.tech/articles/advanced-rag-agentic-graph-eval</link>
+      <guid isPermaLink="true">https://adityakumarsingh.tech/articles/advanced-rag-agentic-graph-eval</guid>
+      <description>Level up your RAG pipelines with autonomous agentic retrieval loops, Knowledge Graphs for complex entity relationships, and rigorous automated evaluation metrics to eliminate hallucinations.</description>
+      <pubDate>Sun, 15 Mar 2026 00:00:00 GMT</pubDate>
+      <author>adityakumarsingh909@outlook.com (Aditya Kumar Singh)</author>
+      <category>AI</category>
+      <category>RAG</category>
+      <category>Agentic AI</category>
+      <category>Graph RAG</category>
+      <category>RAGAS</category>
+      <category>LLM Evaluation</category>
+      <category>LangChain</category>
+      <enclosure url="https://adityakumarsingh.tech/articles/covers/ai.svg" type="image/png" length="0"/>
+    </item>
+  </channel>
+</rss>

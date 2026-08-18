@@ -6,6 +6,7 @@
  */
 
 import type { ArticleFrontmatter } from "@/types/content";
+import { categoryToSlug, seriesToSlug } from "../content/slugify";
 
 const SITE_URL = "https://adityakumarsingh.tech";
 const AUTHOR_NAME = "Aditya Kumar Singh";
@@ -90,12 +91,6 @@ export function generateSitemap(articles: ArticleFrontmatter[]): string {
     ...new Set(published.filter((a) => a.series).map((a) => a.series!)),
   ];
 
-  const categorySlug = (cat: string) =>
-    cat.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
-
-  const seriesSlug = (s: string) =>
-    s.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
-
   const articleEntries = published
     .map((a) => {
       const lastmod = a.updated || a.published;
@@ -113,7 +108,7 @@ export function generateSitemap(articles: ArticleFrontmatter[]): string {
     .map(
       (cat) => `
   <url>
-    <loc>${SITE_URL}/articles/category/${categorySlug(cat)}</loc>
+    <loc>${SITE_URL}/articles/category/${categoryToSlug(cat)}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>`
@@ -124,7 +119,7 @@ export function generateSitemap(articles: ArticleFrontmatter[]): string {
     .map(
       (s) => `
   <url>
-    <loc>${SITE_URL}/articles/series/${seriesSlug(s)}</loc>
+    <loc>${SITE_URL}/articles/series/${seriesToSlug(s)}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>`

@@ -199,7 +199,7 @@ User Query
 |---|---|---|---|
 | `POST` | `/api/chat` | — | Portfolio chatbot — streams Gemini SSE response |
 | `POST` | `/api/articles/chat` | — | RAG chatbot — semantic search + Gemini SSE stream |
-| `DELETE` | `/api/articles/session/:sessionId` | — | Clear a conversation session (UUID v4 validated) |
+| `DELETE` | `/api/articles/session/:sessionId` | — | Clear a conversation session (UUID v4 preferred; legacy `rag-*` accepted) |
 | `POST` | `/api/articles/reindex` | `x-admin-key` | Trigger full article re-indexing pipeline |
 | `GET` | `/api/articles/status` | `x-admin-key` | Indexing status + Qdrant collection stats |
 | `GET` | `/health` | — | Server health check |
@@ -264,7 +264,7 @@ User Query
 | **Input Validation** | Message length capped (600 chars chat, 800 chars RAG), type-checked |
 | **CORS Allowlist** | `ALLOWED_ORIGINS` env-var driven — only configured origins accepted; dev fallback to localhost ports |
 | **Admin Key Guard** | `/api/articles/reindex` and `/api/articles/status` require `x-admin-key` header — always requires key (no silent bypass) |
-| **SessionId Validation** | UUID v4 regex enforced on `DELETE /api/articles/session/:sessionId` |
+| **SessionId Validation** | UUID v4 preferred and legacy `rag-{timestamp}-{base36}` accepted on Articles chat/session routes |
 | **API Key Safety** | All secrets live exclusively in server `.env` — never bundled or exposed to the client |
 | **Error Isolation** | Streaming errors forwarded as SSE error events — no stack traces leak to the client |
 

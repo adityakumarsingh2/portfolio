@@ -19,7 +19,7 @@ const sessions = new Map();
 
 /**
  * Get or create a session.
- * @param {string} sessionId - client-provided UUID
+ * @param {string} sessionId - validated client-provided session ID
  * @returns {{ history: Array, lastActivity: number }}
  */
 export function getSession(sessionId) {

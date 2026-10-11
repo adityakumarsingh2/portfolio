@@ -99,6 +99,14 @@ function isRateLimitError(msg: string) {
   return msg.toLowerCase().includes("temporarily busy") || msg.toLowerCase().includes("rate limit");
 }
 
+function getUserSafeErrorMessage(rawMessage: string) {
+  const msg = rawMessage.toLowerCase();
+  if (msg.includes("failed to fetch") || msg.includes("fetch failed")) {
+    return "Unable to reach the article assistant right now. Please try again in a moment.";
+  }
+  return rawMessage;
+}
+
 export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
   const [messages, setMessages] = useState<RAGMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -264,7 +272,8 @@ export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
 
-      const errMsg = err instanceof Error ? err.message : "Something went wrong";
+      const rawErrorMsg = err instanceof Error ? err.message : "Something went wrong";
+      const errMsg = getUserSafeErrorMessage(rawErrorMsg);
       setError(errMsg);
 
       // Start cooldown timer on rate limit errors

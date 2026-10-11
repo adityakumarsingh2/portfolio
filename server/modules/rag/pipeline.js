@@ -9,6 +9,7 @@
 
 import { rewriteStandaloneQuery, extractQueryMetadata } from "./retrieval/query-processor.js";
 import { retrieve } from "./retrieval/retriever.js";
+import { getFallbackChunksForArticle } from "./retrieval/fallback-context.js";
 import { generateStreamingResponse } from "./generation/generator.js";
 
 // ── Response cache ─────────────────────────────────────────────────────────
@@ -69,7 +70,28 @@ export async function runRAGPipeline({ query, history, articleSlug = null, onChu
     }
 
     // Step 3: Retrieve relevant chunks — scoped to articleSlug if provided
-    const chunks = await retrieve(standaloneQuery, queryMeta, undefined, articleSlug);
+    let chunks = [];
+    try {
+      chunks = await retrieve(standaloneQuery, queryMeta, undefined, articleSlug);
+    } catch (retrievalError) {
+      const retrievalMessage =
+        retrievalError instanceof Error && retrievalError.message
+          ? retrievalError.message
+          : "Unknown retrieval error";
+
+      console.error("[pipeline] Retrieval failed:", retrievalMessage);
+
+      // Fallback for article-scoped chats: use local article text so users still
+      // get a meaningful answer if vector service is temporarily unreachable.
+      const fallbackChunks = articleSlug ? getFallbackChunksForArticle(articleSlug) : [];
+      if (fallbackChunks.length > 0) {
+        chunks = fallbackChunks;
+        console.warn(`[pipeline] Using local fallback context for article "${articleSlug}"`);
+      } else {
+        throw new Error("Article retrieval service is temporarily unavailable. Please try again.");
+      }
+    }
+
     console.log(`[pipeline] Retrieved ${chunks.length} chunks`);
 
     // Step 4: Check response cache before calling Gemini
@@ -120,7 +142,11 @@ export async function runRAGPipeline({ query, history, articleSlug = null, onChu
       cachingOnDone
     );
   } catch (error) {
-    console.error("[pipeline] Error:", error.message);
-    onError(error);
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Unexpected pipeline failure. Please try again.";
+    console.error("[pipeline] Error:", message);
+    onError(new Error(message));
   }
 }

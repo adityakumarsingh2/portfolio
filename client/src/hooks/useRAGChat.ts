@@ -49,8 +49,17 @@ function generateSessionId(): string {
     return crypto.randomUUID();
   }
 
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    const randomPart = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return `rag-${Date.now()}-${randomPart}`;
+  }
+
   // Legacy fallback for older browsers lacking crypto.randomUUID support.
-  const randomPart = Math.random().toString(36).slice(2, 12) || Date.now().toString(36);
+  const perfNow =
+    typeof performance !== "undefined" ? Math.floor(performance.now()).toString(36) : "0";
+  const randomPart = `${Date.now().toString(36)}${perfNow}`;
   return `rag-${Date.now()}-${randomPart}`;
 }
 

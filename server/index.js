@@ -327,9 +327,9 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "sessionId is required" });
   }
   if (!isValidSessionId(sessionId)) {
-    console.warn(
-      `[/api/articles/chat] Rejected invalid session ID: ${redactSessionId(sessionId)}`
-    );
+    console.warn("[/api/articles/chat] Rejected invalid session ID", {
+      sessionId: redactSessionId(sessionId),
+    });
     return res.status(400).json({ error: "Invalid session ID format" });
   }
   if (query.length > 800) {
@@ -399,9 +399,9 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
 app.delete("/api/articles/session/:sessionId", (req, res) => {
   const { sessionId } = req.params;
   if (!isValidSessionId(sessionId)) {
-    console.warn(
-      `[/api/articles/session] Rejected invalid session ID: ${redactSessionId(sessionId)}`
-    );
+    console.warn("[/api/articles/session] Rejected invalid session ID", {
+      sessionId: redactSessionId(sessionId),
+    });
     return res.status(400).json({ error: "Invalid session ID format" });
   }
 
@@ -409,10 +409,10 @@ app.delete("/api/articles/session/:sessionId", (req, res) => {
     clearSession(sessionId);
     res.json({ ok: true });
   } catch (error) {
-    console.error(
-      `[/api/articles/session] Failed to clear session ${redactSessionId(sessionId)}:`,
-      error instanceof Error ? error.message : error
-    );
+    console.error("[/api/articles/session] Failed to clear session", {
+      sessionId: redactSessionId(sessionId),
+      error: error instanceof Error ? error.message : error,
+    });
     res.status(500).json({ error: "Failed to clear session" });
   }
 });

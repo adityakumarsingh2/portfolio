@@ -16,6 +16,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const RATE_LIMIT_COOLDOWN_MS = 65_000; // 65s — Gemini RPM window is 60s
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const LEGACY_RAG_SESSION_ID_RE = /^rag-\d{10,}-[a-z0-9]+$/i;
 
 export interface ArticleSource {
   slug: string;
@@ -43,17 +45,45 @@ export interface RAGMessage {
 }
 
 function generateSessionId(): string {
-  return `rag-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  // Legacy fallback for older browsers lacking crypto.randomUUID support.
+  const randomPart = Math.random().toString(36).slice(2, 12) || Date.now().toString(36);
+  return `rag-${Date.now()}-${randomPart}`;
+}
+
+function isValidSessionId(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    (UUID_V4_RE.test(value) || LEGACY_RAG_SESSION_ID_RE.test(value))
+  );
 }
 
 function getOrCreateSessionId(): string {
   const key = "rag_session_id";
   let id = sessionStorage.getItem(key);
-  if (!id) {
+  if (!isValidSessionId(id)) {
     id = generateSessionId();
     sessionStorage.setItem(key, id);
   }
   return id;
+}
+
+async function readErrorBody(response: Response): Promise<string | null> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const json = await response.json().catch(() => null);
+    if (json && typeof json.error === "string" && json.error.trim()) {
+      return json.error.trim().slice(0, 300);
+    }
+  }
+
+  const text = await response.text().catch(() => "");
+  const trimmed = text.trim();
+  return trimmed ? trimmed.slice(0, 300) : null;
 }
 
 function isRateLimitError(msg: string) {
@@ -149,8 +179,9 @@ export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        const responseMessage = await readErrorBody(response);
+        const message = responseMessage || `Server error: ${response.status}`;
+        throw new Error(message);
       }
 
       if (!response.body) throw new Error("No response body");
@@ -251,11 +282,24 @@ export function useRAGChat({ articleSlug }: { articleSlug?: string } = {}) {
   const clearConversation = useCallback(async () => {
     // Clear server-side session
     try {
-      await fetch(`${API_BASE}/api/articles/session/${sessionIdRef.current}`, {
+      const response = await fetch(`${API_BASE}/api/articles/session/${sessionIdRef.current}`, {
         method: "DELETE",
       });
+
+      if (!response.ok) {
+        const responseMessage = await readErrorBody(response);
+        if (import.meta.env.DEV) {
+          console.warn("[RAG Chat] Failed to clear server session", {
+            status: response.status,
+            sessionId: sessionIdRef.current,
+            error: responseMessage || "No response body",
+          });
+        }
+      }
     } catch {
-      // Non-critical
+      if (import.meta.env.DEV) {
+        console.warn("[RAG Chat] Session cleanup request failed");
+      }
     }
 
     // Generate new session ID

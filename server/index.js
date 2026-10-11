@@ -14,6 +14,7 @@ import {
   clearSession,
   getSessionCount,
 } from "./modules/rag/session-store.js";
+import { isValidSessionId, redactSessionId } from "./modules/rag/session-id.js";
 import { reindex, getIndexingStatus, reindexState } from "./scripts/reindex.js";
 import { validateAndSanitizePrompt } from "./modules/guardrails.js";
 
@@ -325,6 +326,12 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
   if (!sessionId || typeof sessionId !== "string") {
     return res.status(400).json({ error: "sessionId is required" });
   }
+  if (!isValidSessionId(sessionId)) {
+    console.warn(
+      `[/api/articles/chat] Rejected invalid session ID: ${redactSessionId(sessionId)}`
+    );
+    return res.status(400).json({ error: "Invalid session ID format" });
+  }
   if (query.length > 800) {
     return res.status(400).json({ error: "Query exceeds 800 character limit" });
   }
@@ -389,16 +396,25 @@ app.post("/api/articles/chat", articlesRateLimiter, async (req, res) => {
  * DELETE /api/articles/session/:sessionId
  * Clear a conversation session (user clicks "New conversation").
  */
-// UUID v4 pattern — prevents arbitrary strings from being used as session keys.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 app.delete("/api/articles/session/:sessionId", (req, res) => {
   const { sessionId } = req.params;
-  if (!UUID_RE.test(sessionId)) {
+  if (!isValidSessionId(sessionId)) {
+    console.warn(
+      `[/api/articles/session] Rejected invalid session ID: ${redactSessionId(sessionId)}`
+    );
     return res.status(400).json({ error: "Invalid session ID format" });
   }
-  clearSession(sessionId);
-  res.json({ ok: true });
+
+  try {
+    clearSession(sessionId);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(
+      `[/api/articles/session] Failed to clear session ${redactSessionId(sessionId)}:`,
+      error instanceof Error ? error.message : error
+    );
+    res.status(500).json({ error: "Failed to clear session" });
+  }
 });
 
 /**
